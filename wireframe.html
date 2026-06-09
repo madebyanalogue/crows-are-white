@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crows Are White — Interactive Wireframe</title>
+  <meta name="description" content="Interactive wireframe for Crows Are White (2022) — documentary directed by Ahsen Nadeem." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+          },
+          colors: {
+            ink: { DEFAULT: '#0a0a0a', soft: '#141414', muted: '#1c1c1c' },
+            fog: { DEFAULT: '#e8e4df', dim: '#9a9590', faint: '#5c5854' },
+            accent: { DEFAULT: '#c8a96e', hover: '#d4b87e' },
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    [data-page] { display: none; }
+    [data-page].active { display: block; }
+    .wire-box {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(255,255,255,0.03) 8px,
+        rgba(255,255,255,0.03) 9px
+      );
+    }
+    .menu-open { transform: translateX(0) !important; }
+    .overlay-open { opacity: 1 !important; pointer-events: auto !important; }
+    .dropdown-open { display: block !important; }
+  </style>
+</head>
+<body class="bg-ink text-fog font-sans antialiased text-base leading-relaxed">
+
+  <!-- Sticky nav -->
+  <header class="sticky top-0 z-50 bg-ink/95 backdrop-blur border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+      <button id="btn-menu" type="button" class="p-2 -ml-2 text-fog hover:text-white" aria-label="Open menu">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <button type="button" data-nav="home" class="font-display text-sm tracking-[0.2em] uppercase text-fog hover:text-white transition-colors">
+        Crows Are White
+      </button>
+      <div class="flex-1"></div>
+      <button id="btn-share" type="button" class="p-2 text-fog-dim hover:text-white" aria-label="Share">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+      </button>
+      <a href="#" class="p-2 text-fog-dim hover:text-white" aria-label="Instagram">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" stroke-width="1.5"/><circle cx="12" cy="12" r="3.5" stroke-width="1.5"/><circle cx="17" cy="7" r="0.5" fill="currentColor"/></svg>
+      </a>
+      <button id="btn-nav-cta" type="button" data-nav="tickets" class="ml-1 px-4 py-2 bg-accent text-ink text-sm font-semibold uppercase tracking-wide hover:bg-accent-hover transition-colors">
+        Get Tickets
+      </button>
+    </div>
+  </header>
+
+  <!-- Slide-out menu -->
+  <div id="menu-overlay" class="fixed inset-0 z-[60] bg-black/60 opacity-0 pointer-events-none transition-opacity" aria-hidden="true"></div>
+  <nav id="side-menu" class="fixed top-0 left-0 z-[70] h-full w-72 bg-ink-soft border-r border-white/10 -translate-x-full transition-transform duration-200 p-6" aria-label="Site menu">
+    <div class="flex items-center justify-between mb-8">
+      <span class="text-xs font-semibold uppercase tracking-widest text-fog-dim">Menu</span>
+      <button id="btn-menu-close" type="button" class="p-1 text-fog-dim hover:text-white" aria-label="Close menu">&times;</button>
+    </div>
+    <ul class="space-y-1 text-sm">
+      <li><button data-nav="home" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Home</button></li>
+      <li><button data-nav="trailer" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Trailer</button></li>
+      <li><button data-nav="tickets" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Buy Tickets</button></li>
+      <li><button data-nav="press" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Press</button></li>
+      <li><button data-nav="merchandise" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Merchandise</button></li>
+      <li><button data-nav="faq" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">FAQ</button></li>
+      <li><button data-nav="book-screening" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Book a Screening</button></li>
+      <li><button data-nav="contact" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Contact</button></li>
+      <li><button data-nav="footer" class="nav-link w-full text-left px-3 py-2 rounded hover:bg-white/5">Footer</button></li>
+    </ul>
+    <div class="mt-8 pt-6 border-t border-white/10 flex items-center gap-2 text-xs text-fog-dim">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" stroke-width="1.5"/></svg>
+      @crowsarewhite
+    </div>
+  </nav>
+
+  <!-- Wireframe chrome -->
+  <div class="bg-ink-muted border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-fog-dim mb-1">Client wireframe</p>
+        <h1 class="font-display text-2xl text-fog">Crows Are White</h1>
+        <p class="text-sm text-fog-dim mt-1">
+          <a href="https://www.imdb.com/title/tt10332620/" class="underline hover:text-fog" target="_blank" rel="noopener">IMDb tt10332620</a>
+          · Documentary · 2022 · 98 min
+        </p>
+      </div>
+      <div class="flex-1"></div>
+      <label class="flex items-center gap-3 text-sm text-fog-dim cursor-pointer select-none">
+        <span>Phase 2 — Streaming active</span>
+        <span class="relative inline-flex">
+          <input id="phase-toggle" type="checkbox" class="sr-only peer" />
+          <span class="block w-10 h-5 bg-white/10 rounded-full peer-checked:bg-accent/40 transition-colors"></span>
+          <span class="pointer-events-none absolute left-0.5 top-0.5 w-4 h-4 bg-fog rounded-full transition-transform peer-checked:translate-x-5"></span>
+        </span>
+      </label>
+    </div>
+    <div class="max-w-5xl mx-auto px-4 pb-3 flex flex-wrap gap-2" id="page-tabs" role="tablist"></div>
+  </div>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- HOME -->
+    <section data-page="home" class="active space-y-8">
+      <div class="wire-box border border-dashed border-white/20 rounded-lg aspect-[16/7] flex items-center justify-center text-center p-6">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-fog-dim mb-2">Hero — above the fold</p>
+          <p class="text-sm text-fog-dim max-w-md">Full-bleed cinematic still or 10–40 sec video loop</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button data-nav="trailer" class="px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40 transition-colors">Trailer</button>
+        <button id="btn-newsletter" class="px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40 transition-colors">Request a Screening</button>
+        <div id="watch-wrap" class="relative hidden">
+          <button id="btn-watch" type="button" class="px-5 py-2.5 bg-accent text-ink text-sm font-semibold uppercase tracking-wide hover:bg-accent-hover flex items-center gap-2">
+            Watch Now <span id="watch-chevron">▾</span>
+          </button>
+          <div id="watch-dropdown" class="hidden absolute top-full left-0 mt-1 min-w-[200px] bg-ink-soft border border-white/10 rounded py-1 z-10">
+            <a href="#" class="block px-4 py-2 text-sm hover:bg-white/5">Apple TV</a>
+            <a href="#" class="block px-4 py-2 text-sm hover:bg-white/5">Amazon Prime</a>
+            <a href="#" class="block px-4 py-2 text-sm hover:bg-white/5">Vimeo OTT</a>
+            <a href="#" class="block px-4 py-2 text-sm hover:bg-white/5">Google Play</a>
+            <a href="#" class="block px-4 py-2 text-sm hover:bg-white/5">YouTube Rentals</a>
+          </div>
+        </div>
+        <button id="btn-home-tickets" data-nav="tickets" class="px-5 py-2.5 bg-accent text-ink text-sm font-semibold uppercase tracking-wide hover:bg-accent-hover">Get Tickets</button>
+      </div>
+      <div class="p-4 border border-accent/30 bg-accent/5 rounded text-sm text-fog-dim">
+        <strong class="text-accent block mb-1 text-xs uppercase tracking-widest">Conversion rule</strong>
+        Ticket or streaming CTA must be visible before scroll on every device and page. Sticky nav always shows Get Tickets (or Watch Now in Phase 2).
+      </div>
+      <hr class="border-white/10" />
+      <div>
+        <h2 class="font-display text-xl mb-3">Logline</h2>
+        <p class="text-lg text-fog leading-relaxed max-w-2xl">
+          Banned from a secretive Buddhist monastery, a filmmaker befriends a monk who prefers heavy metal and ice cream over meditation. Their unlikely bond forces him to confront the double life he's been hiding for years.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-4">Festival laurels</h3>
+        <div class="flex flex-wrap gap-3">
+          <span class="px-4 py-3 border border-white/10 rounded text-xs text-fog-dim">Sundance</span>
+          <span class="px-4 py-3 border border-white/10 rounded text-xs text-fog-dim">Hot Docs</span>
+          <span class="px-4 py-3 border border-white/10 rounded text-xs text-fog-dim">Sheffield</span>
+          <span class="px-4 py-3 border border-white/10 rounded text-xs text-fog-dim">AFI Docs</span>
+          <span class="px-4 py-3 border border-white/10 rounded text-xs text-fog-dim">Camden</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="text-center p-4 border border-white/10 rounded"><p class="text-2xl font-semibold">98</p><p class="text-xs text-fog-dim mt-1 uppercase tracking-wide">Minutes</p></div>
+        <div class="text-center p-4 border border-white/10 rounded"><p class="text-2xl font-semibold">100%</p><p class="text-xs text-fog-dim mt-1 uppercase tracking-wide">Rotten Tomatoes</p></div>
+        <div class="text-center p-4 border border-white/10 rounded"><p class="text-2xl font-semibold">80+</p><p class="text-xs text-fog-dim mt-1 uppercase tracking-wide">Festivals</p></div>
+        <div class="text-center p-4 border border-white/10 rounded"><p class="text-2xl font-semibold">11</p><p class="text-xs text-fog-dim mt-1 uppercase tracking-wide">Awards</p></div>
+      </div>
+    </section>
+
+    <!-- TRAILER -->
+    <section data-page="trailer" class="space-y-6">
+      <h2 class="font-display text-2xl">Trailer</h2>
+      <div class="wire-box border border-dashed border-white/20 rounded-lg aspect-video flex items-center justify-center">
+        <p class="text-sm text-fog-dim">YouTube embed — 16:9 player</p>
+      </div>
+      <p class="text-sm text-fog-dim">Linked from hamburger menu. Opens on dedicated page.</p>
+      <button class="px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Open on YouTube</button>
+    </section>
+
+    <!-- TICKETS -->
+    <section data-page="tickets" class="space-y-6">
+      <h2 class="font-display text-2xl">Get Tickets</h2>
+      <div class="p-4 border border-amber-500/30 bg-amber-500/5 rounded text-sm text-fog-dim">
+        <strong class="text-amber-400 block mb-1 text-xs uppercase tracking-widest">Primary conversion page</strong>
+        City-by-city listings sorted by date. Powered by Assemble or Powster. Reference: andreisanidiot.film/tickets
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <input id="filter-city" type="search" placeholder="Filter by city" class="px-4 py-2 bg-ink-soft border border-white/10 rounded text-sm w-48 focus:outline-none focus:border-accent/50" />
+        <select id="filter-state" class="px-4 py-2 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50">
+          <option value="">All states</option>
+          <option value="CA">CA</option>
+          <option value="NY">NY</option>
+          <option value="IL">IL</option>
+          <option value="TX">TX</option>
+          <option value="WA">WA</option>
+        </select>
+      </div>
+      <div class="overflow-x-auto border border-white/10 rounded-lg">
+        <table class="w-full text-sm">
+          <thead class="bg-white/5 text-left text-xs uppercase tracking-widest text-fog-dim">
+            <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">City</th><th class="px-4 py-3">State</th><th class="px-4 py-3">Venue</th><th class="px-4 py-3 text-right">Action</th></tr>
+          </thead>
+          <tbody id="screenings-body" class="divide-y divide-white/5"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PRESS -->
+    <section data-page="press" class="space-y-10">
+      <h2 class="font-display text-2xl">Press</h2>
+      <div class="p-4 border border-blue-400/30 bg-blue-400/5 rounded text-sm text-fog-dim">
+        <strong class="text-blue-300 block mb-1 text-xs uppercase tracking-widest">Two-click rule</strong>
+        Journalists must reach press kit, stills, quotes, and contact within two clicks from any page.
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-xs uppercase tracking-widest text-fog-dim">Synopsis</h3>
+        <p class="text-fog max-w-2xl">Banned from a secretive Buddhist monastery, a filmmaker befriends a monk who prefers heavy metal and ice cream over meditation. Their unlikely bond forces him to confront the double life he's been hiding for years.</p>
+        <dl class="grid sm:grid-cols-2 gap-3 text-sm text-fog-dim">
+          <div><dt class="text-fog-faint text-xs uppercase tracking-wide">Director</dt><dd>Ahsen Nadeem</dd></div>
+          <div><dt class="text-fog-faint text-xs uppercase tracking-wide">Writers</dt><dd>Ahsen Nadeem, Matt H. Mayes, Dawn Light Blackman</dd></div>
+          <div><dt class="text-fog-faint text-xs uppercase tracking-wide">Cinematography</dt><dd>Matthew Nauser</dd></div>
+          <div><dt class="text-fog-faint text-xs uppercase tracking-wide">Genre</dt><dd>Documentary · IMDb <a href="https://www.imdb.com/title/tt10332620/" class="underline hover:text-fog" target="_blank" rel="noopener">tt10332620</a></dd></div>
+        </dl>
+        <button class="px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Download Press Kit PDF</button>
+      </div>
+
+      <hr class="border-white/10" />
+
+      <div class="space-y-4">
+        <h3 class="text-xs uppercase tracking-widest text-fog-dim">Production stills</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 1</div>
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 2</div>
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 3</div>
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 4</div>
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 5</div>
+          <div class="wire-box aspect-[4/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Still 6</div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-8">
+        <div class="space-y-3">
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim">Poster</h3>
+          <div class="wire-box aspect-[2/3] border border-dashed border-white/20 rounded flex items-center justify-center text-xs text-fog-dim">Downloadable poster</div>
+          <button class="px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Download Poster</button>
+        </div>
+        <div class="space-y-3">
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim">Festival laurels</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="h-14 border border-white/10 rounded flex items-center justify-center text-xs text-fog-dim">Laurel 1</div>
+            <div class="h-14 border border-white/10 rounded flex items-center justify-center text-xs text-fog-dim">Laurel 2</div>
+            <div class="h-14 border border-white/10 rounded flex items-center justify-center text-xs text-fog-dim">Laurel 3</div>
+            <div class="h-14 border border-white/10 rounded flex items-center justify-center text-xs text-fog-dim">Laurel 4</div>
+            <div class="h-14 border border-white/10 rounded flex items-center justify-center text-xs text-fog-dim">Laurel 5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-xs uppercase tracking-widest text-fog-dim">Press quotes</h3>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <blockquote class="p-4 border-l-2 border-accent bg-white/5 rounded-r text-sm italic">"A tender, funny, and unexpectedly moving portrait of faith and friendship."<footer class="mt-2 not-italic text-xs text-fog-dim">— Jane Smith, Variety</footer></blockquote>
+          <blockquote class="p-4 border-l-2 border-accent bg-white/5 rounded-r text-sm italic">"Nadeem turns spiritual doubt into riveting cinema."<footer class="mt-2 not-italic text-xs text-fog-dim">— Alex Chen, IndieWire</footer></blockquote>
+          <blockquote class="p-4 border-l-2 border-accent bg-white/5 rounded-r text-sm italic">"Heavy metal, ice cream, and enlightenment — somehow it all works."<footer class="mt-2 not-italic text-xs text-fog-dim">— Morgan Lee, The Hollywood Reporter</footer></blockquote>
+          <blockquote class="p-4 border-l-2 border-accent bg-white/5 rounded-r text-sm italic">"One of the year's most surprising documentaries."<footer class="mt-2 not-italic text-xs text-fog-dim">— Ravi Patel, Screen Daily</footer></blockquote>
+        </div>
+      </div>
+
+      <div class="p-5 border border-white/10 rounded-lg">
+        <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Press contact</h3>
+        <p class="font-semibold">Anne Takahashi</p>
+        <p class="text-sm text-fog-dim mt-1">anne@takapr.com</p>
+        <button class="mt-4 px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Email Press Contact</button>
+      </div>
+    </section>
+
+    <!-- MERCHANDISE -->
+    <section data-page="merchandise" class="space-y-6">
+      <h2 class="font-display text-2xl">Merchandise</h2>
+      <p class="text-sm text-fog-dim">Shopify collection — print-on-demand via Printful/Printify. Styled to match film site.</p>
+      <div class="grid sm:grid-cols-2 gap-6">
+        <article class="border border-white/10 rounded-lg overflow-hidden">
+          <div class="wire-box aspect-square flex items-center justify-center text-xs text-fog-dim">Product image</div>
+          <div class="p-4 flex items-center justify-between"><div><p class="font-semibold">Official Poster</p><p class="text-sm text-fog-dim">$24</p></div><button class="px-4 py-2 bg-accent text-ink text-xs font-semibold uppercase">Add to Cart</button></div>
+        </article>
+        <article class="border border-white/10 rounded-lg overflow-hidden">
+          <div class="wire-box aspect-square flex items-center justify-center text-xs text-fog-dim">Product image</div>
+          <div class="p-4 flex items-center justify-between"><div><p class="font-semibold">Director's Cut Tee</p><p class="text-sm text-fog-dim">$32</p></div><button class="px-4 py-2 bg-accent text-ink text-xs font-semibold uppercase">Add to Cart</button></div>
+        </article>
+        <article class="border border-white/10 rounded-lg overflow-hidden">
+          <div class="wire-box aspect-square flex items-center justify-center text-xs text-fog-dim">Product image</div>
+          <div class="p-4 flex items-center justify-between"><div><p class="font-semibold">Monk &amp; Metal Hoodie</p><p class="text-sm text-fog-dim">$58</p></div><button class="px-4 py-2 bg-accent text-ink text-xs font-semibold uppercase">Add to Cart</button></div>
+        </article>
+        <article class="border border-white/10 rounded-lg overflow-hidden">
+          <div class="wire-box aspect-square flex items-center justify-center text-xs text-fog-dim">Product image</div>
+          <div class="p-4 flex items-center justify-between"><div><p class="font-semibold">Ice Cream Club Cap</p><p class="text-sm text-fog-dim">$28</p></div><button class="px-4 py-2 bg-accent text-ink text-xs font-semibold uppercase">Add to Cart</button></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section data-page="faq" class="space-y-3">
+      <h2 class="font-display text-2xl mb-6">FAQ</h2>
+      <details class="group border border-white/10 rounded-lg" open>
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium list-none flex justify-between items-center">Where can I watch Crows Are White?<span class="text-fog-dim group-open:rotate-180 transition-transform">▾</span></summary>
+        <p class="px-4 pb-4 text-sm text-fog-dim">Use Get Tickets for theatrical screenings. Streaming links appear on the home page when rental is live.</p>
+      </details>
+      <details class="group border border-white/10 rounded-lg">
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium list-none flex justify-between items-center">How long is the film?<span class="text-fog-dim group-open:rotate-180 transition-transform">▾</span></summary>
+        <p class="px-4 pb-4 text-sm text-fog-dim">98 minutes.</p>
+      </details>
+      <details class="group border border-white/10 rounded-lg">
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium list-none flex justify-between items-center">Can I host a screening?<span class="text-fog-dim group-open:rotate-180 transition-transform">▾</span></summary>
+        <p class="px-4 pb-4 text-sm text-fog-dim">Yes — use Book a Screening. We respond via bookings@crowsarewhite.com.</p>
+      </details>
+      <details class="group border border-white/10 rounded-lg">
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium list-none flex justify-between items-center">Is there a press kit?<span class="text-fog-dim group-open:rotate-180 transition-transform">▾</span></summary>
+        <p class="px-4 pb-4 text-sm text-fog-dim">Yes. Press page includes stills, poster, quotes, laurels, and Anne Takahashi contact.</p>
+      </details>
+    </section>
+
+    <!-- BOOK A SCREENING -->
+    <section data-page="book-screening" class="space-y-8">
+      <h2 class="font-display text-2xl">Book a Screening</h2>
+      <p class="text-sm text-fog-dim">Reference: ourherobalthazar.com · Submissions to bookings@crowsarewhite.com</p>
+      <form class="grid sm:grid-cols-2 gap-5" onsubmit="event.preventDefault(); alert('Wireframe — form not submitted.');">
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">First name *</label><input required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">Last name *</label><input required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">Email *</label><input type="email" required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">Organization name *</label><input required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">Organization type *</label>
+          <select required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50">
+            <option value="">Select type</option>
+            <option>College / University</option>
+            <option>Buddhist or Meditation Center</option>
+            <option>Interfaith or Religious Organization</option>
+            <option>Cultural Institution</option>
+            <option>Community Cinema</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">Expected audience size *</label>
+          <select required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50">
+            <option value="">Select size</option>
+            <option>Under 25</option>
+            <option>25–50</option>
+            <option>50–100</option>
+            <option>100–250</option>
+            <option>250+</option>
+          </select>
+        </div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">City *</label><input required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div><label class="block text-xs uppercase tracking-wide text-fog-dim mb-1.5">State *</label><input required class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div class="sm:col-span-2"><hr class="border-white/10" /><p class="text-xs uppercase tracking-widest text-fog-dim mt-6 mb-4">Optional</p></div>
+        <div class="sm:col-span-2"><label class="block text-xs text-fog-dim mb-1.5">Preferred date or date range</label><input placeholder="e.g. Fall 2026 or March 15–30" class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div class="sm:col-span-2"><label class="block text-xs text-fog-dim mb-1.5">How did you hear about the film?</label><input class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50" /></div>
+        <div class="sm:col-span-2"><label class="block text-xs text-fog-dim mb-1.5">Anything else (3 lines max)</label><textarea rows="3" class="w-full px-4 py-2.5 bg-ink-soft border border-white/10 rounded text-sm focus:outline-none focus:border-accent/50 resize-y"></textarea></div>
+        <div class="sm:col-span-2"><button type="submit" class="px-6 py-3 bg-accent text-ink text-sm font-semibold uppercase tracking-wide hover:bg-accent-hover">Submit Screening Request</button></div>
+      </form>
+    </section>
+
+    <!-- CONTACT -->
+    <section data-page="contact" class="space-y-6">
+      <h2 class="font-display text-2xl">Contact</h2>
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="p-5 border border-white/10 rounded-lg">
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Press</h3>
+          <p class="font-semibold">Anne Takahashi</p>
+          <p class="text-sm text-fog-dim mt-1">anne@takapr.com</p>
+          <button class="mt-4 px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Email Press</button>
+        </div>
+        <div class="p-5 border border-white/10 rounded-lg">
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Bookings</h3>
+          <p class="font-semibold">Screening requests</p>
+          <p class="text-sm text-fog-dim mt-1">bookings@crowsarewhite.com</p>
+          <button class="mt-4 px-5 py-2.5 border border-white/20 text-sm uppercase tracking-wide hover:border-white/40">Email Bookings</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <section data-page="footer" class="space-y-8">
+      <h2 class="font-display text-2xl">Footer</h2>
+      <div class="wire-box border border-dashed border-white/20 rounded h-20 flex items-center justify-center text-xs text-fog-dim">Site footer — appears on all pages</div>
+      <div class="grid sm:grid-cols-3 gap-8 text-sm">
+        <div>
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Navigation</h3>
+          <ul class="space-y-1 text-fog-dim">
+            <li><button data-nav="home" class="nav-link hover:text-fog">Home</button></li>
+            <li><button data-nav="trailer" class="nav-link hover:text-fog">Trailer</button></li>
+            <li><button data-nav="tickets" class="nav-link hover:text-fog">Buy Tickets</button></li>
+            <li><button data-nav="press" class="nav-link hover:text-fog">Press</button></li>
+            <li><button data-nav="merchandise" class="nav-link hover:text-fog">Merchandise</button></li>
+            <li><button data-nav="faq" class="nav-link hover:text-fog">FAQ</button></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Social</h3>
+          <p class="text-fog-dim">Instagram</p>
+        </div>
+        <div>
+          <h3 class="text-xs uppercase tracking-widest text-fog-dim mb-3">Legals &amp; Credits</h3>
+          <ul class="space-y-1 text-fog-dim">
+            <li>Privacy Policy</li>
+            <li>Terms of Use</li>
+            <li>Credits</li>
+            <li class="text-fog-faint text-xs pt-2">© Crows Are White · Directed by Ahsen Nadeem</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Site footer (persistent) -->
+  <footer class="mt-16 border-t border-white/10 py-8">
+    <div class="max-w-5xl mx-auto px-4 flex flex-wrap justify-between gap-4 text-xs text-fog-faint">
+      <span>Wireframe only — not the final site</span>
+      <span>Visual refs: Neon Rated · Criterion · Type Goes Here</span>
+    </div>
+  </footer>
+
+  <!-- Newsletter modal -->
+  <div id="modal-newsletter" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 opacity-0 pointer-events-none transition-opacity" aria-hidden="true">
+    <div class="bg-ink-soft border border-white/10 rounded-lg w-full max-w-md p-6" role="dialog" aria-labelledby="nl-title">
+      <div class="flex justify-between items-start mb-4">
+        <h2 id="nl-title" class="font-display text-lg">Request a Screening</h2>
+        <button type="button" class="modal-close text-fog-dim hover:text-white text-xl leading-none">&times;</button>
+      </div>
+      <p class="text-sm text-fog-dim mb-5">Help us get the movie to you and show your local theater you want to see Crows Are White.</p>
+      <form class="space-y-3" onsubmit="event.preventDefault(); alert('Wireframe — newsletter signup.');">
+        <input type="email" required placeholder="Email" class="w-full px-4 py-2.5 bg-ink border border-white/10 rounded text-sm" />
+        <input placeholder="Country" class="w-full px-4 py-2.5 bg-ink border border-white/10 rounded text-sm" />
+        <input placeholder="State" class="w-full px-4 py-2.5 bg-ink border border-white/10 rounded text-sm" />
+        <input placeholder="Region" class="w-full px-4 py-2.5 bg-ink border border-white/10 rounded text-sm" />
+        <input placeholder="City" class="w-full px-4 py-2.5 bg-ink border border-white/10 rounded text-sm" />
+        <button type="submit" class="w-full py-3 bg-accent text-ink text-sm font-semibold uppercase tracking-wide hover:bg-accent-hover">Join the List</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Share modal -->
+  <div id="modal-share" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 opacity-0 pointer-events-none transition-opacity" aria-hidden="true">
+    <div class="bg-ink-soft border border-white/10 rounded-lg w-full max-w-sm p-6" role="dialog">
+      <div class="flex justify-between items-start mb-4">
+        <h2 class="font-display text-lg">Share</h2>
+        <button type="button" class="modal-close text-fog-dim hover:text-white text-xl leading-none">&times;</button>
+      </div>
+      <p class="text-sm text-fog-dim mb-4">Reference: hundredsofbeavers.com share pattern</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="navigator.clipboard?.writeText(location.href); alert('Link copied.');" class="px-4 py-2 border border-white/20 text-xs uppercase tracking-wide hover:border-white/40">Copy Link</button>
+        <button type="button" class="px-4 py-2 border border-white/20 text-xs uppercase tracking-wide hover:border-white/40">Share on X</button>
+        <button type="button" class="px-4 py-2 border border-white/20 text-xs uppercase tracking-wide hover:border-white/40">Facebook</button>
+        <button type="button" class="px-4 py-2 border border-white/20 text-xs uppercase tracking-wide hover:border-white/40">Email</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PAGES = [
+      { id: 'home', label: 'Home' },
+      { id: 'trailer', label: 'Trailer' },
+      { id: 'tickets', label: 'Buy Tickets' },
+      { id: 'press', label: 'Press' },
+      { id: 'merchandise', label: 'Merchandise' },
+      { id: 'faq', label: 'FAQ' },
+      { id: 'book-screening', label: 'Book a Screening' },
+      { id: 'contact', label: 'Contact' },
+      { id: 'footer', label: 'Footer' },
+    ];
+
+    const SCREENINGS = [
+      { date: 'Jun 12', city: 'Los Angeles', state: 'CA', venue: 'Nuart Theatre', status: 'on-sale' },
+      { date: 'Jun 14', city: 'New York', state: 'NY', venue: 'Film Forum', status: 'on-sale' },
+      { date: 'Jun 18', city: 'Chicago', state: 'IL', venue: 'Music Box Theatre', status: 'on-sale' },
+      { date: 'Jul 2', city: 'Austin', state: 'TX', venue: 'AFS Cinema', status: 'coming-soon' },
+      { date: 'Jul 9', city: 'Seattle', state: 'WA', venue: 'SIFF Film Center', status: 'coming-soon' },
+    ];
+
+    let currentPage = 'home';
+    let phase2 = false;
+
+    const tabsEl = document.getElementById('page-tabs');
+    PAGES.forEach(({ id, label }) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.pageTab = id;
+      btn.textContent = label;
+      btn.className = 'px-3 py-1.5 text-xs uppercase tracking-wide rounded border border-white/10 text-fog-dim hover:text-fog hover:border-white/20 transition-colors';
+      btn.addEventListener('click', () => navigate(id));
+      tabsEl.appendChild(btn);
+    });
+
+    function navigate(page) {
+      currentPage = page;
+      document.querySelectorAll('[data-page]').forEach((el) => {
+        el.classList.toggle('active', el.dataset.page === page);
+      });
+      document.querySelectorAll('[data-page-tab]').forEach((btn) => {
+        const active = btn.dataset.pageTab === page;
+        btn.classList.toggle('bg-accent', active);
+        btn.classList.toggle('text-ink', active);
+        btn.classList.toggle('border-accent', active);
+        btn.classList.toggle('font-semibold', active);
+      });
+      closeMenu();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('[data-nav]').forEach((el) => {
+      el.addEventListener('click', () => navigate(el.dataset.nav));
+    });
+
+    function openMenu() {
+      document.getElementById('side-menu').classList.add('menu-open');
+      document.getElementById('menu-overlay').classList.add('overlay-open');
+    }
+    function closeMenu() {
+      document.getElementById('side-menu').classList.remove('menu-open');
+      document.getElementById('menu-overlay').classList.remove('overlay-open');
+    }
+
+    document.getElementById('btn-menu').addEventListener('click', openMenu);
+    document.getElementById('btn-menu-close').addEventListener('click', closeMenu);
+    document.getElementById('menu-overlay').addEventListener('click', closeMenu);
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add('overlay-open');
+      el.setAttribute('aria-hidden', 'false');
+    }
+    function closeModals() {
+      document.querySelectorAll('#modal-newsletter, #modal-share').forEach((el) => {
+        el.classList.remove('overlay-open');
+        el.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    document.getElementById('btn-newsletter').addEventListener('click', () => openModal('modal-newsletter'));
+    document.getElementById('btn-share').addEventListener('click', () => openModal('modal-share'));
+    document.querySelectorAll('.modal-close').forEach((btn) => btn.addEventListener('click', closeModals));
+    document.querySelectorAll('#modal-newsletter, #modal-share').forEach((el) => {
+      el.addEventListener('click', (e) => { if (e.target === el) closeModals(); });
+    });
+
+    function renderScreenings() {
+      const city = document.getElementById('filter-city').value.toLowerCase();
+      const state = document.getElementById('filter-state').value;
+      const tbody = document.getElementById('screenings-body');
+      tbody.innerHTML = SCREENINGS
+        .filter((s) => (!city || s.city.toLowerCase().includes(city)) && (!state || s.state === state))
+        .map((s) => `
+          <tr class="hover:bg-white/[0.02]">
+            <td class="px-4 py-3">${s.date}</td>
+            <td class="px-4 py-3">${s.city}</td>
+            <td class="px-4 py-3">${s.state}</td>
+            <td class="px-4 py-3">${s.venue}</td>
+            <td class="px-4 py-3 text-right">
+              ${s.status === 'coming-soon'
+                ? '<span class="text-xs uppercase tracking-wide text-amber-400/90 border border-amber-400/30 px-2 py-1 rounded">Coming Soon</span>'
+                : '<button class="px-3 py-1.5 bg-accent text-ink text-xs font-semibold uppercase">Buy Tickets</button>'}
+            </td>
+          </tr>`).join('');
+    }
+
+    document.getElementById('filter-city').addEventListener('input', renderScreenings);
+    document.getElementById('filter-state').addEventListener('change', renderScreenings);
+    renderScreenings();
+
+    const phaseToggle = document.getElementById('phase-toggle');
+    const watchWrap = document.getElementById('watch-wrap');
+    const homeTickets = document.getElementById('btn-home-tickets');
+    const navCta = document.getElementById('btn-nav-cta');
+    const watchBtn = document.getElementById('btn-watch');
+    const watchDropdown = document.getElementById('watch-dropdown');
+
+    function setPhase(on) {
+      phase2 = on;
+      watchWrap.classList.toggle('hidden', !on);
+      homeTickets.classList.toggle('hidden', on);
+      navCta.textContent = on ? 'Watch Now' : 'Get Tickets';
+      navCta.onclick = on
+        ? () => { navigate('home'); watchDropdown.classList.add('dropdown-open'); }
+        : () => navigate('tickets');
+    }
+
+    phaseToggle.addEventListener('change', (e) => setPhase(e.target.checked));
+    watchBtn.addEventListener('click', () => watchDropdown.classList.toggle('dropdown-open'));
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('watch-wrap').contains(e.target)) {
+        watchDropdown.classList.remove('dropdown-open');
+      }
+    });
+
+    navigate('home');
+  </script>
+</body>
+</html>
