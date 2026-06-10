@@ -2,7 +2,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-06-09',
   devtools: { enabled: false },
   modules: ['@nuxtjs/tailwindcss'],
-  css: ['~/assets/css/main.css'],
+  router: {
+    options: {
+      scrollBehaviorType: 'smooth',
+    },
+  },
+  css: ['~/assets/css/main.css', '~/assets/css/plyr-custom.css'],
   app: {
     head: {
       title: 'Crows Are White',

@@ -18,11 +18,21 @@ const filtered = computed(() =>
   <div class="page-section">
     <PageHeader
       title="Get Tickets"
-      subtitle="Primary conversion page. City-by-city listings sorted by date, powered by Assemble or Powster."
+      subtitle="Theatrical screenings — Buy Tickets links directly to each theater's ticketing platform."
     />
 
-    <WireNote title="Primary conversion page" tone="warn" class="mb-8">
-      Reference: andreisanidiot.film/tickets, blueheron.film, thelovethatremains.film
+    <WireNote title="Powster vs manual listings" class="mb-8">
+      Powster can power this page with automated showtimes and deep links to theater platforms.
+      Alternatively, listings can be managed manually — see
+      <a
+        href="https://ourherobalthazar.com/"
+        target="_blank"
+        rel="noopener"
+        class="underline underline-offset-2"
+      >
+        ourherobalthazar.com
+      </a>
+      for a manual approach.
     </WireNote>
 
     <div class="mb-10 flex flex-wrap gap-4">
@@ -66,9 +76,15 @@ const filtered = computed(() =>
               >
                 Coming Soon
               </span>
-              <button v-else type="button" class="btn-primary text-xs px-3 py-1.5">
+              <a
+                v-else
+                :href="s.ticketUrl"
+                target="_blank"
+                rel="noopener"
+                class="btn-primary px-3 py-1.5 text-xs"
+              >
                 Buy Tickets
-              </button>
+              </a>
             </td>
           </tr>
         </tbody>

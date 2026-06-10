@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { film, pressQuotes } from '~/data/site'
+import { film, pressPhotos, pressQuotes } from '~/data/site'
 </script>
 
 <template>
@@ -11,22 +11,22 @@ import { film, pressQuotes } from '~/data/site'
 
     <section class="mb-16 space-y-6 md:mb-24">
       <h2 class="label-caps">Synopsis</h2>
-      <p class="text-stone-700 max-w-3xl leading-relaxed">{{ film.logline }}</p>
-      <dl class="grid sm:grid-cols-2 gap-4 text-sm">
+      <p class="max-w-3xl leading-relaxed text-stone-700">{{ film.logline }}</p>
+      <dl class="grid gap-4 text-sm sm:grid-cols-2">
         <div>
-          <dt class="text-wire-muted text-xs uppercase tracking-wide">Director</dt>
+          <dt class="text-xs uppercase tracking-wide text-wire-muted">Director</dt>
           <dd class="mt-1">{{ film.director }}</dd>
         </div>
         <div>
-          <dt class="text-wire-muted text-xs uppercase tracking-wide">Writers</dt>
+          <dt class="text-xs uppercase tracking-wide text-wire-muted">Writers</dt>
           <dd class="mt-1">{{ film.writers }}</dd>
         </div>
         <div>
-          <dt class="text-wire-muted text-xs uppercase tracking-wide">Cinematography</dt>
+          <dt class="text-xs uppercase tracking-wide text-wire-muted">Cinematography</dt>
           <dd class="mt-1">{{ film.cinematography }}</dd>
         </div>
         <div>
-          <dt class="text-wire-muted text-xs uppercase tracking-wide">IMDb</dt>
+          <dt class="text-xs uppercase tracking-wide text-wire-muted">IMDb</dt>
           <dd class="mt-1">
             <a :href="film.imdb" target="_blank" rel="noopener" class="underline hover:text-stone-500">
               tt10332620
@@ -41,17 +41,10 @@ import { film, pressQuotes } from '~/data/site'
 
     <section class="mb-16 space-y-6 md:mb-24">
       <h2 class="label-caps">Production stills</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <WireBox
-          v-for="n in 6"
-          :key="n"
-          :label="`Still ${n}`"
-          class="aspect-[4/3]"
-        />
-      </div>
+      <PhotoGallery :photos="pressPhotos" />
     </section>
 
-    <section class="grid md:grid-cols-2 gap-10 mb-12">
+    <section class="mb-12 grid gap-10 md:grid-cols-2">
       <div class="space-y-4">
         <h2 class="label-caps">Poster</h2>
         <WireBox label="Downloadable poster asset" class="aspect-[2/3]" />
@@ -73,7 +66,7 @@ import { film, pressQuotes } from '~/data/site'
 
     <section class="mb-16 space-y-6 md:mb-24">
       <h2 class="label-caps">Press quotes</h2>
-      <div class="grid md:grid-cols-2 gap-4">
+      <div class="grid gap-4 md:grid-cols-2">
         <blockquote
           v-for="q in pressQuotes"
           :key="q.pub"
@@ -90,7 +83,7 @@ import { film, pressQuotes } from '~/data/site'
     <section class="surface-card max-w-md">
       <h2 class="label-caps mb-4">Press contact</h2>
       <p class="font-semibold">Anne Takahashi</p>
-      <p class="text-sm text-wire-muted mt-1">anne@takapr.com</p>
+      <p class="mt-1 text-sm text-wire-muted">anne@takapr.com</p>
       <button type="button" class="btn-secondary mt-4">Email Press Contact</button>
     </section>
   </div>

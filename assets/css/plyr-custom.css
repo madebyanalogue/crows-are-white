@@ -1,0 +1,80 @@
+@import 'plyr/dist/plyr.css';
+
+.trailer-player .plyr {
+  --plyr-color-main: #ffffff;
+  --plyr-video-control-color: #ffffff;
+  --plyr-video-control-color-hover: #ffffff;
+  --plyr-video-control-background-hover: rgba(255, 255, 255, 0.12);
+  --plyr-control-icon-size: 20px;
+  --plyr-range-fill-background: #ffffff;
+  --plyr-range-track-background: rgba(255, 255, 255, 0.28);
+  --plyr-range-thumb-background: #ffffff;
+  --plyr-range-thumb-shadow: none;
+  --plyr-video-progress-buffered-background: rgba(255, 255, 255, 0.18);
+  --plyr-font-family: inherit;
+  --plyr-font-size-time: 0;
+  border-radius: 0;
+}
+
+.trailer-player .plyr--video {
+  overflow: hidden;
+}
+
+.trailer-player .plyr__controls {
+  padding: 16px 20px 20px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+}
+
+.trailer-player .plyr__control--overlaid {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  padding: 22px;
+}
+
+.trailer-player .plyr__control--overlaid:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.trailer-player .plyr__control--overlaid svg {
+  left: 2px;
+}
+
+.trailer-player .plyr__time,
+.trailer-player .plyr__menu,
+.trailer-player .plyr__volume,
+.trailer-player [data-plyr='mute'],
+.trailer-player [data-plyr='captions'],
+.trailer-player [data-plyr='settings'],
+.trailer-player [data-plyr='pip'],
+.trailer-player [data-plyr='airplay'] {
+  display: none !important;
+}
+
+.trailer-player .plyr__progress {
+  margin-left: 12px;
+  margin-right: 12px;
+}
+
+.trailer-modal-enter-active,
+.trailer-modal-leave-active {
+  transition: opacity 0.45s ease;
+}
+
+.trailer-modal-enter-active .trailer-modal__inner,
+.trailer-modal-leave-active .trailer-modal__inner {
+  transition:
+    opacity 0.5s ease 0.08s,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
+}
+
+.trailer-modal-enter-from,
+.trailer-modal-leave-to {
+  opacity: 0;
+}
+
+.trailer-modal-enter-from .trailer-modal__inner,
+.trailer-modal-leave-to .trailer-modal__inner {
+  opacity: 0;
+  transform: scale(0.97) translateY(8px);
+}

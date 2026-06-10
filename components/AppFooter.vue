@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navItems } from '~/data/site'
+import { footerNavItems } from '~/data/site'
 </script>
 
 <template>
@@ -22,22 +22,16 @@ import { navItems } from '~/data/site'
         </div>
 
         <div>
-          <p class="label-caps mb-6">Explore</p>
-          <ul class="space-y-4">
-            <li v-for="item in navItems.slice(0, 6)" :key="item.to">
-              <NuxtLink :to="item.to" class="text-base text-wire-muted transition-colors hover:text-wire-ink">
-                {{ item.label }}
-              </NuxtLink>
-            </li>
-          </ul>
+          <NewsletterSignup />
         </div>
 
         <div>
           <p class="label-caps mb-6">Connect</p>
           <ul class="space-y-4 text-base text-wire-muted">
             <li><a href="#" class="transition-colors hover:text-wire-ink">Instagram</a></li>
-            <li><NuxtLink to="/contact" class="transition-colors hover:text-wire-ink">Contact</NuxtLink></li>
-            <li><NuxtLink to="/book-a-screening" class="transition-colors hover:text-wire-ink">Book a Screening</NuxtLink></li>
+            <li v-for="item in footerNavItems" :key="item.to">
+              <NuxtLink :to="item.to" class="transition-colors hover:text-wire-ink">{{ item.label }}</NuxtLink>
+            </li>
           </ul>
         </div>
 
@@ -47,6 +41,11 @@ import { navItems } from '~/data/site'
             <li><NuxtLink to="/legals" class="transition-colors hover:text-wire-ink">Privacy Policy</NuxtLink></li>
             <li><NuxtLink to="/legals" class="transition-colors hover:text-wire-ink">Terms of Use</NuxtLink></li>
             <li><NuxtLink to="/legals" class="transition-colors hover:text-wire-ink">Credits</NuxtLink></li>
+            <li>
+              <NuxtLink to="/technical-requirements" class="transition-colors hover:text-wire-ink">
+                Technical Requirements
+              </NuxtLink>
+            </li>
           </ul>
         </div>
       </div>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { navItems } from '~/data/site'
+import { navItems, siteConfig } from '~/data/site'
 
 const route = useRoute()
 const menuOpen = ref(false)
-const shareOpen = ref(false)
 const { count } = useCart()
 
 function closeMenu() {
@@ -15,23 +14,25 @@ watch(() => route.path, closeMenu)
 
 <template>
   <header class="sticky top-0 z-50 border-b-2 border-wire-border bg-white">
-    <div class="nav-wrap flex h-20 items-center gap-6">
-      <button
-        type="button"
-        class="p-2 text-wire-muted transition-colors hover:text-wire-ink lg:hidden"
-        aria-label="Open menu"
-        @click="menuOpen = true"
-      >
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
-      </button>
+    <div class="nav-wrap relative flex h-20 items-center">
+      <div class="flex items-center gap-4">
+        <button
+          type="button"
+          class="p-2 text-wire-muted transition-colors hover:text-wire-ink lg:hidden"
+          aria-label="Open menu"
+          @click="menuOpen = true"
+        >
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
 
-      <NuxtLink to="/" class="shrink-0 text-base font-semibold tracking-[0.12em] uppercase text-wire-ink md:text-lg">
-        Crows Are White
-      </NuxtLink>
+        <NuxtLink to="/" class="shrink-0 text-base font-semibold tracking-[0.12em] uppercase text-wire-ink md:text-lg">
+          Crows Are White
+        </NuxtLink>
+      </div>
 
-      <nav class="ml-4 hidden flex-1 items-center gap-2 lg:flex" aria-label="Main">
+      <nav class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 lg:flex" aria-label="Main">
         <NuxtLink
           v-for="item in navItems"
           :key="item.to"
@@ -44,17 +45,6 @@ watch(() => route.path, closeMenu)
       </nav>
 
       <div class="ml-auto flex items-center gap-2 sm:gap-3">
-        <button
-          type="button"
-          class="p-2.5 text-wire-muted transition-colors hover:text-wire-ink"
-          aria-label="Share"
-          @click="shareOpen = true"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-        </button>
-
         <a href="#" class="p-2.5 text-wire-muted transition-colors hover:text-wire-ink" aria-label="Instagram">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="4" y="4" width="16" height="16" rx="4" stroke-width="2" />
@@ -67,12 +57,17 @@ watch(() => route.path, closeMenu)
           class="relative p-2.5 text-wire-muted transition-colors hover:text-wire-ink"
           aria-label="Cart"
         >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l3-8H6.4M7 13L5.4 5M7 13l-2 9m10-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" />
+          <svg class="h-[22px] w-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"
+            />
           </svg>
           <span
             v-if="count > 0"
-            class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center bg-wire-ink px-1 text-[10px] font-bold text-white"
+            class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-wire-ink px-1 text-[10px] font-semibold leading-none text-white"
           >
             {{ count }}
           </span>
@@ -80,7 +75,9 @@ watch(() => route.path, closeMenu)
 
         <div class="hidden items-center gap-3 sm:flex">
           <WatchNowDropdown align="right" />
-          <NuxtLink to="/tickets" class="btn-secondary">Get Tickets</NuxtLink>
+          <NuxtLink v-if="siteConfig.theatricalReleaseActive" to="/tickets" class="btn-secondary">
+            Get Tickets
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -99,6 +96,7 @@ watch(() => route.path, closeMenu)
                 :to="item.to"
                 class="block px-4 py-3.5 text-base font-medium text-wire-muted transition-colors hover:bg-stone-50 hover:text-wire-ink"
                 active-class="!text-wire-ink bg-stone-50"
+                @click="closeMenu"
               >
                 {{ item.label }}
               </NuxtLink>
@@ -106,29 +104,16 @@ watch(() => route.path, closeMenu)
           </ul>
           <div class="mt-auto space-y-3 border-t-2 border-wire-border pt-8">
             <WatchNowDropdown full-width />
-            <NuxtLink to="/tickets" class="btn-secondary w-full justify-center" @click="closeMenu">
+            <NuxtLink
+              v-if="siteConfig.theatricalReleaseActive"
+              to="/tickets"
+              class="btn-secondary w-full justify-center"
+              @click="closeMenu"
+            >
               Get Tickets
             </NuxtLink>
           </div>
         </nav>
-      </div>
-    </Teleport>
-
-    <Teleport to="body">
-      <div v-if="shareOpen" class="modal-overlay" @click.self="shareOpen = false">
-        <div class="modal-panel max-w-md">
-          <div class="mb-6 flex items-start justify-between gap-4">
-            <h2 class="text-2xl font-semibold">Share</h2>
-            <button type="button" class="text-2xl text-wire-muted" @click="shareOpen = false">&times;</button>
-          </div>
-          <p class="mb-6 text-wire-muted">Reference: hundredsofbeavers.com share pattern</p>
-          <div class="flex flex-wrap gap-3">
-            <button type="button" class="btn-secondary text-xs">Copy Link</button>
-            <button type="button" class="btn-secondary text-xs">Share on X</button>
-            <button type="button" class="btn-secondary text-xs">Facebook</button>
-            <button type="button" class="btn-secondary text-xs">Email</button>
-          </div>
-        </div>
       </div>
     </Teleport>
   </header>
