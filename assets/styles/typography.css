@@ -1,0 +1,316 @@
+@font-face {
+  font-family: 'Basis Grotesque';
+  src: url('/fonts/basis-grotesque-medium-pro.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sirca Display';
+  src:
+    url('/fonts/SircaDisplayTrial-Regular.woff2') format('woff2'),
+    url('/fonts/SircaDisplayTrial-Regular.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sirca Display';
+  src:
+    url('/fonts/SircaDisplayTrial-Medium.woff2') format('woff2'),
+    url('/fonts/SircaDisplayTrial-Medium.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aktiv Grotesk';
+  src: url('/fonts/aktiv-grotesk-black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Biro Script';
+  src: url('/fonts/biro-script-plus-sloppy-us.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --sans: 'Basis Grotesque', system-ui, sans-serif;
+  --serif: 'Sirca Display', ui-serif, Georgia, serif;
+  --quote: 'Aktiv Grotesk', system-ui, sans-serif;
+  --handwritten: 'Biro Script', 'Segoe Print', 'Comic Sans MS', cursive;
+
+  --goudy: 'Goudy Bookletter 1911', serif;
+
+  --unit-font: 12px;
+  --h1: calc(var(--unit-font) * 3.25);
+  --h2: clamp(28px, calc(var(--unit-font) * 2.5), 60px);
+  --h3: clamp(20px, calc(var(--unit-font) * 2.2), 60px);
+  --h4: calc(var(--body) * 1.3);
+  --h5: calc(var(--body) * 1.2);
+  --h6: calc(var(--body) * 1.1);
+  --h7: clamp(16px, calc(var(--unit-font) * 1.05), 19px);
+  --h8: clamp(12px, calc(var(--unit-font) * .875), 14px);
+  --caption: clamp(12px, 1vw, 16px);
+  --caption-gap: 18px;
+  --header: clamp(14px, 1vw, 15.5px);
+  --body: clamp(14px, calc(var(--unit-font) * .8), 18px);
+  --rich-text: clamp(17px, calc(var(--unit-font) * 1.5), 23px);
+
+  --underline-link-line-height: 1.1;
+}
+
+@media (min-width: 700px) {
+  :root {
+    --unit-font: 20px;
+  }
+}
+
+@media (min-width: 1000px) {
+  :root {
+    --unit-font: clamp(11px, 1.1vw, 20px);
+    --body: clamp(14px, calc(var(--unit-font) * 1), 23px);
+  }
+}
+
+@media (min-width: 2060px) {
+  :root {
+    --unit-font: 20.6px;
+  }
+}
+
+html {
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.000em; }
+.jumbo { font-size: clamp(42px, 10vw, calc(var(--unit-font) * 7.1)); line-height: 1.1; letter-spacing: -0.000em; }
+.h1 { font-size: var(--h1); line-height: 1.25; letter-spacing: -0.000em; }
+.h2 { font-size: var(--h2); line-height: 1.25; letter-spacing: -0.000em; }
+.h3 { font-size: var(--h3); line-height: 1.25; letter-spacing: -0.000em; }
+.h4 { font-size: var(--h4); line-height: 1.3; letter-spacing: -0.000em; }
+.h5 { font-size: var(--h5); line-height: 1.3; letter-spacing: -0.000em; }
+.h6 { font-size: var(--h6); line-height: 1.0; letter-spacing: -0.000em; }
+.h7 { font-size: var(--h7); line-height: 1.0; letter-spacing: -0.000em; }
+.h8 { font-size: var(--h8); line-height: 1.0; letter-spacing: -0.000em; }
+.body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.0175em; }
+.rich-text { font-size: var(--rich-text); line-height: 1.75; letter-spacing: 0.015em; font-family: var(--goudy); }
+
+.goudy {
+  font-family: var(--goudy);
+}
+
+em, i {
+  font-style: italic;
+}
+
+header {
+  font-size: var(--header);
+}
+
+.subdued { opacity: 0.5; }
+
+.subdued-link a {
+  opacity: 0.5;
+  transition: opacity var(--animation-default, 0.2s ease);
+}
+
+.subdued-link a:hover { opacity: 1; }
+
+@media (max-width: 999px) {
+  .show-desktop { display: none !important; }
+  body { line-height: 2; }
+}
+
+@media (min-width: 1000px) {
+  .hide-desktop { display: none !important; }
+}
+
+@media (max-width: 1399px) {
+  .show-nav-desktop { display: none !important; }
+}
+
+@media (min-width: 1400px) {
+  .hide-nav-desktop { display: none !important; }
+}
+
+.serif,
+.headline {
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+.quote {
+  font-family: var(--quote);
+  font-weight: 900;
+}
+
+.handwritten {
+  font-family: var(--handwritten);
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.caption {
+  font-size: var(--caption);
+  line-height: 1.4;
+  letter-spacing: -0.000em;
+  margin-top: var(--caption-gap);
+  font-family: var(--sans);
+}
+
+.text-center { text-align: center; }
+
+@media (min-width: 1000px) {
+  .text-left-md { text-align: left; }
+}
+
+.max-text-block-width { max-width: var(--max-text-block-width); }
+.max-central-content { max-width: var(--max-central-content); margin: 0 auto; }
+
+.rich-text {
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.rich-text a,
+.underline-links a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.rich-text :is(p, h1, h2, h3, h4, h5, h6, blockquote, li),
+.sanity-inline {
+  white-space: pre-line;
+}
+
+.rich-text br,
+.sanity-inline br {
+  display: block;
+  margin: 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+.rich-text h1:not(:first-child),
+.rich-text h2:not(:first-child),
+.rich-text h3:not(:first-child),
+.rich-text h4:not(:first-child),
+.rich-text h5:not(:first-child),
+.rich-text h6:not(:first-child) {
+  margin-top: calc(40px + 0.7em);
+}
+
+.rich-text hr + h1:not(:first-child),
+.rich-text hr + h2:not(:first-child),
+.rich-text hr + h3:not(:first-child),
+.rich-text hr + h4:not(:first-child),
+.rich-text hr + h5:not(:first-child),
+.rich-text hr + h6:not(:first-child) {
+  margin-top: 0;
+}
+
+.rich-text h1,
+.rich-text h2,
+.rich-text h3,
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  margin-bottom: calc(20px + 0.4em);
+}
+
+.rich-text h1 strong,
+.rich-text h2 strong,
+.rich-text h3 strong,
+.rich-text h4 strong,
+.rich-text h5 strong,
+.rich-text h6 strong {
+  font-weight: 500;
+}
+
+.rich-text h1,
+.rich-text h2,
+.rich-text h3 {
+  font-family: var(--serif);
+}
+
+.underline-links a {
+  position: relative;
+  display: inline;
+  text-decoration: none;
+  color: inherit;
+}
+
+.underline-links a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.2em;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.underline-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.2em;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.underline-links a:hover::after,
+.underline-links a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.rich-text ul,
+.rich-text ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  padding-left: 1.5em;
+}
+
+.rich-text ul {
+  list-style: square;
+}
+
+.rich-text ol {
+  list-style: decimal;
+}
+
+.rich-text li {
+  padding-left: 0.15em;
+}
+
+.max-width-medium {
+  max-width: 800px;
+}

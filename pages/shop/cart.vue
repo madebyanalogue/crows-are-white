@@ -1,17 +1,28 @@
 <script setup lang="ts">
-const { items, subtotal, updateQty, removeFromCart } = useCart()
+const {items, subtotal, currencyCode, updateQty, removeFromCart, checkout, checkoutLoading, loading} =
+  useCart()
+
+function formatPrice(amount: string, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', {style: 'currency', currency}).format(Number(amount))
+}
+
+function lineTotal(price: string, qty: number) {
+  return formatPrice((Number(price) * qty).toFixed(2), currencyCode.value)
+}
 </script>
 
 <template>
   <div class="page-section">
     <PageHeader
       title="Cart"
-      subtitle="Shopify checkout wireframe — cart icon in nav shows item count."
+      subtitle="Review your order, then continue to Shopify checkout."
     />
 
-    <div v-if="items.length === 0" class="surface-card py-24 text-center">
+    <div v-if="loading && items.length === 0" class="text-wire-muted">Loading cart…</div>
+
+    <div v-else-if="items.length === 0" class="surface-card py-24 text-center">
       <p class="mb-3 text-2xl font-semibold text-wire-ink">Your cart is empty</p>
-      <p class="mb-8 text-wire-muted">Add merchandise from the shop to preview checkout.</p>
+      <p class="mb-8 text-wire-muted">Add merchandise from the shop to continue.</p>
       <NuxtLink to="/shop" class="btn-secondary">Continue Shopping</NuxtLink>
     </div>
 
@@ -22,14 +33,20 @@ const { items, subtotal, updateQty, removeFromCart } = useCart()
           :key="item.id"
           class="surface-card flex gap-6"
         >
-          <WireBox :label="item.name" class="w-24 h-24 shrink-0 rounded" min-height="96px" />
-          <div class="flex-1 min-w-0">
-            <h2 class="font-medium">{{ item.name }}</h2>
-            <p class="text-sm text-wire-muted mt-1">${{ item.price }}</p>
+          <img
+            v-if="item.imageUrl"
+            :src="item.imageUrl"
+            :alt="item.title"
+            class="h-24 w-24 shrink-0 rounded object-cover"
+          />
+          <WireBox v-else :label="item.title" class="h-24 w-24 shrink-0 rounded" min-height="96px" />
+          <div class="min-w-0 flex-1">
+            <h2 class="font-medium">{{ item.title }}</h2>
+            <p class="mt-1 text-sm text-wire-muted">{{ formatPrice(item.price, item.currencyCode) }}</p>
             <div class="mt-3 flex items-center gap-3">
               <label class="text-xs text-wire-muted">Qty</label>
               <select
-                :value="item.qty"
+                :value="item.quantity"
                 class="input-wire w-20 py-1"
                 @change="updateQty(item.id, Number(($event.target as HTMLSelectElement).value))"
               >
@@ -44,26 +61,33 @@ const { items, subtotal, updateQty, removeFromCart } = useCart()
               </button>
             </div>
           </div>
-          <p class="font-medium shrink-0">${{ item.price * item.qty }}</p>
+          <p class="shrink-0 font-medium">{{ lineTotal(item.price, item.quantity) }}</p>
         </article>
       </div>
 
       <aside class="surface-card h-fit">
         <h2 class="label-caps mb-4">Order summary</h2>
-        <div class="flex justify-between text-sm mb-2">
+        <div class="mb-2 flex justify-between text-sm">
           <span class="text-wire-muted">Subtotal</span>
-          <span>${{ subtotal }}</span>
+          <span>{{ formatPrice(subtotal, currencyCode) }}</span>
         </div>
-        <div class="flex justify-between text-sm mb-6">
+        <div class="mb-6 flex justify-between text-sm">
           <span class="text-wire-muted">Shipping</span>
           <span class="text-wire-muted">Calculated at checkout</span>
         </div>
-        <div class="flex justify-between font-semibold mb-6 pt-4 border-t border-wire-border">
+        <div class="mb-6 flex justify-between border-t border-wire-border pt-4 font-semibold">
           <span>Total</span>
-          <span>${{ subtotal }}</span>
+          <span>{{ formatPrice(subtotal, currencyCode) }}</span>
         </div>
-        <button type="button" class="btn-primary w-full mb-3">Checkout</button>
-        <NuxtLink to="/shop" class="btn-secondary w-full text-center block">
+        <button
+          type="button"
+          class="btn-primary mb-3 w-full"
+          :disabled="checkoutLoading"
+          @click="checkout"
+        >
+          {{ checkoutLoading ? 'Redirecting…' : 'Checkout' }}
+        </button>
+        <NuxtLink to="/shop" class="btn-secondary block w-full text-center">
           Continue Shopping
         </NuxtLink>
       </aside>

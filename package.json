@@ -2,19 +2,35 @@
   "name": "crows-are-white",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "NODE_OPTIONS='--max-old-space-size=8192' nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "deploy": "nuxt build && npx vercel deploy --prebuilt",
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/image": "^2.0.0",
+    "@nuxtjs/sanity": "^2.3.0",
+    "@nuxtjs/sitemap": "^8.2.1",
+    "@sanity/client": "^7.22.1",
+    "@sanity/image-url": "^2.0.2",
+    "@shopify/storefront-api-client": "^1.0.10",
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.23",
     "nuxt": "^3.16.2",
     "plyr": "^3.8.4",
+    "resend": "^6.12.4",
+    "smooothy": "^0.0.35",
+    "three": "^0.185.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^6.13.2"
+    "sass": "^1.101.0"
   }
 }

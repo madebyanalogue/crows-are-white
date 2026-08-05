@@ -39,7 +39,7 @@ import {
         <h2 class="text-xl font-semibold text-wire-ink md:pt-1">Suggested SEO title &amp; description</h2>
 
         <div class="space-y-8 text-sm text-stone-800">
-          <div class="space-y-4 border-b-2 border-wire-border pb-8">
+          <div class="space-y-4 border-b border-wire-border pb-8">
             <div>
               <p class="label-caps mb-2 text-wire-ink">Primary home page</p>
               <p class="font-semibold text-wire-ink">{{ suggestedSeo[0].title }}</p>
@@ -53,7 +53,7 @@ import {
             <p v-if="suggestedSeo[0].notes">{{ suggestedSeo[0].notes }}</p>
           </div>
 
-          <div class="space-y-4 border-b-2 border-wire-border pb-8">
+          <div class="space-y-4 border-b border-wire-border pb-8">
             <p class="label-caps text-wire-ink">Open Graph (social sharing)</p>
             <p class="font-semibold text-wire-ink">{{ suggestedOpenGraph.title }}</p>
             <p class="mt-2 leading-relaxed">{{ suggestedOpenGraph.description }}</p>

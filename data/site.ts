@@ -13,6 +13,10 @@ export const film = {
   imdb: 'https://www.imdb.com/title/tt10332620/',
   trailer: 'https://www.youtube.com/watch?v=Joux-zYHEuY',
   trailerId: 'Joux-zYHEuY',
+  /** Self-hosted trailer MP4 for custom player UI. Falls back to YouTube when empty. */
+  trailerSrc: '',
+  /** Optional poster override; defaults to YouTube maxres thumbnail */
+  trailerPoster: '',
   /** Replace with dedicated 10–40 sec hero loop when available */
   heroVideoId: 'Joux-zYHEuY',
   /** Self-hosted hero loop — no YouTube UI. e.g. '/videos/hero-loop.mp4' */
@@ -66,10 +70,132 @@ export const faqItems = [
 ]
 
 export const navItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Watch', to: '/watch' },
+  { label: 'Screenings', to: '/screenings' },
   { label: 'Trailer', to: '/#trailer' },
-  { label: 'Press', to: '/press' },
+  { label: 'Videos', to: '/videos' },
   { label: 'Shop', to: '/shop' },
+]
+
+export const secondaryNavItems = [
+  { label: 'Press', to: '/press' },
   { label: 'Host a Screening', to: '/host-a-screening' },
+  { label: 'Shipping & Delivery', to: '/shipping-delivery' },
+  { label: 'Terms & Conditions', to: '/terms-of-use' },
+]
+
+export type MenuLink = {
+  type?: 'page' | 'url'
+  page?: {slug?: string}
+  url?: string
+}
+
+export type MenuItem = {
+  _key?: string
+  itemType?: 'link' | 'divider' | 'spacer'
+  text?: string
+  link?: MenuLink
+}
+
+export type Menu = {
+  title?: string
+  items?: MenuItem[]
+}
+
+export type FooterMenuGroup = {
+  _key?: string
+  title: string
+  menu?: Menu
+}
+
+export type SocialLink = {
+  platform: 'instagram' | 'youtube' | 'twitter' | 'tiktok'
+  label: string
+  url: string
+}
+
+export type LegalLink = {
+  label: string
+  to: string
+}
+
+export const defaultMainMenu: Menu = {
+  title: 'Primary menu',
+  items: navItems.map((item, index) => ({
+    _key: `nav-${index}`,
+    itemType: 'link',
+    text: item.label,
+    link: {type: 'url', url: item.to},
+  })),
+}
+
+export const defaultFooterMenus: FooterMenuGroup[] = [
+  {
+    title: 'Documentary',
+    menu: {
+      items: [
+        {itemType: 'link', text: 'Screenings', link: {type: 'url', url: '/screenings'}},
+        {itemType: 'link', text: 'Trailer', link: {type: 'url', url: '/#trailer'}},
+        {itemType: 'link', text: 'Press', link: {type: 'url', url: '/press'}},
+        {itemType: 'link', text: 'Videos', link: {type: 'url', url: '/videos'}},
+      ],
+    },
+  },
+  {
+    title: 'Shop',
+    menu: {
+      items: [
+        {itemType: 'link', text: 'All', link: {type: 'url', url: '/shop'}},
+        {itemType: 'link', text: 'Apparel', link: {type: 'url', url: '/shop/collections/apparel'}},
+        {itemType: 'link', text: 'Prints', link: {type: 'url', url: '/shop/collections/posters'}},
+        {itemType: 'link', text: 'Shipping & Delivery', link: {type: 'url', url: '/shipping-delivery'}},
+      ],
+    },
+  },
+  {
+    title: 'Connect',
+    menu: {
+      items: [
+        {itemType: 'link', text: 'Host a Screening', link: {type: 'url', url: '/host-a-screening'}},
+        {itemType: 'link', text: 'FAQ', link: {type: 'url', url: '/faq'}},
+        {itemType: 'link', text: 'Contact', link: {type: 'url', url: '/contact'}},
+      ],
+    },
+  },
+]
+
+export const defaultPrivacyMenu: Menu = {
+  title: 'Privacy',
+  items: [
+    {itemType: 'link', text: 'Privacy Policy', link: {type: 'url', url: '/privacy-policy'}},
+    {itemType: 'link', text: 'Terms of Use', link: {type: 'url', url: '/terms-of-use'}},
+    {itemType: 'link', text: 'Credits', link: {type: 'url', url: '/credits'}},
+  ],
+}
+
+/** Secondary header links under the primary nav */
+export const defaultMainMenuSub: Menu = {
+  title: 'Secondary menu',
+  items: secondaryNavItems.map((item, index) => ({
+    _key: `sub-${index}`,
+    itemType: 'link',
+    text: item.label,
+    link: {type: 'url', url: item.to},
+  })),
+}
+
+export const defaultSocialLinks: SocialLink[] = [
+  {platform: 'instagram', label: 'Instagram', url: 'https://instagram.com/desire.monk'},
+  {platform: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/@crowsarewhite'},
+  {platform: 'twitter', label: 'Twitter', url: 'https://twitter.com/crowsarewhite'},
+  {platform: 'tiktok', label: 'TikTok', url: 'https://www.tiktok.com/@crowsarewhite'},
+]
+
+export const defaultFooterLegal: LegalLink[] = [
+  {label: 'Privacy Policy', to: '/privacy-policy'},
+  {label: 'Terms of Use', to: '/terms-of-use'},
+  {label: 'Credits', to: '/credits'},
 ]
 
 export const footerNavItems = [

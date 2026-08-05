@@ -1,0 +1,32 @@
+.line-reveal:not(.line-reveal--ready) {
+  visibility: hidden;
+}
+
+.line-reveal.line-reveal--ready {
+  visibility: visible;
+}
+
+.line-reveal .split-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+
+.line-reveal .split-line__inner {
+  display: block;
+  white-space: normal;
+  will-change: transform, opacity;
+}
+
+.line-reveal .split-word {
+  display: inline;
+}
+
+.line-reveal .split-word--em {
+  font-family: var(--serif);
+  font-style: italic;
+}
+
+.line-reveal .split-word--strong {
+  font-weight: bold;
+}

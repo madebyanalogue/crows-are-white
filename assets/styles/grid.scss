@@ -1,0 +1,40 @@
+$grid-sm-cols: 6;
+$grid-md-cols: 12;
+$breakpoint-sm: 700px;
+$breakpoint-md: 1000px;
+
+@mixin span($start, $end) {
+  grid-column: $start / ($end + 1);
+}
+
+@mixin span-sm($start, $end) {
+  @media (min-width: $breakpoint-sm) {
+    @include span($start, $end);
+  }
+}
+
+@mixin span-md($start, $end) {
+  @media (min-width: $breakpoint-md) {
+    @include span($start, $end);
+  }
+}
+
+@media (min-width: $breakpoint-sm) {
+  @for $start from 1 through $grid-sm-cols {
+    @for $end from ($start + 1) through $grid-sm-cols {
+      .span-sm-#{$start}-#{$end} {
+        @include span($start, $end);
+      }
+    }
+  }
+}
+
+@media (min-width: $breakpoint-md) {
+  @for $start from 1 through $grid-md-cols {
+    @for $end from ($start + 1) through $grid-md-cols {
+      .span-md-#{$start}-#{$end} {
+        @include span($start, $end);
+      }
+    }
+  }
+}

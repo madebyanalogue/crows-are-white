@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { film, pressPhotos, pressQuotes } from '~/data/site'
+const pageTitle = useState('pageTitle', () => '')
+pageTitle.value = 'Press'
+useHead({ title: 'Press — Crows Are White' })
+usePageColor(ref(null))
+
+const {film, pressPhotos, pressQuotes, pressKit} = useSiteContent()
 </script>
 
 <template>

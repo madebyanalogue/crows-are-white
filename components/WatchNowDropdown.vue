@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import { streamingLinks } from '~/data/site'
+const { watchNowDropdown } = useSiteSettings()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
-
-const props = withDefaults(
-  defineProps<{
-    align?: 'left' | 'right'
-    fullWidth?: boolean
-  }>(),
-  { align: 'left', fullWidth: false },
-)
 
 function close() {
   open.value = false
 }
 
-function toggle() {
+function toggle(e: Event) {
+  e.stopPropagation()
   open.value = !open.value
 }
 
@@ -27,12 +20,11 @@ function onClickOutside(e: MouseEvent) {
 }
 
 watch(open, (isOpen) => {
-  if (import.meta.client) {
-    if (isOpen) {
-      document.addEventListener('click', onClickOutside)
-    } else {
-      document.removeEventListener('click', onClickOutside)
-    }
+  if (!import.meta.client) return
+  if (isOpen) {
+    document.addEventListener('click', onClickOutside)
+  } else {
+    document.removeEventListener('click', onClickOutside)
   }
 })
 
@@ -45,42 +37,69 @@ onUnmounted(() => {
 function isExternal(href: string) {
   return href.startsWith('http')
 }
+
+const buttonLabel = computed(() => watchNowDropdown.value?.buttonLabel || 'Watch Now')
+const platformsLabel = computed(() => watchNowDropdown.value?.platformsLabel || 'Also available on')
+const featuredLink = computed(() => {
+  const link = watchNowDropdown.value?.featuredLink
+  if (!link?.label || !link?.href) return null
+  return link
+})
+const platforms = computed(() => watchNowDropdown.value?.platforms || [])
+const hasMenuContent = computed(() => Boolean(featuredLink.value) || platforms.value.length > 0)
 </script>
 
 <template>
-  <div ref="root" class="relative">
+  <div
+    v-if="hasMenuContent"
+    ref="root"
+    class="watch-menu"
+    :class="{'watch-menu--open': open}"
+  >
     <button
       type="button"
-      class="btn-primary gap-2"
-      :class="props.fullWidth ? 'w-full justify-center' : ''"
+      class="watch-menu__btn"
       aria-haspopup="true"
       :aria-expanded="open"
-      @click.stop="toggle"
+      @click="toggle"
     >
-      Watch Now
-      <svg
-        class="h-4 w-4 transition-transform"
-        :class="open ? 'rotate-180' : ''"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      {{ buttonLabel }}
+      <svg width="8" height="5" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
 
-    <div
-      v-if="open"
-      class="absolute top-full z-20 mt-2 w-72 border-2 border-wire-border bg-white py-2 shadow-lg"
-      :class="align === 'right' ? 'right-0' : 'left-0'"
-      role="menu"
-    >
-      <template v-for="link in streamingLinks" :key="link.label">
+    <div class="watch-menu__panel" role="menu">
+      <NuxtLink
+        v-if="featuredLink && !isExternal(featuredLink.href)"
+        :to="featuredLink.href"
+        class="watch-menu__featured"
+        role="menuitem"
+        @click="close"
+      >
+        {{ featuredLink.label }}
+      </NuxtLink>
+      <a
+        v-else-if="featuredLink"
+        :href="featuredLink.href"
+        class="watch-menu__featured"
+        target="_blank"
+        rel="noopener"
+        role="menuitem"
+        @click="close"
+      >
+        {{ featuredLink.label }}
+      </a>
+
+      <div v-if="platforms.length" class="watch-menu__section">
+        <span class="watch-menu__section-label">{{ platformsLabel }}</span>
+      </div>
+
+      <template v-for="link in platforms" :key="link.label">
         <NuxtLink
           v-if="!isExternal(link.href)"
           :to="link.href"
-          class="watch-now-item"
-          :class="link.featured ? 'watch-now-item--featured' : ''"
+          class="watch-menu__link"
           role="menuitem"
           @click="close"
         >
@@ -89,9 +108,9 @@ function isExternal(href: string) {
         <a
           v-else
           :href="link.href"
+          class="watch-menu__link"
           target="_blank"
           rel="noopener"
-          class="watch-now-item"
           role="menuitem"
           @click="close"
         >
@@ -101,13 +120,3 @@ function isExternal(href: string) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.watch-now-item {
-  @apply block px-5 py-3 text-sm font-medium text-wire-muted transition-colors hover:bg-stone-50 hover:text-wire-ink;
-}
-
-.watch-now-item--featured {
-  @apply border-b-2 border-wire-border font-semibold text-wire-ink;
-}
-</style>
