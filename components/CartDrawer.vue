@@ -151,8 +151,13 @@ onUnmounted(() => {
                 >
                   <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
                 </select>
-                <button type="button" class="cart-panel__remove" @click="removeFromCart(item.id)">
-                  Remove
+                <button
+                  type="button"
+                  class="cart-panel__remove"
+                  aria-label="Remove item"
+                  @click="removeFromCart(item.id)"
+                >
+                  <TrashIcon />
                 </button>
               </div>
               <p class="cart-panel__line-total">{{ lineTotal(item.price, item.quantity) }}</p>
@@ -292,12 +297,21 @@ onUnmounted(() => {
 }
 
 .cart-panel__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
   border: none;
   background: none;
-  font-size: 12px;
   color: rgba(17, 16, 16, 0.5);
-  text-decoration: underline;
   cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.cart-panel__remove:hover {
+  color: #111010;
 }
 
 .cart-panel__line-total {

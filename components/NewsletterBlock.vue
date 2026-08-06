@@ -16,7 +16,7 @@ const submitted = ref(false)
 const email = ref('')
 
 const hasMedia = computed(() =>
-  Boolean(props.background?.imageUrl || props.background?.videoUrl),
+  Boolean(props.background?.imageUrl || props.background?.videoUrl || props.background?.loop),
 )
 
 function onSubmit() {
@@ -35,7 +35,28 @@ function onSubmit() {
     aria-label="Newsletter"
   >
     <video
-      v-if="background?.videoUrl"
+      v-if="background?.loop"
+      class="newsletter-block__media"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source
+        v-if="background.loop.url1080 && background.loop.url1080 !== background.loop.url720"
+        media="(min-width: 1000px)"
+        :src="background.loop.url1080"
+        type="video/mp4"
+      >
+      <source
+        :src="background.loop.url720 || background.loop.url"
+        type="video/mp4"
+      >
+    </video>
+    <video
+      v-else-if="background?.videoUrl"
       class="newsletter-block__media"
       :src="background.videoUrl"
       autoplay

@@ -1,5 +1,5 @@
 import { getSanityClient } from '~/utils/sanity'
-import { getRouterPageSlug, sanityFetchOptions } from '~/server/utils/sanityQuery'
+import { getRouterPageSlug, pageDocumentFilter, sanityFetchOptions } from '~/server/utils/sanityQuery'
 import { colorField } from '~/server/utils/sanityColor'
 
 export default defineEventHandler(async (event) => {
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   try {
     const client = getSanityClient(useRuntimeConfig())
     const colors = await client.fetch(
-      `*[_type == "page" && slug.current == $slug][0] {
+      `*[${pageDocumentFilter(slug)}][0] {
         ${colorField('pageColor')},
         ${colorField('pageTextColor')},
         ${colorField('menuBackgroundColor')},

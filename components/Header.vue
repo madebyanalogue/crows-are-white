@@ -18,6 +18,7 @@
       >
         <div class="site-header__leading">
           <button
+            ref="menuToggleRef"
             type="button"
             class="site-header__toggle"
             :aria-expanded="menuOpen"
@@ -89,7 +90,8 @@
         id="site-header-menu"
         class="site-header__nav"
         aria-label="Main"
-        :aria-hidden="!menuOpen"
+        :inert="menuOpen ? undefined : true"
+        :aria-hidden="menuOpen ? undefined : 'true'"
       >
         <div
           ref="navInnerRef"
@@ -152,6 +154,7 @@ const pageTitle = useState('pageTitle', () => '')
 const { getMenuItemUrl } = useMenuLinks()
 const navInnerRef = ref(null)
 const pageNameWrapRef = ref(null)
+const menuToggleRef = ref(null)
 const displayedPageName = ref('')
 let menuItemsTween = null
 let menuItemsDelay = null
@@ -257,7 +260,17 @@ function onBarClick() {
 }
 
 function closeMenu() {
+  if (!menuOpen.value) return
   menuOpen.value = false
+
+  if (!import.meta.client) return
+
+  nextTick(() => {
+    const active = document.activeElement
+    if (active && navInnerRef.value?.contains(active)) {
+      menuToggleRef.value?.focus()
+    }
+  })
 }
 
 function onMenuNavigate() {

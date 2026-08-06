@@ -30,8 +30,9 @@
             :ref="(el) => setItemRef(el, index)"
             :video="video"
             :index="index"
-            :interactable="!isDragging && currentIndex === index"
+            :interactable="!isDragging && focusedIndex === index"
             @playing="onPlaying"
+            @closed="onClosed"
             @runtime="onRuntime"
           />
         </div>
@@ -80,7 +81,11 @@ const VIDEOS_PAGE_COLORS = {
   menuHighlightColor: 'arancio',
 }
 
-const PARALLAX_STRENGTH = 10
+// Thumbnail media is taller than the frame so it can drift without exposing edges.
+// Max yPercent must equal half the extra height, expressed as a % of the media element.
+const THUMB_EXTRA_HEIGHT_PERCENT = 10
+const THUMB_HEIGHT_PERCENT = 100 + THUMB_EXTRA_HEIGHT_PERCENT
+const PARALLAX_STRENGTH = ((THUMB_EXTRA_HEIGHT_PERCENT / 2) / THUMB_HEIGHT_PERCENT) * 100
 
 const pageTitle = useState('pageTitle', () => '')
 pageTitle.value = 'Videos'
@@ -104,6 +109,7 @@ watch(
 const sliderElement = ref(null)
 const reelRef = ref(null)
 const currentIndex = ref(0)
+const focusedIndex = ref(0)
 const isDragging = ref(false)
 const sliderSettled = ref(false)
 const itemRefs = []
@@ -221,8 +227,11 @@ const { slider, destroy: destroySlider } = useSmooothy(sliderElement, () => ({
     if (slider.value) slider.value.paused = false
   },
   onUpdate: (instance) => {
-    isDragging.value = Boolean(instance.isDragging)
+    const dragging = Boolean(instance.isDragging)
+    isDragging.value = dragging
     applyParallax(instance)
+    focusedIndex.value = getCenteredSlideIndex(instance)
+    if (!dragging) syncCurrentToCenter(instance)
   },
   onResize: (instance) => {
     if (instance.isDragging || snapLock) return
@@ -235,6 +244,48 @@ const { slider, destroy: destroySlider } = useSmooothy(sliderElement, () => ({
 
 let snapLock = false
 
+function getCenteredSlideIndex(instance = slider.value) {
+  if (!instance?.items?.length) return 0
+
+  const viewportCenterY = window.innerHeight / 2
+  let bestIndex = 0
+  let bestDistance = Infinity
+
+  instance.items.forEach((slideEl, i) => {
+    const slideRect = slideEl.getBoundingClientRect()
+    const slideCenterY = slideRect.top + slideRect.height / 2
+    const distance = Math.abs(slideCenterY - viewportCenterY)
+    if (distance < bestDistance) {
+      bestDistance = distance
+      bestIndex = i
+    }
+  })
+
+  return bestIndex
+}
+
+function syncCurrentToCenter(instance = slider.value, { animateReel = false } = {}) {
+  if (!instance?.items?.length) return
+
+  const centered = getCenteredSlideIndex(instance)
+  focusedIndex.value = centered
+  if (centered === currentIndex.value) return
+
+  const prev = currentIndex.value
+  const total = videos.value.length
+  let direction = 1
+  if (total > 1) {
+    if (centered === prev) direction = 1
+    else if (prev === total - 1 && centered === 0) direction = 1
+    else if (prev === 0 && centered === total - 1) direction = -1
+    else direction = centered > prev ? 1 : -1
+  }
+
+  currentIndex.value = centered
+  setReelToIndex(centered, { animate: animateReel, direction })
+  stopAllExcept(centered)
+}
+
 function syncSliderPosition(index = 0, instance = slider.value) {
   if (!instance?.items?.length) return
 
@@ -242,6 +293,7 @@ function syncSliderPosition(index = 0, instance = slider.value) {
   instance.current = instance.target
   instance.update?.()
   applyParallax(instance)
+  syncCurrentToCenter(instance)
 }
 
 function snapSliderInstant(index = 0, instance = slider.value) {
@@ -252,6 +304,7 @@ function snapSliderInstant(index = 0, instance = slider.value) {
   syncSliderPosition(index, instance)
   sliderSettled.value = true
   snapLock = false
+  nextTick(() => syncCurrentToCenter(instance))
 }
 
 function setItemRef(el, index) {
@@ -271,6 +324,10 @@ function stopAllExcept(keepIndex = -1) {
 function onPlaying(index) {
   stopAllExcept(index)
   if (slider.value) slider.value.paused = true
+}
+
+function onClosed() {
+  if (slider.value) slider.value.paused = false
 }
 
 function onRuntime({ index, runtimeSeconds }) {
@@ -468,7 +525,7 @@ onBeforeUnmount(() => {
   gap: clamp(0px, .75vw, 50px);
   transform: translateY(-50%);
   font-family: var(--handwritten);
-  font-size: clamp(20px, 1.75vw, 120px);
+  font-size: clamp(20px, 1.65vw, 40px);
   font-style: normal;
   font-weight: 400;
   letter-spacing: normal;
@@ -476,6 +533,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
   color: var(--obsidian, #111);
   width: calc(calc(100% - var(--video-frame-width)) / 2);
+  opacity: 0.75;
   justify-content: center;
 }
 

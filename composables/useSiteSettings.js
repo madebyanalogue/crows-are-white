@@ -86,6 +86,12 @@ export function useSiteSettings() {
     return base
   })
   const theatricalReleaseActive = computed(() => settings.value?.theatricalReleaseActive !== false)
+  const assemble = computed(() => ({
+    enabled: settings.value?.assemble?.enabled === true,
+    filmId: settings.value?.assemble?.filmId?.trim() || '',
+    mxId: settings.value?.assemble?.mxId?.trim() || '',
+    countries: settings.value?.assemble?.countries || [],
+  }))
   const watchNowDropdown = computed(() => settings.value?.watchNowDropdown || null)
   const socialLinks = computed(() => settings.value?.socialLinks || [])
   const mailchimpAction = computed(() => settings.value?.mailchimpAction || '')
@@ -152,6 +158,7 @@ export function useSiteSettings() {
     whatsappMessage,
     whatsappUrl,
     theatricalReleaseActive,
+    assemble,
     watchNowDropdown,
     socialLinks,
     mailchimpAction,

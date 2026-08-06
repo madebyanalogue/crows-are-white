@@ -6,6 +6,62 @@ export function formatRuntime(seconds) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
+export function formatVideoTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+export function buildVimeoPlayerUrl(videoData, extraParams = {}) {
+  if (!videoData?.id) return null
+
+  const params = new URLSearchParams()
+  if (videoData.hash) params.set('h', videoData.hash)
+  Object.entries(extraParams).forEach(([key, value]) => {
+    params.set(key, String(value))
+  })
+
+  const query = params.toString()
+  return query
+    ? `https://player.vimeo.com/video/${videoData.id}?${query}`
+    : `https://player.vimeo.com/video/${videoData.id}`
+}
+
+export function resolveCinematicProvider(config = {}) {
+  if (config.provider) return config.provider
+  if (config.videoSrc) return 'native'
+  if (config.youtubeId) return 'youtube'
+  if (config.vimeoId || config.vimeoUrl) return 'vimeo'
+  return null
+}
+
+export function parseYoutubeId(input) {
+  if (!input || typeof input !== 'string') return null
+  const trimmed = input.trim()
+  if (/^[\w-]{11}$/.test(trimmed)) return trimmed
+
+  try {
+    const url = new URL(trimmed)
+    if (url.hostname.includes('youtu.be')) {
+      const id = url.pathname.split('/').filter(Boolean)[0]
+      return id || null
+    }
+    const fromQuery = url.searchParams.get('v')
+    if (fromQuery) return fromQuery
+    const parts = url.pathname.split('/').filter(Boolean)
+    const embedIndex = parts.indexOf('embed')
+    if (embedIndex >= 0 && parts[embedIndex + 1]) return parts[embedIndex + 1]
+    const shortsIndex = parts.indexOf('shorts')
+    if (shortsIndex >= 0 && parts[shortsIndex + 1]) return parts[shortsIndex + 1]
+  } catch {
+    const match = trimmed.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)
+    return match?.[1] || null
+  }
+
+  return null
+}
+
 export function parseVimeoData(input) {
   if (!input || typeof input !== 'string') return null
   const trimmed = input.trim()

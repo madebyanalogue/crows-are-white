@@ -108,6 +108,12 @@ export default defineEventHandler(async () => {
     },
     theatricalReleaseActive,
     mailchimpAction,
+    assemble {
+      enabled,
+      filmId,
+      mxId,
+      countries
+    },
     shopNewsletterBackground {
       mediaType,
       textColor,

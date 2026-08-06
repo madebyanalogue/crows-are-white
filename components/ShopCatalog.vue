@@ -8,7 +8,6 @@ import {
 } from '~/utils/shopCollections'
 
 const route = useRoute()
-const {shopNewsletterBackground} = useSiteSettings()
 const {data: productData, pending} = useShopifyProducts()
 const viewMode = ref<'feature' | 'grid'>('feature')
 
@@ -193,8 +192,6 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
         </div>
       </NuxtLink>
     </div>
-
-    <NewsletterBlock :background="shopNewsletterBackground" />
   </div>
 </template>
 

@@ -84,7 +84,7 @@ function onVideoPlaying() {
 
     <iframe
       v-else-if="loopSrc"
-      class="video-loop__iframe absolute left-1/2 top-1/2 border-0 transition-opacity duration-500"
+      class="video-loop__iframe absolute inset-0 h-full w-full border-0 transition-opacity duration-500"
       :class="videoReady ? 'opacity-100' : 'opacity-0'"
       :src="loopSrc"
       :title="title"
@@ -107,12 +107,8 @@ function onVideoPlaying() {
 }
 
 .video-loop__iframe {
-  width: auto;
-  height: auto;
-  min-width: 100%;
-  min-height: 100%;
-  aspect-ratio: 16 / 9;
-  transform: translate(-50%, -50%) scale(1.08);
+  width: 100%;
+  height: 100%;
 }
 
 /* Hide YouTube logo / watch-on-youtube chrome in corners */

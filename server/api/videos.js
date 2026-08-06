@@ -1,4 +1,6 @@
+import { cloudflareStreamMp4Url } from '~/utils/cloudflareStream'
 import { getSanityClient } from '~/utils/sanity'
+import { parseVimeoData } from '~/utils/videoRuntime'
 
 const fileProjection = `{
   asset-> {
@@ -64,6 +66,9 @@ export default defineEventHandler(async () => {
       vimeoUrl,
       runtimeSeconds,
       thumbnailType,
+      thumbnailVideoSource,
+      thumbnailLoopCloudflare720,
+      thumbnailLoopCloudflare1080,
       thumbnailImage ${imageProjection},
       videoFile ${fileProjection},
       thumbnailVideo ${fileProjection}
@@ -73,7 +78,9 @@ export default defineEventHandler(async () => {
 
     const enriched = await Promise.all(
       (videos || []).map(async (video) => {
-        const vimeoId = video.sourceType === 'vimeo' ? parseVimeoId(video.vimeoUrl) : null
+        const vimeoData = video.sourceType === 'vimeo' ? parseVimeoData(video.vimeoUrl) : null
+        const vimeoId = vimeoData?.id || null
+        const vimeoHash = vimeoData?.hash || null
         let runtimeSeconds = typeof video.runtimeSeconds === 'number'
           ? video.runtimeSeconds
           : null
@@ -82,12 +89,23 @@ export default defineEventHandler(async () => {
           runtimeSeconds = await fetchVimeoRuntimeSeconds(video.vimeoUrl)
         }
 
+        const thumbnailVideoUrl = video.thumbnailVideo?.asset?.url || null
+        const thumbnailLoopCloudflare720Url = cloudflareStreamMp4Url(video.thumbnailLoopCloudflare720)
+        const thumbnailLoopCloudflare1080Url = cloudflareStreamMp4Url(video.thumbnailLoopCloudflare1080)
+        const usesCloudflareLoop = video.thumbnailVideoSource === 'cloudflare'
+          && Boolean(thumbnailLoopCloudflare720Url || thumbnailLoopCloudflare1080Url)
+
         return {
           ...video,
           vimeoId,
+          vimeoHash,
           runtimeSeconds,
           videoUrl: video.videoFile?.asset?.url || null,
-          thumbnailVideoUrl: video.thumbnailVideo?.asset?.url || null,
+          thumbnailVideoUrl: usesCloudflareLoop
+            ? (thumbnailLoopCloudflare1080Url || thumbnailLoopCloudflare720Url)
+            : thumbnailVideoUrl,
+          thumbnailLoopCloudflare720Url,
+          thumbnailLoopCloudflare1080Url,
           thumbnailImageUrl: video.thumbnailImage?.asset?.url || null,
         }
       }),

@@ -170,13 +170,11 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div
-          class="screenings-row__action"
-          :class="{ 'screenings-row__action--soon': s.status === 'coming-soon' }"
-        >
+        <div class="screenings-row__action">
           <span
             v-if="s.status === 'coming-soon'"
-            class="screenings-soon handwritten"
+            class="screenings-book screenings-book--disabled"
+            aria-disabled="true"
           >
             Coming soon
           </span>
@@ -215,6 +213,8 @@ onBeforeUnmount(() => {
     3rem;
   background: #fff;
   color: var(--screenings-ink);
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 .screenings-page__intro {
@@ -307,12 +307,7 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns:
-    minmax(4.5rem, 0.7fr)
-    minmax(5.5rem, 0.95fr)
-    minmax(7rem, 1.6fr)
-    var(--screenings-stub-width)
-    var(--screenings-action-width);
+  grid-template-columns: minmax(5rem, 0.7fr) minmax(6rem, 0.95fr) minmax(6rem, 1.6fr) 0 var(--screenings-action-width);
   column-gap: 2rem;
 }
 
@@ -348,6 +343,18 @@ onBeforeUnmount(() => {
   line-height: 1.35;
 }
 
+.screenings-row__date {
+  grid-column: 1;
+}
+
+.screenings-row__location {
+  grid-column: 2;
+}
+
+.screenings-row__venue {
+  grid-column: 3;
+}
+
 .screenings-row__date,
 .screenings-row__location,
 .screenings-row__venue {
@@ -355,6 +362,7 @@ onBeforeUnmount(() => {
 }
 
 .screenings-row__stub {
+  grid-column: 4;
   position: relative;
   align-self: stretch;
   justify-self: stretch;
@@ -409,32 +417,13 @@ onBeforeUnmount(() => {
 }
 
 .screenings-row__action {
+  grid-column: 5;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   width: var(--screenings-action-width);
   min-width: var(--screenings-action-width);
   overflow: visible;
-}
-
-.screenings-soon {
-  display: block;
-  flex-shrink: 0;
-  font-size: clamp(1.15rem, 2vw, 1.75rem);
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  text-align: right;
-  white-space: nowrap;
-  color: var(--screenings-ink);
-  overflow: visible;
-}
-
-.screenings-row__action--soon {
-  grid-column: 4 / -1;
-  width: auto;
-  min-width: 0;
-  justify-content: flex-end;
 }
 
 .screenings-book {
@@ -463,6 +452,12 @@ onBeforeUnmount(() => {
 .screenings-book:hover,
 .screenings-book:focus-visible {
   opacity: 0.55;
+}
+
+.screenings-book--disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .screenings-empty {
@@ -518,12 +513,5 @@ onBeforeUnmount(() => {
     justify-content: flex-start;
   }
 
-  .screenings-row__action--soon {
-    grid-column: 1 / -1;
-  }
-
-  .screenings-soon {
-    text-align: left;
-  }
 }
 </style>

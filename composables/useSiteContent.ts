@@ -24,7 +24,23 @@ type Screening = {
   status: 'on-sale' | 'coming-soon'
   ticketUrl: string
 }
-type PressQuote = {quote: string; pub: string; reviewer: string}
+type PressQuoteLayer = {
+  asset?: {
+    _id?: string
+    url?: string
+    metadata?: {dimensions?: {width?: number; height?: number}}
+  }
+}
+
+type PressQuote = {
+  _id?: string
+  quote: string
+  pub: string
+  reviewer: string
+  layer1?: PressQuoteLayer
+  layer2?: PressQuoteLayer
+  layer3?: PressQuoteLayer
+}
 type PressPhoto = {id: number; alt: string}
 type FaqItem = {q: string; a: string}
 
@@ -49,6 +65,12 @@ const siteQuery = groq`{
     navItems,
     footerNavItems,
     streamingLinks,
+    "assemble": assemble {
+      enabled,
+      filmId,
+      mxId,
+      countries
+    },
     "mainMenu": mainMenu->${menuProjection},
     footerMenus[] {
       _key,
@@ -88,9 +110,31 @@ const siteQuery = groq`{
     ticketUrl
   },
   "pressQuotes": *[_type == "pressQuote"] | order(sortOrder asc){
+    _id,
     quote,
     "pub": publication,
-    reviewer
+    reviewer,
+    layer1 {
+      asset-> {
+        _id,
+        url,
+        metadata { dimensions }
+      }
+    },
+    layer2 {
+      asset-> {
+        _id,
+        url,
+        metadata { dimensions }
+      }
+    },
+    layer3 {
+      asset-> {
+        _id,
+        url,
+        metadata { dimensions }
+      }
+    }
   },
   "pressPhotos": *[_type == "pressPhoto"] | order(sortOrder asc){
     "id": sortOrder,
@@ -121,6 +165,12 @@ export function useSiteContent() {
     settings?: {
       theatricalReleaseActive?: boolean
       mailchimpAction?: string
+      assemble?: {
+        enabled?: boolean
+        filmId?: string
+        mxId?: string
+        countries?: string[]
+      }
       navItems?: Array<{label: string; to: string}>
       footerNavItems?: Array<{label: string; to: string}>
       streamingLinks?: StreamingLink[]
@@ -145,6 +195,13 @@ export function useSiteContent() {
     theatricalReleaseActive:
       data.value?.settings?.theatricalReleaseActive ?? defaultSiteConfig.theatricalReleaseActive,
     mailchimpAction: data.value?.settings?.mailchimpAction ?? defaultSiteConfig.mailchimpAction,
+  }))
+
+  const assemble = computed(() => ({
+    enabled: data.value?.settings?.assemble?.enabled === true,
+    filmId: data.value?.settings?.assemble?.filmId?.trim() || '',
+    mxId: data.value?.settings?.assemble?.mxId?.trim() || '',
+    countries: data.value?.settings?.assemble?.countries || [],
   }))
 
   const mainMenuItems = computed(() => {
@@ -190,6 +247,7 @@ export function useSiteContent() {
 
   return {
     siteConfig,
+    assemble,
     mainMenuItems,
     footerMenus,
     socialLinks,

@@ -1,0 +1,187 @@
+import gsap from 'gsap'
+
+function resolveExposedRef(exposed) {
+  if (!exposed) return null
+  if (exposed instanceof Element) return exposed
+  if (typeof exposed === 'object' && 'value' in exposed) {
+    return exposed.value instanceof Element ? exposed.value : null
+  }
+  return null
+}
+
+function gsapSet(target, vars) {
+  if (!target) return
+
+  if (Array.isArray(target)) {
+    const validTargets = target.filter(Boolean)
+    if (!validTargets.length) return
+    gsap.set(validTargets, vars)
+    return
+  }
+
+  gsap.set(target, vars)
+}
+
+export function useCinematicVideoExperience(getConfig, refs, options = {}) {
+  const {
+    onOpen,
+    onClose,
+    beforeOpen,
+    canOpen = () => true,
+    extendOpenTimeline,
+    extendCloseTimeline,
+  } = options
+
+  const isOpen = ref(false)
+  const isOpening = ref(false)
+  const playerReady = ref(false)
+
+  let openToken = 0
+
+  const mediaComponentRef = refs.mediaComponentRef
+
+  const player = useCinematicVideoPlayer(getConfig, mediaComponentRef)
+
+  function controlUiRefs() {
+    const controls = refs.controlsRef?.value
+    if (!controls) return []
+
+    return [
+      resolveExposedRef(controls.uiPlayRef),
+      resolveExposedRef(controls.uiProgressRef),
+      resolveExposedRef(controls.uiSoundRef),
+    ].filter(Boolean)
+  }
+
+  function startOpenAnimation(token) {
+    const overlay = refs.overlayRef?.value
+    const thumbnail = refs.thumbnailRef?.value
+    const dialog = refs.dialogRef?.value
+    const darken = refs.darkenRef?.value
+    const shell = player.mediaFadeTarget()
+
+    gsapSet(darken, { scale: 1, autoAlpha: 0.9, visibility: 'visible' })
+    if (shell) gsapSet(shell, { autoAlpha: 1 })
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power2.out' },
+      onComplete: () => {
+        if (token === openToken) isOpening.value = false
+      },
+    })
+
+    const controls = controlUiRefs()
+
+    if (overlay) tl.to(overlay, { autoAlpha: 0, duration: 0.2 }, 0)
+    if (dialog) tl.to(dialog, { autoAlpha: 1, duration: 0.35 }, 0)
+    if (darken) tl.to(darken, { scale: 4, duration: 0.55 }, 0)
+    if (thumbnail) tl.to(thumbnail, { autoAlpha: 0, duration: 0.35 }, 0.25)
+    if (controls.length) {
+      tl.to(
+        controls,
+        { autoAlpha: 1, yPercent: 0, stagger: 0.12, duration: 0.5 },
+        0.4,
+      )
+    }
+
+    extendOpenTimeline?.(tl, token)
+  }
+
+  async function open() {
+    if (isOpen.value || isOpening.value || !canOpen()) return false
+    const token = ++openToken
+    isOpening.value = true
+
+    isOpen.value = true
+    playerReady.value = true
+    await nextTick()
+
+    startOpenAnimation(token)
+    onOpen?.()
+
+    player.primePlayer()
+    player.play()
+
+    void (async () => {
+      await beforeOpen?.()
+      if (token !== openToken) return
+      await player.completeEmbedPlayer()
+    })()
+
+    return true
+  }
+
+  async function close() {
+    if (!isOpen.value || isOpening.value) return
+    openToken += 1
+    isOpening.value = true
+
+    player.pause()
+    onClose?.()
+
+    const overlay = refs.overlayRef?.value
+    const thumbnail = refs.thumbnailRef?.value
+    const dialog = refs.dialogRef?.value
+    const darken = refs.darkenRef?.value
+    const shell = player.mediaFadeTarget()
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power2.out' },
+      onComplete: () => {
+        isOpen.value = false
+        isOpening.value = false
+        playerReady.value = false
+        player.destroyPlayer()
+        player.resetUi()
+        gsapSet(overlay, { clearProps: 'opacity,visibility' })
+        gsapSet(thumbnail, { clearProps: 'opacity,visibility' })
+      },
+    })
+
+    const controls = controlUiRefs()
+
+    if (controls.length) {
+      tl.to(controls, { autoAlpha: 0, yPercent: 150, duration: 0.4 }, 0)
+    }
+    extendCloseTimeline?.(tl)
+    if (darken) tl.to(darken, { autoAlpha: 0, scale: 1, duration: 0.25 }, 0)
+    if (shell) tl.to(shell, { autoAlpha: 0, duration: 0.2 }, 0)
+    if (thumbnail) tl.to(thumbnail, { autoAlpha: 1, duration: 0.25 }, 0.1)
+    if (dialog) tl.to(dialog, { autoAlpha: 0, duration: 0.15 }, 0.05)
+    if (overlay) tl.to(overlay, { autoAlpha: 1, duration: 0.3 }, 0.15)
+  }
+
+  function stop() {
+    close()
+  }
+
+  function setupInitialState() {
+    nextTick(() => {
+      nextTick(() => {
+        gsapSet(refs.dialogRef?.value, { autoAlpha: 0 })
+        gsapSet(refs.darkenRef?.value, { autoAlpha: 0 })
+        gsapSet(controlUiRefs(), { autoAlpha: 0, yPercent: 150 })
+        const shell = player.mediaFadeTarget()
+        if (shell) gsapSet(shell, { autoAlpha: 0 })
+        gsapSet(refs.thumbnailRef?.value, { autoAlpha: 1 })
+        gsapSet(refs.overlayRef?.value, { autoAlpha: 1 })
+      })
+    })
+  }
+
+  onBeforeUnmount(() => {
+    openToken += 1
+    player.destroyPlayer()
+  })
+
+  return {
+    isOpen,
+    isOpening,
+    playerReady,
+    open,
+    close,
+    stop,
+    setupInitialState,
+    ...player,
+  }
+}

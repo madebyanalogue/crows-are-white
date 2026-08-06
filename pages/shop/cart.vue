@@ -54,10 +54,11 @@ function lineTotal(price: string, qty: number) {
               </select>
               <button
                 type="button"
-                class="text-xs text-wire-muted underline hover:text-wire-ink"
+                class="cart-remove"
+                aria-label="Remove item"
                 @click="removeFromCart(item.id)"
               >
-                Remove
+                <TrashIcon />
               </button>
             </div>
           </div>
@@ -94,3 +95,22 @@ function lineTotal(price: string, qty: number) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.cart-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--wire-muted, rgba(17, 16, 16, 0.55));
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.cart-remove:hover {
+  color: var(--wire-ink, #111010);
+}
+</style>

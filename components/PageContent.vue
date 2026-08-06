@@ -23,17 +23,47 @@
       </div>
 
       <template v-for="(section, index) in sections" :key="section._id || index">
+        <PageSectionHero
+          v-if="section.sectionType === 'hero'"
+          :section="section"
+        />
+        <PageSectionWatch
+          v-else-if="section.sectionType === 'watch'"
+          :section="section"
+        />
+        <PageSectionTrailer
+          v-else-if="section.sectionType === 'trailer'"
+          :section="section"
+        />
+        <PageSectionFeaturedProducts
+          v-else-if="section.sectionType === 'featuredProducts'"
+          :section="section"
+        />
+        <PageSectionNewsletter
+          v-else-if="section.sectionType === 'newsletter'"
+          :section="section"
+        />
+        <PageSectionPress
+          v-else-if="section.sectionType === 'press'"
+          :section="section"
+        />
+        <PageSectionPressQuotes
+          v-else-if="section.sectionType === 'pressQuotes'"
+          :section="section"
+        />
+
+        <!-- Legacy section types from a previous project — components kept for existing content -->
+        <!--
         <PageSectionArticlesIndexText
-          v-if="section.sectionType === 'articlesIndex' && section.articlesIndexVariant === 'text'"
+          v-else-if="section.sectionType === 'articlesIndex' && section.articlesIndexVariant === 'text'"
           :section="section"
         />
         <PageSectionArticlesIndex
           v-else-if="section.sectionType === 'articlesIndex'"
           :section="section"
         />
-
         <PageSectionBasicPage
-          v-if="section.sectionType === 'basicPage'"
+          v-else-if="section.sectionType === 'basicPage'"
           :section="section"
         />
         <PageSectionTypography
@@ -46,10 +76,6 @@
         />
         <PageSectionContactForm
           v-else-if="section.sectionType === 'contactForm'"
-          :section="section"
-        />
-        <PageSectionNewsletter
-          v-else-if="section.sectionType === 'newsletter'"
           :section="section"
         />
         <PageSectionTeam
@@ -120,15 +146,12 @@
           v-else-if="section.sectionType === 'assembleWidget'"
           :section="section"
         />
+        -->
       </template>
   </div>
 </template>
 
 <script setup>
-import PageSectionCta from '~/components/PageSectionCta.vue'
-import PageSectionTitle from '~/components/PageSectionTitle.vue'
-import PageSectionTitleTextAndImages from '~/components/PageSectionTitleTextAndImages.vue'
-
 const props = defineProps({
   page: {
     type: Object,

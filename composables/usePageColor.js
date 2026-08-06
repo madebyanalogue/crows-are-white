@@ -38,17 +38,6 @@ function getKnownPageColorsForPath(nuxtApp, path) {
     })
   }
 
-  if (path === '/watch' || path === '/watch/') {
-    return extractPageChromeColors({
-      pageColor: '#000000',
-      pageTextColor: '#ffffff',
-      menuBackgroundColor: '#0b0d0c',
-      menuTextColor: '#ff555f',
-      menuHighlightColor: '#ff555f',
-      basketIconColor: '#ff555f',
-    })
-  }
-
   if (path === '/videos' || path === '/videos/') {
     return extractPageChromeColors({
       pageColor: '#e6f2e9',

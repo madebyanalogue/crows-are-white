@@ -1,5 +1,5 @@
 import { getSanityClient } from '~/utils/sanity'
-import { getRouterPageSlug, sanityFetchOptions } from '~/server/utils/sanityQuery'
+import { getRouterPageSlug, pageDocumentFilter, sanityFetchOptions } from '~/server/utils/sanityQuery'
 import { colorField } from '~/server/utils/sanityColor'
 
 const imageProjection = `{
@@ -86,6 +86,9 @@ function pageSectionProjection() {
         mimeType
       }
     },
+    newsletterVideoSource,
+    newsletterLoopCloudflare720,
+    newsletterLoopCloudflare1080,
     contactInformationItems[] {
       _key,
       title,
@@ -333,6 +336,129 @@ function pageSectionProjection() {
         mimeType
       }
     },
+    trailerTitle,
+    ${colorField('trailerTextColor')},
+    ${colorField('trailerBackgroundColor')},
+    trailerRuntimeSeconds,
+    trailerThumbnailType,
+    trailerThumbnailVideoSource,
+    trailerThumbnailLoopCloudflare720,
+    trailerThumbnailLoopCloudflare1080,
+    trailerSourceType,
+    trailerVideoUrl,
+    trailerScrollScale,
+    trailerPaddingTop,
+    trailerPaddingBottom,
+    trailerThumbnailImage ${imageProjection},
+    trailerThumbnailVideo {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    trailerVideoFile {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    heroLogo ${imageProjection},
+    heroLogoAlt,
+    heroShowScrim,
+    heroVideoSource,
+    heroLoopCloudflare720,
+    heroLoopCloudflare1080,
+    heroVideoId,
+    heroVideoFile {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    heroButtons[] {
+      _key,
+      style,
+      type,
+      linkTitle,
+      url,
+      page-> {
+        slug { current }
+      }
+    },
+    watchTitle,
+    watchYear,
+    watchRuntimeMinutes,
+    watchCtaLabel,
+    watchCtaLink {
+      type,
+      linkTitle,
+      url,
+      page-> {
+        slug { current }
+      }
+    },
+    watchPlatformsLabel,
+    watchPlatformLinks[] {
+      _key,
+      label,
+      url
+    },
+    watchPreviewVideoSource,
+    watchPreviewLoopCloudflare720,
+    watchPreviewLoopCloudflare1080,
+    watchPreviewVideoId,
+    watchPreviewVideoFile {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    featuredProductsTitle,
+    featuredProductsCollection,
+    featuredProductsLimit,
+    pressMediaItems[] {
+      _key,
+      mediaType,
+      alt,
+      image ${imageProjection},
+      videoSource,
+      loopCloudflare720,
+      loopCloudflare1080,
+      videoId,
+      videoFile {
+        asset-> {
+          _id,
+          url,
+          mimeType
+        }
+      }
+    },
+    pressLinks[] {
+      _key,
+      linkTitle,
+      type,
+      url,
+      openInNewTab,
+      page-> {
+        slug { current }
+      }
+    },
+    pressQuotesTitle,
+    pressQuotesShowTitle,
+    pressQuotesItems[]-> {
+      _id,
+      quote,
+      "pub": publication,
+      reviewer,
+      sortOrder,
+      layer1 ${imageProjection},
+      layer2 ${imageProjection},
+      layer3 ${imageProjection}
+    },
     assembleWidgetFilmIds,
     assembleWidgetMxId,
     assembleWidgetTabs,
@@ -359,7 +485,7 @@ export default defineEventHandler(async (event) => {
   try {
     const client = getSanityClient(useRuntimeConfig())
     const sectionFields = pageSectionProjection()
-    const query = `*[_type == "page" && slug.current == $slug][0] {
+    const query = `*[${pageDocumentFilter(slug)}][0] {
       _id,
       title,
       slug,
