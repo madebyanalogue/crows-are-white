@@ -292,7 +292,7 @@ const platforms = computed(() => {
     min-height: 600px;
     margin: -10px;
     overflow: hidden;
-    max-height: 110dvw;
+    max-height: calc(100dvh - var(--watch-nav-clearance));
     border-radius: 10px;
     max-width: 2200px;
     margin: 0 auto;

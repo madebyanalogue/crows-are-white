@@ -77,7 +77,7 @@ defineProps({
 .cinematic-video-overlay__title,
 .cinematic-video-overlay__runtime {
   margin: 0;
-  font-size: clamp(20px, 1.75vw, 100px);
+  font-size: clamp(20px, 2.5vw, 100px);
   letter-spacing: 0.03em;
   font-weight: 300;
   line-height: 1.1;
@@ -104,8 +104,9 @@ defineProps({
 }
 
 .cinematic-video-overlay__play svg {
-  width: 100%;
+  width: 90%;
   height: 100%;
+  min-width: 80px;
 }
 
 @media (max-width: 699px) {

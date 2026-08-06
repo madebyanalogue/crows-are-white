@@ -63,6 +63,7 @@ export default defineEventHandler(async () => {
       _id,
       title,
       sourceType,
+      cloudflareUrl,
       vimeoUrl,
       runtimeSeconds,
       thumbnailType,
@@ -109,7 +110,9 @@ export default defineEventHandler(async () => {
           runtimeSeconds,
           videoUrl: video.sourceType === 'upload'
             ? (video.videoFile?.asset?.url || null)
-            : null,
+            : video.sourceType === 'cloudflare'
+              ? cloudflareStreamMp4Url(video.cloudflareUrl) || null
+              : null,
           thumbnailVideoUrl: usesCloudflareLoop
             ? (thumbnailLoopCloudflare1080Url || thumbnailLoopCloudflare720Url)
             : thumbnailVideoUrl,

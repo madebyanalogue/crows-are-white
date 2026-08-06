@@ -247,7 +247,8 @@ onBeforeUnmount(() => {
 }
 
 .page-section-trailer :deep(.page-section-trailer__frame) {
-  width: var(--video-frame-width);
+  width: calc(100% - var(--wrapper-padding));
+  max-width: calc(1600px - var(--wrapper-padding));
 }
 
 .page-section-trailer__fallback {

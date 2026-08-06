@@ -86,7 +86,7 @@ body {
 
 @media (min-width: 1000px) {
   :root {
-    --video-frame-width:68.5%;
+    --video-frame-width:80%;
     --logo-height: clamp(16px, 1.6vw, 21.5px);
     --unit: 1vw;
     --wrapper-padding: calc(var(--unit) * 4);

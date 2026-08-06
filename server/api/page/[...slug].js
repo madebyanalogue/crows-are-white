@@ -469,6 +469,7 @@ function pageSectionProjection() {
       layer2 ${imageProjection},
       layer3 ${imageProjection}
     },
+    videosScrollMode,
     screeningsTitle,
     screeningsLede,
     screeningsEmptyTitle,

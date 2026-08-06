@@ -79,7 +79,7 @@
 
 <script setup>
 import { formatRuntime, parseVimeoData } from '~/utils/videoRuntime'
-import { resolveLoopingThumbnailUrls } from '~/utils/cloudflareStream'
+import { cloudflareStreamMp4Url, resolveLoopingThumbnailUrls } from '~/utils/cloudflareStream'
 
 const props = defineProps({
   video: {
@@ -114,6 +114,11 @@ const localRuntime = ref(
 const sourceType = computed(() => props.video.sourceType || 'upload')
 const videoUrl = computed(() => {
   if (sourceType.value === 'vimeo') return ''
+  if (sourceType.value === 'cloudflare') {
+    return props.video.videoUrl
+      || cloudflareStreamMp4Url(props.video.cloudflareUrl)
+      || ''
+  }
   return props.video.videoUrl || props.video.videoFile?.asset?.url || ''
 })
 const thumbnailType = computed(() => props.video.thumbnailType || 'image')
@@ -234,7 +239,7 @@ onMounted(() => {
 }
 
 .videos-item__media {
-  --videos-thumb-extra: 10%;
+  --videos-thumb-extra: 5%;
   position: absolute;
   left: 0;
   width: 100%;

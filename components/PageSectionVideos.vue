@@ -6,6 +6,7 @@
       'is-stack-layout': isStackLayout,
       'is-player-open': isPlayerOpen,
       'is-navigation-suspended': isNavigationSuspended,
+      'is-free-scroll': isFreeScroll,
     }"
   >
     <div
@@ -62,7 +63,7 @@
               :video="video"
               :index="index"
               layout="slider"
-              :interactable="!isDragging && focusedIndex === index"
+              :interactable="!isDragging && (isFreeScroll || focusedIndex === index)"
               @playing="onPlaying"
               @closed="onClosed"
               @runtime="onRuntime"
@@ -92,11 +93,11 @@
               </span>
             </div>
           </div>
-          <span
+          <!-- <span
             class="page-section-videos__counter-rule"
             aria-hidden="true"
-          />
-          <span class="page-section-videos__counter-total">{{ totalLabel }}</span>
+          /> -->
+          <span class="page-section-videos__counter-total">/ {{ totalLabel }}</span>
         </aside>
       </template>
     </template>
@@ -106,16 +107,45 @@
 <script setup>
 import gsap from 'gsap'
 
-defineProps({
+const props = defineProps({
   section: {
     type: Object,
     required: true,
   },
 })
 
+const scrollMode = computed(() => props.section?.videosScrollMode || 'snap')
+const isFreeScroll = computed(() => scrollMode.value === 'free')
+
+function getScrollModeOptions() {
+  switch (scrollMode.value) {
+    case 'free':
+      return {
+        snap: false,
+        snapStrength: 0,
+        lerpFactor: 0.28,
+        scrollSensitivity: 1.2,
+      }
+    case 'softSnap':
+      return {
+        snap: true,
+        snapStrength: 0.06,
+        lerpFactor: 0.35,
+        scrollSensitivity: 1.4,
+      }
+    default:
+      return {
+        snap: true,
+        snapStrength: 0.14,
+        lerpFactor: 0.42,
+        scrollSensitivity: 1.8,
+      }
+  }
+}
+
 // Thumbnail media is taller than the frame so it can drift without exposing edges.
 // Max yPercent must equal half the extra height, expressed as a % of the media element.
-const THUMB_EXTRA_HEIGHT_PERCENT = 10
+const THUMB_EXTRA_HEIGHT_PERCENT = 5
 const THUMB_HEIGHT_PERCENT = 100 + THUMB_EXTRA_HEIGHT_PERCENT
 const PARALLAX_STRENGTH = ((THUMB_EXTRA_HEIGHT_PERCENT / 2) / THUMB_HEIGHT_PERCENT) * 100
 
@@ -224,12 +254,9 @@ function setReelToIndex(index, { animate = true, direction = 1 } = {}) {
 const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderElement, () => ({
   vertical: true,
   infinite: true,
-  snap: true,
   variableWidth: true,
   scrollInput: true,
-  lerpFactor: 0.42,
-  snapStrength: 0.14,
-  scrollSensitivity: 1.8,
+  ...getScrollModeOptions(),
   dragSensitivity: 0.008,
   speedDecay: 0.97,
   setOffset: ({ wrapperHeight, itemWidth, vertical }) =>
@@ -255,7 +282,7 @@ const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderEleme
     currentIndex.value = current
     setReelToIndex(current, { animate: true, direction })
     stopAllExcept(current)
-    if (slider.value) slider.value.paused = false
+    if (slider.value && !isPlayerOpen.value) slider.value.paused = false
   },
   onUpdate: (instance) => {
     if (isNavigationSuspended.value) return
@@ -353,10 +380,34 @@ function stopAllExcept(keepIndex = -1) {
   })
 }
 
+function scrollToVideoIndex(index) {
+  const instance = slider.value
+  if (!instance?.items?.length || isStackLayout.value) return
+
+  const prev = currentIndex.value
+  const total = videos.value.length
+  let direction = 1
+  if (total > 1) {
+    if (index === prev) direction = 1
+    else if (prev === total - 1 && index === 0) direction = 1
+    else if (prev === 0 && index === total - 1) direction = -1
+    else direction = index > prev ? 1 : -1
+  }
+
+  instance.goToIndex(index)
+  currentIndex.value = index
+  focusedIndex.value = index
+  setReelToIndex(index, { animate: true, direction })
+  applyParallax(instance)
+}
+
 function onPlaying(index) {
   isPlayerOpen.value = true
   stopAllExcept(index)
-  if (!isStackLayout.value && slider.value) slider.value.paused = true
+  if (!isStackLayout.value && slider.value) {
+    if (isFreeScroll.value) scrollToVideoIndex(index)
+    slider.value.paused = true
+  }
 }
 
 function onClosed() {
@@ -683,7 +734,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: clamp(0px, .75vw, 50px);
+  gap: 4px;
   transform: translateY(-50%);
   font-family: var(--handwritten);
   font-size: clamp(20px, 1.65vw, 40px);
@@ -720,7 +771,7 @@ onBeforeUnmount(() => {
 }
 
 .page-section-videos__counter-rule {
-  display: block;
+  display: none;
   width: clamp(20px, 1.9vw, 100px);
   height: clamp(1px, 0.1vw, 2px);
   background: currentColor;
