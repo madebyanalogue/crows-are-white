@@ -24,6 +24,8 @@ export function pageRemovesHeaderPadding(page) {
   return (
     videoSectionRemoveHeaderPadding(firstSection)
     || videoSectionTransparentHeader(firstSection)
+    || firstSection.sectionType === 'videos'
+    || firstSection.sectionType === 'watch'
   )
 }
 

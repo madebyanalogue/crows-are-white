@@ -47,6 +47,18 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  showOverlay: {
+    type: Boolean,
+    default: true,
+  },
+  overlayShowTitle: {
+    type: Boolean,
+    default: true,
+  },
+  overlayShowRuntime: {
+    type: Boolean,
+    default: true,
+  },
   showClose: {
     type: Boolean,
     default: false,
@@ -97,6 +109,7 @@ const thumbnailInnerRef = ref(null)
 const overlayRef = ref(null)
 const dialogRef = ref(null)
 const darkenRef = ref(null)
+const closeRef = ref(null)
 const mediaComponentRef = ref(null)
 const controlsRef = ref(null)
 
@@ -135,6 +148,7 @@ const experience = useCinematicVideoExperience(
     thumbnailRef,
     dialogRef,
     darkenRef,
+    closeRef,
   },
   {
     canOpen: () => props.interactable && canPlay.value,
@@ -174,6 +188,8 @@ const {
   seekFromEvent,
   onScrubDown,
   setupInitialState,
+  onDialogEnter,
+  onDialogLeave,
 } = experience
 
 function onHitClick() {
@@ -291,6 +307,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
       </div>
 
       <div
+        v-if="showOverlay"
         ref="overlayRef"
         class="cinematic-video-frame__overlay-wrap"
         :style="overlayStyle"
@@ -298,6 +315,8 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
         <CinematicVideoOverlay
           :title="title"
           :runtime="runtime"
+          :show-title="overlayShowTitle"
+          :show-runtime="overlayShowRuntime"
         />
       </div>
 
@@ -307,6 +326,8 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
         role="dialog"
         :aria-modal="isOpen ? 'true' : undefined"
         :aria-label="`${title} player`"
+        @mouseenter="onDialogEnter"
+        @mouseleave="onDialogLeave"
         @click="togglePlay"
       >
         <div
@@ -314,6 +335,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
           class="cinematic-video-frame__bar cinematic-video-frame__bar--top"
         >
           <button
+            ref="closeRef"
             type="button"
             class="cinematic-video-frame__close"
             aria-label="Close video"
@@ -460,7 +482,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   z-index: 4;
   display: flex;
   align-items: center;
-  padding: var(--cinematic-bar-pad-y) var(--cinematic-bar-pad-x);
+  padding: var(--cinematic-bar-pad-y) var(--cinematic-bar-pad-y);
   pointer-events: none;
 }
 
@@ -489,7 +511,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   margin: 0;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: 0px;
   background: rgba(0, 0, 0, 0.35);
   color: #f7f4ec;
   cursor: pointer;
@@ -530,5 +552,14 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 
 .cinematic-video-frame.is-open .cinematic-video-frame__stage {
   z-index: 55;
+  cursor: pointer;
+}
+
+.cinematic-video-frame.is-open .cinematic-video-frame__dialog {
+  cursor: pointer;
+}
+
+.cinematic-video-frame.is-open .cinematic-video-frame__darken {
+  cursor: pointer;
 }
 </style>

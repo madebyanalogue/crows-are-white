@@ -3,6 +3,7 @@ import {
   formatVideoTime,
   parseVimeoData,
   resolveCinematicProvider,
+  VIMEO_CINEMATIC_PARAMS,
 } from '~/utils/videoRuntime'
 
 function resolveExposedRef(exposed) {
@@ -14,7 +15,7 @@ function resolveExposedRef(exposed) {
   return null
 }
 
-export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
+export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOptions = {}) {
   const isPlaying = ref(false)
   const isMuted = ref(false)
   const currentLabel = ref('0:00')
@@ -94,6 +95,10 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
     videoEl?.pause?.()
   }
 
+  function handleEnded() {
+    playerOptions.onEnded?.()
+  }
+
   function bindNativeVideo(video) {
     video.controls = false
     video.playsInline = true
@@ -114,6 +119,7 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
     video.addEventListener('volumechange', () => {
       isMuted.value = video.muted || video.volume === 0
     })
+    video.addEventListener('ended', handleEnded)
   }
 
   function primePlayer() {
@@ -145,13 +151,7 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
     } else if (config.provider === 'vimeo' && config.vimeoId && iframe) {
       iframe.src = buildVimeoPlayerUrl(
         { id: config.vimeoId, hash: config.vimeoHash },
-        {
-          autoplay: 1,
-          byline: 0,
-          portrait: 0,
-          title: 0,
-          dnt: 1,
-        },
+        VIMEO_CINEMATIC_PARAMS,
       )
       iframe.title = config.iframeTitle
     }
@@ -185,9 +185,11 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
       }
     } else if (config.provider === 'vimeo') {
       plyrOptions.vimeo = {
+        ...VIMEO_CINEMATIC_PARAMS,
         byline: false,
         portrait: false,
         title: false,
+        controls: false,
         dnt: true,
       }
     }
@@ -211,6 +213,7 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef) {
     player.on('volumechange', () => {
       isMuted.value = Boolean(player.muted)
     })
+    player.on('ended', handleEnded)
   }
 
   async function initPlayer() {

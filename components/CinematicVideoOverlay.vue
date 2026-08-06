@@ -8,12 +8,26 @@ defineProps({
     type: String,
     default: '',
   },
+  showTitle: {
+    type: Boolean,
+    default: true,
+  },
+  showRuntime: {
+    type: Boolean,
+    default: true,
+  },
 })
 </script>
 
 <template>
-  <div class="cinematic-video-overlay">
-    <p class="cinematic-video-overlay__title serif">
+  <div
+    class="cinematic-video-overlay"
+    :class="{ 'cinematic-video-overlay--play-only': !showTitle && !showRuntime }"
+  >
+    <p
+      v-if="showTitle"
+      class="cinematic-video-overlay__title serif"
+    >
       {{ title }}
     </p>
     <span
@@ -34,7 +48,7 @@ defineProps({
       </svg>
     </span>
     <p
-      v-if="runtime"
+      v-if="showRuntime && runtime"
       class="cinematic-video-overlay__runtime serif"
     >
       {{ runtime }}
@@ -53,6 +67,11 @@ defineProps({
   padding: 5%;
   pointer-events: none;
   color: var(--background-color, #f0f0ed);
+}
+
+.cinematic-video-overlay--play-only {
+  grid-template-columns: 1fr;
+  justify-items: center;
 }
 
 .cinematic-video-overlay__title,

@@ -760,15 +760,15 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 12px;
   right: 9px;
-  min-width: 15px;
-  height: 15px;
+  min-width: 13px;
+  height: 13px;
   line-height: 9px;
   padding: 0 0.1rem;
-  border-radius: 30px;
+  /* border-radius: 30px; */
   background: var(--menu-text-color);
   color: var(--menu-background-color);
   font-size: 9px;
-  line-height: 0.95rem;
+  line-height: 0.85rem;
   text-align: center;
 }
 

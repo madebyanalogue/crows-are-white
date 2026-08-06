@@ -100,7 +100,9 @@ export default defineEventHandler(async () => {
           vimeoId,
           vimeoHash,
           runtimeSeconds,
-          videoUrl: video.videoFile?.asset?.url || null,
+          videoUrl: video.sourceType === 'upload'
+            ? (video.videoFile?.asset?.url || null)
+            : null,
           thumbnailVideoUrl: usesCloudflareLoop
             ? (thumbnailLoopCloudflare1080Url || thumbnailLoopCloudflare720Url)
             : thumbnailVideoUrl,

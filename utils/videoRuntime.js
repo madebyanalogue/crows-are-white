@@ -13,6 +13,17 @@ export function formatVideoTime(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
+/** Params for cinematic full-screen Vimeo embeds (custom controls, minimal chrome). */
+export const VIMEO_CINEMATIC_PARAMS = {
+  autoplay: 1,
+  byline: 0,
+  portrait: 0,
+  title: 0,
+  dnt: 1,
+  controls: 0,
+  transparent: 0,
+}
+
 export function buildVimeoPlayerUrl(videoData, extraParams = {}) {
   if (!videoData?.id) return null
 

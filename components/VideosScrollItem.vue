@@ -1,12 +1,13 @@
 <template>
   <div
     class="videos-item"
+    :class="{ 'videos-item--stack': layout === 'stack' }"
     :data-index="index"
   >
     <CinematicVideoFrame
       ref="frameRef"
       :title="video.title"
-      :runtime="displayRuntime"
+      :runtime="layout === 'stack' ? '' : displayRuntime"
       :provider="playerProvider"
       :video-src="videoUrl"
       :vimeo-id="vimeoId"
@@ -14,6 +15,8 @@
       :vimeo-hash="video.vimeoHash"
       :iframe-title="video.title"
       :interactable="interactable"
+      :overlay-show-title="layout !== 'stack'"
+      :overlay-show-runtime="layout !== 'stack'"
       show-close
       close-on-darken
       close-on-escape
@@ -26,7 +29,7 @@
         <div
           ref="mediaRef"
           class="videos-item__media"
-          data-p
+          :data-p="layout === 'slider' ? true : undefined"
         >
           <video
             v-if="hasLoopingThumbnail"
@@ -64,6 +67,13 @@
         </div>
       </template>
     </CinematicVideoFrame>
+
+    <p
+      v-if="layout === 'stack'"
+      class="videos-item__stack-title serif"
+    >
+      {{ video.title }}
+    </p>
   </div>
 </template>
 
@@ -84,6 +94,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  layout: {
+    type: String,
+    default: 'slider',
+    validator: (value) => ['slider', 'stack'].includes(value),
+  },
 })
 
 const emit = defineEmits(['runtime', 'playing', 'closed'])
@@ -97,7 +112,10 @@ const localRuntime = ref(
 )
 
 const sourceType = computed(() => props.video.sourceType || 'upload')
-const videoUrl = computed(() => props.video.videoUrl || props.video.videoFile?.asset?.url || '')
+const videoUrl = computed(() => {
+  if (sourceType.value === 'vimeo') return ''
+  return props.video.videoUrl || props.video.videoFile?.asset?.url || ''
+})
 const loopingThumbnail = computed(() => resolveLoopingThumbnailUrls(props.video))
 const thumbnailLoop720Url = computed(() => loopingThumbnail.value.url720)
 const thumbnailLoop1080Url = computed(() => {
@@ -115,6 +133,8 @@ const vimeoId = computed(() => {
 
 const playerProvider = computed(() => {
   if (sourceType.value === 'vimeo' && vimeoId.value) return 'vimeo'
+  if (videoUrl.value) return 'native'
+  if (vimeoId.value) return 'vimeo'
   return 'native'
 })
 
@@ -196,8 +216,17 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+.videos-item--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .videos-item :deep(.videos-item__frame) {
   width: var(--video-frame-width);
+}
+
+.videos-item--stack :deep(.videos-item__frame) {
+  width: 100%;
 }
 
 .videos-item__media {
@@ -208,6 +237,13 @@ onMounted(() => {
   top: calc(var(--videos-thumb-extra) / -2);
   height: calc(100% + var(--videos-thumb-extra));
   will-change: transform;
+}
+
+.videos-item--stack .videos-item__media {
+  --videos-thumb-extra: 0%;
+  top: 0;
+  height: 100%;
+  will-change: auto;
 }
 
 .videos-item__thumb-image,
@@ -221,5 +257,17 @@ onMounted(() => {
 
 .videos-item__thumb-fallback {
   background: #8e968d;
+}
+
+.videos-item__stack-title {
+  margin: clamp(0.65rem, 2vw, 0.85rem) 0 0;
+  padding: 0;
+  color: var(--text-color);
+  font-size: clamp(18px, 4.5vw, 24px);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  text-align: left;
+  text-transform: uppercase;
 }
 </style>
