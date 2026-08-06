@@ -29,7 +29,6 @@
         <div
           ref="mediaRef"
           class="videos-item__media"
-          :data-p="layout === 'slider' ? true : undefined"
         >
           <video
             v-if="hasLoopingThumbnail"
@@ -239,20 +238,15 @@ onMounted(() => {
 }
 
 .videos-item__media {
-  --videos-thumb-extra: 5%;
   position: absolute;
-  left: 0;
+  inset: 0;
   width: 100%;
-  top: calc(var(--videos-thumb-extra) / -2);
-  height: calc(100% + var(--videos-thumb-extra));
-  will-change: transform;
+  height: 100%;
 }
 
 .videos-item--stack .videos-item__media {
-  --videos-thumb-extra: 0%;
-  top: 0;
-  height: 100%;
-  will-change: auto;
+  position: absolute;
+  inset: 0;
 }
 
 .videos-item__thumb-image,

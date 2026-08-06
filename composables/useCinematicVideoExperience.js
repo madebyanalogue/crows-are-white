@@ -174,14 +174,13 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     if (!isOpen.value || isOpening.value) return
     openToken += 1
     isOpening.value = true
-    playerReady.value = false
     controlsHovered = false
     if (controlsTween) {
       controlsTween.kill()
       controlsTween = null
     }
 
-    player.destroyPlayer()
+    player.pause()
     onClose?.()
 
     const overlay = refs.overlayRef?.value
@@ -193,27 +192,30 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     const tl = gsap.timeline({
       defaults: { ease: 'power2.out' },
       onComplete: () => {
-        isOpen.value = false
-        isOpening.value = false
-        playerReady.value = false
         player.destroyPlayer()
         player.resetUi()
+        playerReady.value = false
+        isOpen.value = false
+        isOpening.value = false
         gsapSet(overlay, { clearProps: 'opacity,visibility' })
         gsapSet(thumbnail, { clearProps: 'opacity,visibility' })
+        gsapSet(dialog, { clearProps: 'opacity,visibility' })
+        gsapSet(shell, { clearProps: 'opacity,visibility,transform' })
+        gsapSet(darken, { clearProps: 'opacity,visibility,transform' })
       },
     })
 
     const controls = controlUiRefs()
 
     if (controls.length) {
-      tl.to(controls, { autoAlpha: 0, yPercent: 150, duration: 0.4 }, 0)
+      tl.to(controls, { autoAlpha: 0, yPercent: 150, duration: 0.3 }, 0)
     }
     extendCloseTimeline?.(tl)
-    if (darken) tl.to(darken, { autoAlpha: 0, scale: 1, duration: 0.25 }, 0)
-    if (shell) tl.to(shell, { autoAlpha: 0, duration: 0.2 }, 0)
-    if (thumbnail) tl.to(thumbnail, { autoAlpha: 1, duration: 0.25 }, 0.1)
-    if (dialog) tl.to(dialog, { autoAlpha: 0, duration: 0.15 }, 0.05)
-    if (overlay) tl.to(overlay, { autoAlpha: 1, duration: 0.3 }, 0.15)
+    if (thumbnail) tl.to(thumbnail, { autoAlpha: 1, duration: 0.25 }, 0)
+    if (shell) tl.to(shell, { autoAlpha: 0, duration: 0.22 }, 0)
+    if (dialog) tl.to(dialog, { autoAlpha: 0, duration: 0.22 }, 0)
+    if (darken) tl.to(darken, { autoAlpha: 0, scale: 1, duration: 0.28 }, 0)
+    if (overlay) tl.to(overlay, { autoAlpha: 1, duration: 0.25 }, 0.08)
   }
 
   function stop() {

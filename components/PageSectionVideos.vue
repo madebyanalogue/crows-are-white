@@ -143,12 +143,6 @@ function getScrollModeOptions() {
   }
 }
 
-// Thumbnail media is taller than the frame so it can drift without exposing edges.
-// Max yPercent must equal half the extra height, expressed as a % of the media element.
-const THUMB_EXTRA_HEIGHT_PERCENT = 5
-const THUMB_HEIGHT_PERCENT = 100 + THUMB_EXTRA_HEIGHT_PERCENT
-const PARALLAX_STRENGTH = ((THUMB_EXTRA_HEIGHT_PERCENT / 2) / THUMB_HEIGHT_PERCENT) * 100
-
 const { data, pending } = await useAsyncData('videos', () => $fetch('/api/videos'), {
   default: () => [],
 })
@@ -174,7 +168,6 @@ const isStackLayout = ref(false)
 const isNavigationSuspended = ref(false)
 const itemRefs = []
 let lenisWasStopped = false
-let parallaxNodes = []
 let reelTween = null
 let reelOffset = 0
 let stackMediaQuery = null
@@ -288,7 +281,6 @@ const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderEleme
     if (isNavigationSuspended.value) return
     const dragging = Boolean(instance.isDragging)
     isDragging.value = dragging
-    applyParallax(instance)
     focusedIndex.value = getCenteredSlideIndex(instance)
     if (!dragging) syncCurrentToCenter(instance)
   },
@@ -351,7 +343,6 @@ function syncSliderPosition(index = 0, instance = slider.value) {
   instance.goToIndex(index)
   instance.current = instance.target
   instance.update?.()
-  applyParallax(instance)
   syncCurrentToCenter(instance)
 }
 
@@ -398,7 +389,6 @@ function scrollToVideoIndex(index) {
   currentIndex.value = index
   focusedIndex.value = index
   setReelToIndex(index, { animate: true, direction })
-  applyParallax(instance)
 }
 
 function onPlaying(index) {
@@ -421,33 +411,6 @@ function onRuntime({ index, runtimeSeconds }) {
     ...videos.value[index],
     runtimeSeconds,
   }
-}
-
-function collectParallaxNodes() {
-  parallaxNodes = sliderElement.value
-    ? [...sliderElement.value.querySelectorAll('[data-p]')]
-    : []
-}
-
-function applyParallax(instance) {
-  if (!instance?.items?.length || !sliderElement.value) return
-  if (parallaxNodes.length !== instance.items.length) collectParallaxNodes()
-
-  const wrapperRect = sliderElement.value.getBoundingClientRect()
-  const viewportCenterY = wrapperRect.top + instance.viewport.wrapperHeight / 2
-  const normalizeRange = Math.max(instance.viewport.wrapperHeight / 2, 1)
-
-  instance.items.forEach((slideEl, i) => {
-    const media = parallaxNodes[i]
-    if (!media || !slideEl) return
-
-    const slideRect = slideEl.getBoundingClientRect()
-    const slideCenterY = slideRect.top + slideRect.height / 2
-    const normalized = (slideCenterY - viewportCenterY) / normalizeRange
-    const offset = normalized * PARALLAX_STRENGTH
-
-    gsap.set(media, { yPercent: offset, force3D: true })
-  })
 }
 
 const videosScrollLocked = useState('videosScrollLocked', () => false)
@@ -499,7 +462,6 @@ watch(
   async (count) => {
     if (!count || isStackLayout.value || isNavigationSuspended.value) return
     await nextTick()
-    collectParallaxNodes()
     snapSliderInstant(currentIndex.value)
   },
 )
@@ -521,7 +483,6 @@ function bootSlider() {
   if (isStackLayout.value) return
   holdNativeScrollOff()
   nextTick(() => {
-    collectParallaxNodes()
     snapSliderInstant(currentIndex.value)
     setReelToIndex(currentIndex.value, { animate: false })
   })
