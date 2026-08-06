@@ -175,59 +175,61 @@ onBeforeUnmount(() => {
     data-trailer-section
     :style="sectionStyle"
   >
-    <CinematicVideoFrame
-      ref="frameRef"
-      :title="title"
-      :runtime="displayRuntime"
-      :overlay-color="overlayColor"
-      :provider="playerProvider"
-      :video-src="videoUrl"
-      :youtube-id="youtubeId"
-      :vimeo-id="vimeoData?.id || ''"
-      :vimeo-url="section.trailerVideoUrl || ''"
-      :vimeo-hash="vimeoData?.hash || null"
-      :iframe-title="title"
-      frame-class="page-section-trailer__frame"
-      :scroll-scale="section.trailerScrollScale !== false"
-      close-on-darken
-      :before-open="beforeOpen"
-      :on-close="onClose"
-      :on-duration="setRuntimeFromSeconds"
-    >
-      <template #thumbnail>
-        <video
-          v-if="hasLoopingThumbnail"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-        >
-          <source
-            v-if="thumbnailLoop1080Url"
-            media="(min-width: 1000px)"
-            :src="thumbnailLoop1080Url"
-            type="video/mp4"
+    <div class="page-section-columns wrapper">
+      <CinematicVideoFrame
+        ref="frameRef"
+        :title="title"
+        :runtime="displayRuntime"
+        :overlay-color="overlayColor"
+        :provider="playerProvider"
+        :video-src="videoUrl"
+        :youtube-id="youtubeId"
+        :vimeo-id="vimeoData?.id || ''"
+        :vimeo-url="section.trailerVideoUrl || ''"
+        :vimeo-hash="vimeoData?.hash || null"
+        :iframe-title="title"
+        frame-class="page-section-trailer__frame"
+        :scroll-scale="section.trailerScrollScale !== false"
+        close-on-darken
+        :before-open="beforeOpen"
+        :on-close="onClose"
+        :on-duration="setRuntimeFromSeconds"
+      >
+        <template #thumbnail>
+          <video
+            v-if="hasLoopingThumbnail"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
           >
-          <source
-            v-if="thumbnailLoop720Url"
-            :src="thumbnailLoop720Url"
-            type="video/mp4"
+            <source
+              v-if="thumbnailLoop1080Url"
+              media="(min-width: 1000px)"
+              :src="thumbnailLoop1080Url"
+              type="video/mp4"
+            >
+            <source
+              v-if="thumbnailLoop720Url"
+              :src="thumbnailLoop720Url"
+              type="video/mp4"
+            >
+          </video>
+          <img
+            v-else-if="thumbnailImageUrl"
+            :src="thumbnailImageUrl"
+            :alt="title"
+            draggable="false"
           >
-        </video>
-        <img
-          v-else-if="thumbnailImageUrl"
-          :src="thumbnailImageUrl"
-          :alt="title"
-          draggable="false"
-        >
-        <div
-          v-else
-          class="page-section-trailer__fallback"
-          aria-hidden="true"
-        />
-      </template>
-    </CinematicVideoFrame>
+          <div
+            v-else
+            class="page-section-trailer__fallback"
+            aria-hidden="true"
+          />
+        </template>
+      </CinematicVideoFrame>
+    </div>
   </section>
 </template>
 
@@ -247,8 +249,9 @@ onBeforeUnmount(() => {
 }
 
 .page-section-trailer :deep(.page-section-trailer__frame) {
-  width: calc(100% - var(--wrapper-padding));
-  max-width: calc(1600px - var(--wrapper-padding));
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
 }
 
 .page-section-trailer__fallback {

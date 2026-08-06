@@ -64,6 +64,14 @@
           v-else-if="section.sectionType === 'hostScreening'"
           :section="section"
         />
+        <PageSectionTextImageStack
+          v-else-if="section.sectionType === 'textImageStack'"
+          :section="section"
+        />
+        <PageSectionLetterboxVideo
+          v-else-if="section.sectionType === 'letterboxVideo'"
+          :section="section"
+        />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--

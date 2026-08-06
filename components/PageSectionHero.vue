@@ -151,7 +151,7 @@ useHead(() => ({
   position: relative;
   height: 100svh;
   min-height: 50vw;
-  max-height: 145vw;
+  max-height: 160vw;
   overflow: hidden;
   background: #000;
   color: var(--fuji, #fff);

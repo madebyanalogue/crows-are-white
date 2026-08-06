@@ -134,6 +134,8 @@ function onSubmit() {
   isolation: isolate;
   padding: clamp(3.5rem, 10vw, 7rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 12vw, 8rem);
   color: var(--newsletter-ink);
+  aspect-ratio: 2.5;
+  min-height: 600px;
 }
 
 .newsletter-block.has-background {

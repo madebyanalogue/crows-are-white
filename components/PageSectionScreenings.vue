@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
     </header>
 
     <div class="screenings-page__content">
-        <p class="screenings-page__lede">
+        <!-- <p class="screenings-page__lede">
             {{ lede }}
           </p>
         <div ref="toolbarRef" class="screenings-toolbar">
@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
               </option>
             </select>
           </label>
-        </div>
+        </div> -->
       </div>
 
     <div
@@ -231,8 +231,7 @@ onBeforeUnmount(() => {
 }
 
 .screenings-page__intro {
-  max-width: 36rem;
-  margin: 0 0 3rem;
+  margin: 0 0 1rem;
   gap:2rem;
   display: flex;
   flex-direction: column;
@@ -257,11 +256,10 @@ onBeforeUnmount(() => {
 }
 
 .screenings-page__title {
-  font-size: clamp(36px, 5.5vw, 58px);
-  font-weight: 400;
+  font-size: clamp(36px, 5.5vw, 53px);
+  font-weight: 300;
   letter-spacing: 0.02em;
   line-height: 1.05;
-  text-transform: uppercase;
 }
 
 .screenings-page__lede {
@@ -450,7 +448,7 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 2.85rem;
   padding: 0.55rem 0.75rem;
-  border: 1px solid var(--screenings-ink);
+  border: 3px double var(--screenings-ink);
   font-family: var(--sans);
   font-size: var(--screenings-ui);
   font-weight: 500;
@@ -460,7 +458,8 @@ onBeforeUnmount(() => {
   text-align: center;
   white-space: nowrap;
   color: var(--screenings-ink);
-  background: #fff;
+  border-radius: 5px;
+    corner-shape: notch;
   transition: background-color 0.15s ease, color 0.15s ease;
   pointer-events: none;
 }

@@ -470,6 +470,35 @@ function pageSectionProjection() {
       layer3 ${imageProjection}
     },
     videosScrollMode,
+    textImageStackText[] ${portableTextProjection},
+    textImageStackImages[] {
+      _key,
+      caption,
+      image ${imageProjection}
+    },
+    textImageStackPaddingTop,
+    textImageStackPaddingBottom,
+    textImageStackReverseOrder,
+    ${colorField('letterboxBackgroundColor')},
+    letterboxVideoSource,
+    letterboxVideo {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    letterboxLoopCloudflare720,
+    letterboxLoopCloudflare1080,
+    letterboxLinkText,
+    letterboxLink {
+      type,
+      linkTitle,
+      url,
+      page-> {
+        slug { current }
+      }
+    },
     screeningsTitle,
     screeningsLede,
     screeningsEmptyTitle,
