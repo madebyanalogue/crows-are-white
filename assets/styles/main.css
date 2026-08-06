@@ -109,6 +109,9 @@ body {
   --racing-green: #0e3e27;
   --aintree: #061c11;
 
+
+  --screenings-ink: #111010;
+
   /* Legacy aliases used across Crows Are White component CSS */
   --black: var(--obsidian);
   --white: var(--fuji);

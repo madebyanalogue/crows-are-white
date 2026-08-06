@@ -9,7 +9,17 @@ const props = defineProps({
   },
 })
 
-const { getMenuItemUrl, getMenuItemTarget, getMenuItemRel } = useMenuLinks()
+const {
+  getMenuItemUrl,
+  getMenuItemTarget,
+  getMenuItemRel,
+  isExternalUrl,
+  isSamePageLink,
+  isSamePageHref,
+  getUrlHash,
+  scrollToTop,
+  scrollToHash,
+} = useMenuLinks()
 
 const sectionRef = ref(null)
 const parallaxRef = ref(null)
@@ -38,13 +48,46 @@ const overlayLink = computed(() => {
   const href = getMenuItemUrl(menuItem)
   if (!href || href === '#') return null
 
+  const target = getMenuItemTarget(menuItem)
+  const useRouterLink = target !== '_blank'
+    && !href.startsWith('mailto:')
+    && !href.startsWith('tel:')
+    && !isExternalUrl(href)
+
   return {
     label,
     href,
-    target: getMenuItemTarget(menuItem),
+    target,
     rel: getMenuItemRel(menuItem),
+    useRouterLink,
+    menuItem,
   }
 })
+
+function onLinkClick(event) {
+  const link = overlayLink.value
+  if (!link?.useRouterLink) return
+
+  const { href, menuItem } = link
+  const hash = getUrlHash(href)
+
+  if (href.startsWith('#')) {
+    event.preventDefault()
+    scrollToHash(href)
+    return
+  }
+
+  if (hash && isSamePageHref(href)) {
+    event.preventDefault()
+    scrollToHash(hash)
+    return
+  }
+
+  if (isSamePageLink(menuItem)) {
+    event.preventDefault()
+    scrollToTop()
+  }
+}
 
 const sectionStyle = computed(() => {
   const style = {}
@@ -82,7 +125,16 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
         v-if="overlayLink"
         class="page-section-letterbox-video__link-wrap"
       >
+        <NuxtLink
+          v-if="overlayLink.useRouterLink"
+          :to="overlayLink.href"
+          class="page-section-letterbox-video__link large-title"
+          @click="onLinkClick"
+        >
+          {{ overlayLink.label }}
+        </NuxtLink>
         <a
+          v-else
           :href="overlayLink.href"
           class="page-section-letterbox-video__link large-title"
           :target="overlayLink.target"
@@ -150,17 +202,16 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
 
 .page-section-letterbox-video__link {
   display: inline-flex;
-    pointer-events: auto;
-    padding: 0.25em 0.7em 0.33em;
-    border: 3px double;
-    border-radius: 10px;
-    corner-shape: notch;
-    text-align: center;
-    text-decoration: none;
-    color: var(--fuji, #fff);
-    transition: color 0.2s ease;
-    color: var(--screenings-ink);
-    background: var(--background-color);
+  pointer-events: auto;
+  padding: 0.25em 0.7em 0.33em;
+  border: 3px double var(--screenings-ink);
+  border-radius: 10px;
+  corner-shape: notch;
+  text-align: center;
+  text-decoration: none;
+  color: var(--screenings-ink);
+  background: var(--background-color);
+  transition: color 0.2s ease;
 }
 
 .page-section-letterbox-video__link:hover {
