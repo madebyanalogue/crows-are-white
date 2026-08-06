@@ -786,6 +786,10 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+.site-header.is-over-hero-frosted .site-header__cart-count {
+  color: #111010;
+}
+
 .site-header__nav {
   position: relative;
   z-index: 1;

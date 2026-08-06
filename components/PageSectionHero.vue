@@ -33,6 +33,9 @@ const buttons = computed(() => {
 })
 
 const byline = computed(() => props.section?.heroByline?.trim() || '')
+const showButtons = ref(false)
+const hasButtonToggle = computed(() => buttons.value.length > 0)
+const showButtonStack = computed(() => showButtons.value && buttons.value.length > 0)
 const scrimOpacity = computed(() => {
   const value = props.section?.heroScrimOpacity
   if (value == null) return 1
@@ -86,14 +89,33 @@ useHead(() => ({
       <HeroWordmarkLogo :label="logoLabel" />
     </div>
 
+    <button
+      v-if="hasButtonToggle"
+      type="button"
+      class="page-section-hero__buttons-toggle"
+      :aria-pressed="showButtons"
+      aria-label="Toggle hero buttons"
+      @click="showButtons = !showButtons"
+    >
+      <span
+        class="page-section-hero__buttons-toggle-track"
+        :class="{ 'is-on': showButtons }"
+        aria-hidden="true"
+      >
+        <span class="page-section-hero__buttons-toggle-thumb" />
+      </span>
+      <span class="page-section-hero__buttons-toggle-label">Buttons</span>
+    </button>
+
     <div
-      v-if="buttons.length || byline"
+      v-if="showButtonStack || byline"
       class="page-section-hero__bottom"
+      :class="{ 'is-buttons-hidden': !showButtons }"
     >
       <div class="page-section-hero__bottom-spacer" aria-hidden="true" />
 
       <div
-        v-if="buttons.length"
+        v-if="showButtonStack"
         class="page-section-hero__buttons"
       >
         <MenuLink
@@ -113,6 +135,7 @@ useHead(() => ({
       <p
         v-if="byline"
         class="page-section-hero__byline handwritten"
+        :class="{ 'is-in-buttons-cell': !showButtons }"
       >
         {{ byline }}
       </p>
@@ -126,7 +149,9 @@ useHead(() => ({
   --hero-feature-color: var(--menu-highlight-color, var(--arancio, #ff9944));
 
   position: relative;
-  min-height: 100svh;
+  height: 100svh;
+  min-height: 50vw;
+  max-height: 145vw;
   overflow: hidden;
   background: #000;
   color: var(--fuji, #fff);
@@ -175,6 +200,7 @@ useHead(() => ({
   pointer-events: none;
   user-select: none;
   color: var(--hero-feature-color);
+  top:-7%;
 }
 
 .page-section-hero__logo-wrap :deep(.hero-wordmark-logo) {
@@ -183,11 +209,67 @@ useHead(() => ({
   height: 100%;
 }
 
+.page-section-hero__buttons-toggle {
+  position: absolute;
+  top: 40px;
+  left: 30px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hero-feature-color);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.page-section-hero__buttons-toggle-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.page-section-hero__buttons-toggle-track {
+  position: relative;
+  display: block;
+  width: 2.25rem;
+  height: 1.15rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  transition: background-color 0.25s ease;
+}
+
+.page-section-hero__buttons-toggle-track.is-on {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.page-section-hero__buttons-toggle-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0.12rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(0, -50%);
+  transition: transform 0.25s ease;
+}
+
+.page-section-hero__buttons-toggle-track.is-on .page-section-hero__buttons-toggle-thumb {
+  transform: translate(1rem, -50%);
+}
+
 .page-section-hero__bottom {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: clamp(2rem, 8vh, 5rem);
+  bottom: 70px;
   z-index: 3;
   display: grid;
   grid-template-columns: 1fr min(var(--site-header-panel-width-closed), 100%) 1fr;
@@ -204,7 +286,7 @@ useHead(() => ({
 }
 
 .page-section-hero__buttons {
-  grid-column: 2;
+  grid-area: buttons;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -217,12 +299,18 @@ useHead(() => ({
   margin: 0;
   align-self: end;
   width: 100%;
-  font-size: clamp(18px, 2vw, 42px);
+  font-size: clamp(38px, 2vw, 42px);
   line-height: 1.2;
   letter-spacing: 0.01em;
   text-align: center;
   color: var(--hero-feature-color);
   grid-area: byline;
+}
+
+.page-section-hero__byline.is-in-buttons-cell {
+  grid-column: 2;
+  grid-area: buttons;
+  align-self: end;
 }
 
 .page-section-hero__buttons :deep(.menu-link) {
@@ -290,14 +378,20 @@ useHead(() => ({
   background: rgba(0, 0, 0, 0.52);
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 999px) {
   .page-section-hero__bottom {
     grid-template-columns: 1fr;
-  grid-template-rows:repeat(2, 1fr);
-  grid-template-areas:
-    "byline"
-    "buttons";
+    grid-template-rows: repeat(2, auto);
+    grid-template-areas:
+      "byline"
+      "buttons";
     justify-items: center;
+    bottom: 50px;
+  }
+
+  .page-section-hero__bottom.is-buttons-hidden {
+    grid-template-rows: auto;
+    grid-template-areas: "buttons";
   }
 
   .page-section-hero__buttons {
@@ -307,8 +401,13 @@ useHead(() => ({
 
   .page-section-hero__byline {
     grid-column: auto;
-    font-size: clamp(24px, 3vw, 42px);
+    font-size: clamp(24px, 5.5vw, 42px);
     margin-bottom: 1rem;
+  }
+
+  .page-section-hero__bottom.is-buttons-hidden .page-section-hero__byline,
+  .page-section-hero__byline.is-in-buttons-cell {
+    margin-bottom: 0;
   }
 
   .page-section-hero__bottom-spacer {
