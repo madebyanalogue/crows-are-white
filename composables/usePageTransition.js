@@ -3,6 +3,7 @@ import {
   scheduleScrollSystemSettle,
   waitForScrollLayoutPaint,
 } from '~/composables/useScrollLayoutNotify'
+import { scrollRouteHashWhenReady } from '~/composables/useMenuLinks'
 import { applyPendingPageColors } from '~/composables/usePageColor'
 import {
   DEFAULT_PAGE_TRANSITION_WIPE_COLOR,
@@ -385,6 +386,10 @@ export function usePageTransition() {
     await resetPage(el)
     document.dispatchEvent(new CustomEvent('page-transition-complete'))
     scheduleScrollSystemSettle()
+
+    if (route.hash) {
+      scrollRouteHashWhenReady(route.hash, { afterPageTransition: true })
+    }
   }
 
   const transitionHandlers = {

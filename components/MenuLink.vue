@@ -64,16 +64,26 @@ const {
   getMenuItemRel,
   isCurrentPage,
   isSamePageLink,
+  isSamePageHref,
+  getUrlHash,
   scrollToTop,
   scrollToHash,
 } = useMenuLinks()
 
 function onLinkClick(event) {
   const href = getMenuItemUrl(props.item)
+  const hash = getUrlHash(href)
 
   if (href.startsWith('#')) {
     event.preventDefault()
     scrollToHash(href)
+    emit('click', event)
+    return
+  }
+
+  if (hash && isSamePageHref(href)) {
+    event.preventDefault()
+    scrollToHash(hash)
     emit('click', event)
     return
   }

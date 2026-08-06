@@ -1,6 +1,6 @@
 <template>
   <div class="page-content">
-      <div v-if="hasRichText" class="wrapper">
+      <div v-if="showPageIntro" class="wrapper">
         <div
           class="page-content__intro"
           :class="richTextTwoColumns
@@ -15,9 +15,10 @@
             <h1 class="h2 serif">{{ page.title }}</h1>
           </div>
           <SanityContent
+            v-if="hasRichText"
             :blocks="page.richText"
             class="rich-text underline-links "
-            :class="richTextTwoColumns ? 'max-width-medium' : 'page-content__intro-copy max-central-content'" 
+            :class="richTextTwoColumns ? 'max-width-medium' : 'page-content__intro-copy max-central-content'"
           />
         </div>
       </div>
@@ -53,6 +54,14 @@
         />
         <PageSectionVideos
           v-else-if="section.sectionType === 'videos'"
+          :section="section"
+        />
+        <PageSectionScreenings
+          v-else-if="section.sectionType === 'screenings'"
+          :section="section"
+        />
+        <PageSectionHostScreening
+          v-else-if="section.sectionType === 'hostScreening'"
           :section="section"
         />
 
@@ -174,6 +183,7 @@ watchEffect(() => {
 const hasRichText = computed(() => (props.page?.richText?.length ?? 0) > 0)
 const richTextTwoColumns = computed(() => props.page?.richTextTwoColumns !== false)
 const sections = computed(() => (props.page?.sections || []).filter(Boolean))
+const showPageIntro = computed(() => hasRichText.value || (sections.value.length === 0 && Boolean(props.page?.title)))
 
 const SECTION_PADDING_VALUES = {
   none: '0',

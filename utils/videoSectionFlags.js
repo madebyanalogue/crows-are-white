@@ -12,9 +12,14 @@ export function videoSectionTransparentHeader(section) {
   return section.videoTransparentHeader === true || isLegacyVideoHero(section)
 }
 
+function isHeroSection(section) {
+  return section?.sectionType === 'hero'
+}
+
 export function pageHasTransparentVideoHero(page) {
   const firstSection = (page?.sections || []).find(Boolean)
   if (!firstSection) return false
+  if (isHeroSection(firstSection)) return true
   return videoSectionTransparentHeader(firstSection)
 }
 
@@ -22,7 +27,8 @@ export function pageRemovesHeaderPadding(page) {
   const firstSection = (page?.sections || []).find(Boolean)
   if (!firstSection) return false
   return (
-    videoSectionRemoveHeaderPadding(firstSection)
+    isHeroSection(firstSection)
+    || videoSectionRemoveHeaderPadding(firstSection)
     || videoSectionTransparentHeader(firstSection)
     || firstSection.sectionType === 'videos'
     || firstSection.sectionType === 'watch'

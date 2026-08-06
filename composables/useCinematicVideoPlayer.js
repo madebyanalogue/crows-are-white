@@ -1,5 +1,6 @@
 import {
   buildVimeoPlayerUrl,
+  buildYoutubeEmbedUrl,
   formatVideoTime,
   parseVimeoData,
   resolveCinematicProvider,
@@ -24,6 +25,24 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
 
   let player = null
   let scrubbing = false
+  let playerSession = 0
+  let pendingPlayHandler = null
+
+  function clearPendingPlay() {
+    if (!pendingPlayHandler) return
+    const { video, handler } = pendingPlayHandler
+    video?.removeEventListener?.('canplay', handler)
+    pendingPlayHandler = null
+  }
+
+  function bumpPlayerSession() {
+    playerSession += 1
+    return playerSession
+  }
+
+  function isPlayerSessionActive(session) {
+    return session === playerSession
+  }
 
   function getMediaRefs() {
     return mediaComponentRef?.value || {}
@@ -81,8 +100,23 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     }
   }
 
-  function destroyPlayer() {
+  function stopEmbedIframe() {
+    const { plyrHost } = getMediaElements()
+    const iframe = plyrHost?.querySelector?.('iframe')
+    if (iframe) iframe.src = 'about:blank'
+  }
+
+  function stopMediaElements() {
+    clearPendingPlay()
+
+    stopEmbedIframe()
+
     if (player) {
+      try {
+        player.pause()
+      } catch {
+        // ignore
+      }
       try {
         player.destroy()
       } catch {
@@ -91,8 +125,20 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
       player = null
     }
 
+    stopEmbedIframe()
+
     const { videoEl } = getMediaElements()
-    videoEl?.pause?.()
+    if (videoEl) {
+      videoEl.pause()
+      videoEl.currentTime = 0
+      videoEl.removeAttribute('src')
+      videoEl.load()
+    }
+  }
+
+  function destroyPlayer() {
+    bumpPlayerSession()
+    stopMediaElements()
   }
 
   function handleEnded() {
@@ -123,42 +169,45 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
   }
 
   function primePlayer() {
-    destroyPlayer()
-    if (!import.meta.client) return
+    const session = bumpPlayerSession()
+    stopMediaElements()
+    if (!import.meta.client) return session
 
     const config = getResolvedConfig()
     const { videoEl, plyrHost } = getMediaElements()
 
     if (config.provider === 'native') {
       const video = videoEl
-      if (!video) return
+      if (!video) return session
       if (!video.getAttribute('src') && config.videoSrc) {
         video.src = config.videoSrc
       }
       bindNativeVideo(video)
-      return
+      return session
     }
 
     const host = plyrHost
-    if (!host) return
+    if (!host) return session
 
     const iframe = host.querySelector('iframe')
 
     if (config.provider === 'youtube' && config.youtubeId && iframe) {
-      const origin = window.location.origin
-      iframe.src = `https://www.youtube.com/embed/${config.youtubeId}?autoplay=1&origin=${encodeURIComponent(origin)}&iv_load_policy=3&modestbranding=1&playsinline=1&rel=0&enablejsapi=1`
+      iframe.src = buildYoutubeEmbedUrl(config.youtubeId, { autoplay: '0' })
       iframe.title = config.iframeTitle
     } else if (config.provider === 'vimeo' && config.vimeoId && iframe) {
       iframe.src = buildVimeoPlayerUrl(
         { id: config.vimeoId, hash: config.vimeoHash },
-        VIMEO_CINEMATIC_PARAMS,
+        { ...VIMEO_CINEMATIC_PARAMS, autoplay: 0 },
       )
       iframe.title = config.iframeTitle
     }
+
+    return session
   }
 
-  async function completeEmbedPlayer() {
+  async function completeEmbedPlayer(session = playerSession) {
     if (!import.meta.client || isNative()) return
+    if (!isPlayerSessionActive(session)) return
 
     const config = getResolvedConfig()
     const { plyrHost } = getMediaElements()
@@ -166,9 +215,10 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     if (!host || player) return
 
     const { default: Plyr } = await import('plyr')
+    if (!isPlayerSessionActive(session)) return
 
     const plyrOptions = {
-      autoplay: true,
+      autoplay: false,
       clickToPlay: false,
       hideControls: true,
       resetOnEnd: false,
@@ -186,6 +236,7 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     } else if (config.provider === 'vimeo') {
       plyrOptions.vimeo = {
         ...VIMEO_CINEMATIC_PARAMS,
+        autoplay: 0,
         byline: false,
         portrait: false,
         title: false,
@@ -195,12 +246,20 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     }
 
     player = new Plyr(host, plyrOptions)
+    if (!isPlayerSessionActive(session)) {
+      stopMediaElements()
+      return
+    }
 
     player.on('ready', () => {
+      if (!isPlayerSessionActive(session)) return
       setDuration(player.duration)
       player.play()?.catch?.(() => {})
     })
-    player.on('loadedmetadata', () => setDuration(player.duration))
+    player.on('loadedmetadata', () => {
+      if (!isPlayerSessionActive(session)) return
+      setDuration(player.duration)
+    })
     player.on('timeupdate', () => {
       if (!scrubbing) syncProgress(player.currentTime, player.duration)
     })
@@ -217,8 +276,8 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
   }
 
   async function initPlayer() {
-    primePlayer()
-    await completeEmbedPlayer()
+    const session = primePlayer()
+    await completeEmbedPlayer(session)
   }
 
   function togglePlay(event) {
@@ -292,27 +351,38 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
   }
 
   function play() {
+    const session = playerSession
     const { videoEl } = getMediaElements()
     if (isNative()) {
       const video = videoEl
       if (!video) return
+      clearPendingPlay()
       const attemptPlay = () => {
+        if (!isPlayerSessionActive(session)) return
         video.play()?.catch?.(() => {})
       }
       if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         attemptPlay()
       } else {
-        video.addEventListener('canplay', attemptPlay, { once: true })
+        const handler = () => attemptPlay()
+        pendingPlayHandler = { video, handler }
+        video.addEventListener('canplay', handler, { once: true })
       }
       return
     }
-    player?.play?.()?.catch?.(() => {})
+    if (!isPlayerSessionActive(session) || !player) return
+    player.play()?.catch?.(() => {})
   }
 
   function pause() {
     const { videoEl } = getMediaElements()
-    if (isNative()) videoEl?.pause?.()
-    else player?.pause?.()
+    if (isNative()) {
+      videoEl?.pause?.()
+    } else if (player) {
+      player.pause()
+    } else {
+      stopEmbedIframe()
+    }
     isPlaying.value = false
   }
 

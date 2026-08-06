@@ -17,7 +17,6 @@ const STATIC_PAGE_ROUTES = new Set([
   '/terms-of-use',
   '/credits',
   '/contact',
-  '/host-a-screening',
   '/book-a-screening',
   '/technical-requirements',
   '/shipping-delivery',

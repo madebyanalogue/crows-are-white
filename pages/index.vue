@@ -3,9 +3,14 @@ definePageMeta({
   transparentHeader: true,
 })
 
-const { data: page, error } = await useAsyncData('page-home', () =>
-  $fetch('/api/page/home'),
-)
+import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
+
+const { data: page, error } = await useAsyncData('page-home', async () => {
+  const home = await $fetch('/api/page/home').catch(() => null)
+  if (home) return home
+  return $fetch('/api/page/homepage').catch(() => null)
+})
 
 const pageTitle = useState('pageTitle', () => '')
 
@@ -16,6 +21,15 @@ watchEffect(() => {
 usePageDevBackground(page)
 usePageColor(page)
 usePageSeo(page)
+
+const heroLoop = computed(() => {
+  const heroSection = page.value?.sections?.find((section) => section?.sectionType === 'hero')
+  return heroSection ? resolveSectionLoopVideo(heroSection, 'hero') : null
+})
+
+useHead(() => ({
+  link: getLoopVideoHeadLinks(heroLoop.value),
+}))
 
 const displayPage = computed(() => {
   if (!page.value) return null

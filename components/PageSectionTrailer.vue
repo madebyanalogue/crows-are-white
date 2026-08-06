@@ -109,14 +109,74 @@ watch(
     if (typeof value === 'number') localRuntime.value = value
   },
 )
+
+const frameRef = ref(null)
+const { $lenis } = useNuxtApp()
+const { scrollElementIntoView } = useMenuLinks()
+const { register, unregister } = useTrailerPlayer()
+
+const trailerApi = {
+  open: () => frameRef.value?.open?.(),
+  close: () => frameRef.value?.close?.(),
+}
+
+function stopLenis() {
+  try {
+    $lenis?.stop?.()
+  } catch {
+    // ignore
+  }
+}
+
+function startLenis() {
+  try {
+    $lenis?.start?.()
+  } catch {
+    // ignore
+  }
+}
+
+function scrollTrailerIntoView() {
+  const root = frameRef.value?.$el
+  const stage = root?.querySelector?.('.cinematic-video-frame__stage')
+  if (stage) {
+    scrollElementIntoView(stage, { smooth: true, align: 'center' })
+    return
+  }
+
+  const section = document.getElementById('trailer')
+  if (section) scrollElementIntoView(section, { smooth: true, align: 'center' })
+}
+
+async function beforeOpen() {
+  scrollTrailerIntoView()
+  await new Promise((resolve) => setTimeout(resolve, 450))
+  stopLenis()
+}
+
+function onClose() {
+  startLenis()
+}
+
+onMounted(() => {
+  register(trailerApi)
+})
+
+onBeforeUnmount(() => {
+  unregister(trailerApi)
+  startLenis()
+})
 </script>
 
 <template>
   <section
+    id="trailer"
     class="page-section-trailer"
+    data-trailer-section
     :style="sectionStyle"
   >
     <CinematicVideoFrame
+      ref="frameRef"
       :title="title"
       :runtime="displayRuntime"
       :overlay-color="overlayColor"
@@ -130,6 +190,8 @@ watch(
       frame-class="page-section-trailer__frame"
       :scroll-scale="section.trailerScrollScale !== false"
       close-on-darken
+      :before-open="beforeOpen"
+      :on-close="onClose"
       :on-duration="setRuntimeFromSeconds"
     >
       <template #thumbnail>

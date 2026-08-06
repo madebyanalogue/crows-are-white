@@ -39,6 +39,7 @@ body {
   --background-color-rgb: var(--light-grey-rgb);
   --text-color-rgb: var(--black-rgb);
   --menu-background-color: var(--crema);
+  --menu-border-color: var(--menu-background-color);
   --menu-text-color: var(--obsidian);
   --menu-highlight-color: var(--arancio);
   --basket-icon-color: var(--menu-text-color);

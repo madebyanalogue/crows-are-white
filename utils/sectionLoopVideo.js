@@ -1,5 +1,13 @@
-import { cloudflareStreamMp4Url } from '~/utils/cloudflareStream'
+import { cloudflareStreamMp4Url, cloudflareStreamPosterUrl } from '~/utils/cloudflareStream'
 import { resolveSanityAssetUrl } from '~/utils/sanity'
+
+function pickCloudflarePoster(section, prefix) {
+  const id720 = section[`${prefix}LoopCloudflare720`]
+  const id1080 = section[`${prefix}LoopCloudflare1080`]
+  return cloudflareStreamPosterUrl(id1080 || id720)
+    || cloudflareStreamPosterUrl(id720)
+    || ''
+}
 
 /**
  * Resolve a looping background/preview video from Sanity section fields.
@@ -32,6 +40,7 @@ export function resolveSectionLoopVideo(section, prefix) {
       url720: cloudflare720 || cloudflare1080,
       url1080: cloudflare1080 || cloudflare720,
       url: cloudflare1080 || cloudflare720,
+      posterUrl: pickCloudflarePoster(section, prefix),
     }
   }
 
@@ -41,6 +50,7 @@ export function resolveSectionLoopVideo(section, prefix) {
       url: uploadUrl,
       url720: uploadUrl,
       url1080: uploadUrl,
+      posterUrl: '',
     }
   }
 

@@ -39,6 +39,26 @@ export function buildVimeoPlayerUrl(videoData, extraParams = {}) {
     : `https://player.vimeo.com/video/${videoData.id}`
 }
 
+export function buildYoutubeEmbedUrl(videoId, extraParams = {}) {
+  if (!videoId) return null
+
+  const params = new URLSearchParams({
+    autoplay: '1',
+    iv_load_policy: '3',
+    modestbranding: '1',
+    playsinline: '1',
+    rel: '0',
+    enablejsapi: '1',
+    ...extraParams,
+  })
+
+  if (import.meta.client) {
+    params.set('origin', window.location.origin)
+  }
+
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
+}
+
 export function resolveCinematicProvider(config = {}) {
   if (config.provider) return config.provider
   if (config.videoSrc) return 'native'

@@ -47,8 +47,7 @@ defineExpose({
       :class="shellClass"
     >
       <video
-        v-if="provider === 'native' && videoSrc"
-        v-show="active"
+        v-if="provider === 'native' && active && videoSrc"
         ref="videoElRef"
         class="cinematic-video-media__video"
         :src="videoSrc"
@@ -57,8 +56,7 @@ defineExpose({
       />
     </div>
     <div
-      v-if="provider !== 'native'"
-      v-show="active"
+      v-if="provider !== 'native' && active"
       ref="plyrShellRef"
       class="cinematic-video-media__shell"
       :class="shellClass"

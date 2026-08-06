@@ -5,15 +5,23 @@ const props = withDefaults(
     videoSrc?: string
     title?: string
     aspectClass?: string
+    mediaTransform?: string
   }>(),
   {
     title: 'Video loop',
     aspectClass: 'aspect-video',
+    mediaTransform: '',
   },
 )
 
 const mounted = ref(false)
 const videoReady = ref(false)
+
+const mediaStyle = computed(() => {
+  const transform = props.mediaTransform?.trim()
+  if (!transform) return undefined
+  return { transform }
+})
 
 onMounted(() => {
   mounted.value = true
@@ -72,6 +80,7 @@ function onVideoPlaying() {
       v-if="videoSrc"
       class="video-loop__native absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
       :class="videoReady ? 'opacity-100' : 'opacity-0'"
+      :style="mediaStyle"
       :src="videoSrc"
       autoplay
       muted
@@ -86,6 +95,7 @@ function onVideoPlaying() {
       v-else-if="loopSrc"
       class="video-loop__iframe absolute inset-0 h-full w-full border-0 transition-opacity duration-500"
       :class="videoReady ? 'opacity-100' : 'opacity-0'"
+      :style="mediaStyle"
       :src="loopSrc"
       :title="title"
       tabindex="-1"

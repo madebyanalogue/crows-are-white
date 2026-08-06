@@ -10,11 +10,34 @@ export function cloudflareStreamMp4Url(videoIdOrUrl) {
   return `https://videodelivery.net/${value}/downloads/default.mp4`
 }
 
+export function cloudflareStreamId(value) {
+  const trimmed = typeof value === 'string' ? value.trim() : ''
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parts = new URL(trimmed).pathname.split('/').filter(Boolean)
+      return parts[0] || ''
+    } catch {
+      return ''
+    }
+  }
+  return trimmed
+}
+
+export function cloudflareStreamPosterUrl(videoIdOrUrl, { height = 720 } = {}) {
+  const id = cloudflareStreamId(videoIdOrUrl)
+  if (!id || id.includes('.')) return ''
+  return `https://videodelivery.net/${id}/thumbnails/thumbnail.jpg?time=0s&height=${height}`
+}
+
 /**
  * Pick the best looping thumbnail URL from Sanity video data.
  * Prefers Cloudflare (1080p on large screens, 720p otherwise) then MP4 upload.
  */
 export function resolveLoopingThumbnailUrls(video, { prefer1080 = true } = {}) {
+  const empty = { source: null, url720: '', url1080: '', url: '' }
+  if (video?.thumbnailType === 'image') return empty
+
   const cloudflare720 = video?.thumbnailLoopCloudflare720Url
     || cloudflareStreamMp4Url(video?.thumbnailLoopCloudflare720)
   const cloudflare1080 = video?.thumbnailLoopCloudflare1080Url

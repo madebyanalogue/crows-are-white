@@ -132,21 +132,25 @@ onMounted(() => {
         class="page-section-press__links"
         aria-label="Press links"
       >
-        <a
+        <div
           v-for="link in links"
           :key="link._key"
-          :href="link.href"
-          class="page-section-press__link serif"
-          :target="link.target"
-          :rel="link.rel"
+          class="page-section-press__link-row"
         >
-          <span class="page-section-press__link-text">{{ link.label }}</span>
-          <span
-            v-if="link.showChevron"
-            class="page-section-press__link-chevron"
-            aria-hidden="true"
-          >▾</span>
-        </a>
+          <a
+            :href="link.href"
+            class="page-section-press__link large-title"
+            :target="link.target"
+            :rel="link.rel"
+          >
+            <span class="page-section-press__link-text">{{ link.label }}</span>
+            <span
+              v-if="link.showChevron"
+              class="page-section-press__link-chevron"
+              aria-hidden="true"
+            >▾</span>
+          </a>
+        </div>
       </nav>
     </div>
 
@@ -159,7 +163,7 @@ onMounted(() => {
 
 <style scoped>
 .page-section-press {
-  --press-border: color-mix(in srgb, var(--text-color) 30%, transparent);
+  --press-border: color-mix(in srgb, var(--text-color) 15%, transparent);
   --press-nav-clearance: calc(2rem + 50px + 1.25rem);
   position: relative;
   min-height: 100dvh;
@@ -300,39 +304,38 @@ onMounted(() => {
   }
 }
 
-.page-section-press__link {
+.page-section-press__link-row {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  min-height: clamp(5rem, 22vh, 12rem);
-  padding: 1.5rem clamp(1.25rem, 4vw, 2.5rem);
+  min-height: clamp(5rem, 32vh, 32rem);
+  padding: 1.5rem clamp(1.25rem, 6vw, 30px);
   border-bottom: 1px solid var(--press-border);
-  text-decoration: none;
-  text-align: center;
-  color: inherit;
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  transition: opacity 0.2s ease;
 }
 
-.page-section-press__link:last-child {
+.page-section-press__link-row:last-child {
   border-bottom: 0;
 }
 
+.page-section-press__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-decoration: none;
+  text-align: center;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
 .page-section-press__link:hover {
-  opacity: 0.72;
+  color: var(--menu-highlight-color, var(--arancio));
 }
 
 .page-section-press__link:focus-visible {
-  outline: 2px solid var(--text-color);
-  outline-offset: -4px;
-}
-
-.page-section-press__link-text {
-  max-width: 18ch;
+  outline: 2px solid var(--menu-highlight-color, var(--arancio));
+  outline-offset: 4px;
 }
 
 .page-section-press__link-chevron {

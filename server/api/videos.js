@@ -89,10 +89,17 @@ export default defineEventHandler(async () => {
           runtimeSeconds = await fetchVimeoRuntimeSeconds(video.vimeoUrl)
         }
 
-        const thumbnailVideoUrl = video.thumbnailVideo?.asset?.url || null
-        const thumbnailLoopCloudflare720Url = cloudflareStreamMp4Url(video.thumbnailLoopCloudflare720)
-        const thumbnailLoopCloudflare1080Url = cloudflareStreamMp4Url(video.thumbnailLoopCloudflare1080)
-        const usesCloudflareLoop = video.thumbnailVideoSource === 'cloudflare'
+        const thumbnailVideoUrl = video.thumbnailType === 'video'
+          ? (video.thumbnailVideo?.asset?.url || null)
+          : null
+        const thumbnailLoopCloudflare720Url = video.thumbnailType === 'video'
+          ? cloudflareStreamMp4Url(video.thumbnailLoopCloudflare720)
+          : null
+        const thumbnailLoopCloudflare1080Url = video.thumbnailType === 'video'
+          ? cloudflareStreamMp4Url(video.thumbnailLoopCloudflare1080)
+          : null
+        const usesCloudflareLoop = video.thumbnailType === 'video'
+          && video.thumbnailVideoSource === 'cloudflare'
           && Boolean(thumbnailLoopCloudflare720Url || thumbnailLoopCloudflare1080Url)
 
         return {

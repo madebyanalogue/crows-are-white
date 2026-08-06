@@ -1,17 +1,52 @@
-<script setup lang="ts">
-const pageTitle = useState('pageTitle', () => '')
-pageTitle.value = 'Host a Screening'
+<script setup>
+import { resolveSanityAssetUrl } from '~/utils/sanity'
+import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
+import { toCssColor } from '~/utils/pageColors'
 
-useHead({ title: 'Host a Screening — Crows Are White' })
-
-usePageColor({
-  pageColor: '#141414',
-  pageTextColor: '#4f4f4e',
-  menuBackgroundColor: '#ffffff',
-  menuTextColor: '#1a1a1a',
-  menuHighlightColor: '#ff59d0',
-  basketIconColor: '#1a1a1a',
+const props = defineProps({
+  section: {
+    type: Object,
+    required: true,
+  },
 })
+
+const title = computed(() => props.section?.hostScreeningTitle?.trim() || 'Host a Screening')
+const intro = computed(() =>
+  props.section?.hostScreeningIntro?.trim()
+  || 'We’re excited you’re interested in screening our film. Fill out the form and we’ll be in touch soon.',
+)
+
+const mediaType = computed(() => props.section?.hostScreeningMediaType || 'none')
+
+const loop = computed(() => {
+  if (mediaType.value !== 'video') return null
+  return resolveSectionLoopVideo(props.section, 'hostScreening')
+})
+
+const imageUrl = computed(() =>
+  mediaType.value === 'image'
+    ? resolveSanityAssetUrl(props.section?.hostScreeningImage?.asset)
+    : null,
+)
+
+const hasMedia = computed(() =>
+  Boolean(imageUrl.value || loop.value?.kind === 'mp4' || loop.value?.kind === 'cloudflare' || loop.value?.kind === 'youtube'),
+)
+
+const overlayOpacity = computed(() => {
+  const value = Number(props.section?.hostScreeningOverlayOpacity)
+  if (!Number.isFinite(value)) return 0
+  return Math.min(Math.max(value, 0), 100) / 100
+})
+
+const sectionStyle = computed(() => ({
+  '--host-line': 'color-mix(in srgb, var(--host-ink) 28%, transparent)',
+  '--host-ink': toCssColor(props.section?.hostScreeningTextColor, '#4f4f4e'),
+  '--host-hand': toCssColor(props.section?.hostScreeningAccentColor, '#ff59d0'),
+  '--host-form-bg': toCssColor(props.section?.hostScreeningFormBackgroundColor, '#ebe4eb'),
+  '--host-overlay': overlayOpacity.value,
+}))
 
 const orgTypes = [
   'College / University',
@@ -45,15 +80,46 @@ const form = reactive({
 function onSubmit() {
   // Wire to bookings@crowsarewhite.com / API later
 }
+
+useHead(() => ({
+  link: getLoopVideoHeadLinks(loop.value),
+}))
 </script>
 
 <template>
-  <div class="host-screening">
-    <div class="host-screening__inner">
-      <div class="host-screening__form-container">
-        <h1 class="host-screening__title serif">Host a Screening</h1>
-        <p class="host-screening__intro">
-          We’re excited you’re interested in screening our film. Fill out the form and we’ll be in touch soon.
+  <section
+    class="page-section-host-screening"
+    :class="{ 'has-background': hasMedia }"
+    :style="sectionStyle"
+  >
+    <div
+      v-if="hasMedia"
+      class="page-section-host-screening__media-wrap"
+      aria-hidden="true"
+    >
+      <SectionLoopVideo
+        v-if="loop"
+        :loop="loop"
+        title="Host a screening background"
+        aspect-class="page-section-host-screening__media"
+      />
+      <img
+        v-else-if="imageUrl"
+        class="page-section-host-screening__media page-section-host-screening__image"
+        :src="imageUrl"
+        :alt="section?.hostScreeningImage?.alt || ''"
+        draggable="false"
+      >
+      <div class="page-section-host-screening__overlay" />
+    </div>
+
+    <div class="page-section-host-screening__inner">
+      <div class="page-section-host-screening__form-container">
+        <h1 class="page-section-host-screening__title serif">
+          {{ title }}
+        </h1>
+        <p class="page-section-host-screening__intro">
+          {{ intro }}
         </p>
 
         <form class="host-form" @submit.prevent="onSubmit">
@@ -178,17 +244,14 @@ function onSubmit() {
         </form>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.host-screening {
-  --host-line: color-mix(in srgb, #4f4f4e 28%, transparent);
-  --host-ink: #4f4f4e;
-  --host-hand: #ff59d0;
-  --host-form-bg: #ebe4eb;
-  /* Nav sits at top: 2rem/3.5rem + 50px bar — clear it on both ends */
+.page-section-host-screening {
   --host-nav-clearance: calc(2rem + 50px + 1.5rem);
+
+  position: relative;
   box-sizing: border-box;
   min-height: 100dvh;
   display: flex;
@@ -197,40 +260,80 @@ function onSubmit() {
     var(--host-nav-clearance)
     var(--wrapper-padding, 25px)
     var(--host-nav-clearance);
+  overflow: hidden;
 }
 
 @media (min-width: 700px) {
-  .host-screening {
+  .page-section-host-screening {
     --host-nav-clearance: calc(3.5rem + 50px + 1.5rem);
   }
 }
 
-.host-screening__inner {
-  width: min(100%, 580px);
-  margin-top: auto;
-  margin-bottom: auto;
-  margin-left: auto;
-  margin-right: auto;
+.page-section-host-screening__media-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
-.host-screening__form-container {
+.page-section-host-screening :deep(.page-section-host-screening__media) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.page-section-host-screening :deep(.section-loop-video),
+.page-section-host-screening :deep(.video-loop) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.page-section-host-screening :deep(.section-loop-video__el),
+.page-section-host-screening :deep(.video-loop__native),
+.page-section-host-screening :deep(.video-loop__iframe) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-section-host-screening__image {
+  object-fit: cover;
+}
+
+.page-section-host-screening__overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: var(--host-overlay, 0);
+  pointer-events: none;
+}
+
+.page-section-host-screening__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 580px);
+  margin: auto;
+}
+
+.page-section-host-screening__form-container {
   background: var(--host-form-bg);
   color: var(--host-ink);
   padding: 35px;
 }
 
-.host-screening__title {
-  margin: 0 0 1.25rem;
-  text-align: center;
-  font-size: 17px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  color: var(--host-ink);
+.page-section-host-screening__title {
+  margin: .5em 0 1em 0px;
+    text-align: center;
+    font-size: clamp(24px, 4vw, 39px);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    color: var(--host-ink);
 }
 
-.host-screening__intro {
+.page-section-host-screening__intro {
   margin: 0 auto 2.5rem;
   max-width: 28rem;
   text-align: center;

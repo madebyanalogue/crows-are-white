@@ -38,7 +38,8 @@ const BRAND_HEX = {
 
 function isRawCssColor(color) {
   return typeof color === 'string' && (
-    color.startsWith('#')
+    color === 'transparent'
+    || color.startsWith('#')
     || color.startsWith('rgb')
     || color.startsWith('hsl')
     || color.startsWith('color(')
@@ -136,6 +137,7 @@ export function extractPageChromeColors(source = {}) {
     pageColor: normalizeColorValue(source?.pageColor),
     pageTextColor: normalizeColorValue(source?.pageTextColor),
     menuBackgroundColor: normalizeColorValue(source?.menuBackgroundColor),
+    menuBorderColor: normalizeColorValue(source?.menuBorderColor),
     menuTextColor: normalizeColorValue(source?.menuTextColor),
     menuHighlightColor: normalizeColorValue(source?.menuHighlightColor),
     basketIconColor: normalizeColorValue(source?.basketIconColor),
@@ -147,6 +149,7 @@ export function getPageColorVars(colors = {}) {
     pageColor,
     pageTextColor,
     menuBackgroundColor,
+    menuBorderColor,
     menuTextColor,
     menuHighlightColor,
     basketIconColor,
@@ -155,6 +158,9 @@ export function getPageColorVars(colors = {}) {
   const background = toCssColor(pageColor, DEFAULT_PAGE_COLOR)
   const text = toCssColor(resolvePageTextColor(pageTextColor, pageColor), 'obsidian')
   const menuBackground = toCssColor(menuBackgroundColor, DEFAULT_MENU_BACKGROUND_COLOR)
+  const menuBorder = menuBorderColor
+    ? toCssColor(menuBorderColor, DEFAULT_MENU_BACKGROUND_COLOR)
+    : menuBackground
   const menuText = toCssColor(
     resolvePageTextColor(menuTextColor, menuBackgroundColor || DEFAULT_MENU_BACKGROUND_COLOR),
     'obsidian',
@@ -168,6 +174,7 @@ export function getPageColorVars(colors = {}) {
     '--background-color': background,
     '--text-color': text,
     '--menu-background-color': menuBackground,
+    '--menu-border-color': menuBorder,
     '--menu-text-color': menuText,
     '--menu-highlight-color': menuHighlight,
     '--basket-icon-color': basketIcon,

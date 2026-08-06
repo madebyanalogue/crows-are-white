@@ -116,16 +116,20 @@ const videoUrl = computed(() => {
   if (sourceType.value === 'vimeo') return ''
   return props.video.videoUrl || props.video.videoFile?.asset?.url || ''
 })
+const thumbnailType = computed(() => props.video.thumbnailType || 'image')
 const loopingThumbnail = computed(() => resolveLoopingThumbnailUrls(props.video))
 const thumbnailLoop720Url = computed(() => loopingThumbnail.value.url720)
 const thumbnailLoop1080Url = computed(() => {
   const { url720, url1080 } = loopingThumbnail.value
   return url1080 && url1080 !== url720 ? url1080 : ''
 })
-const hasLoopingThumbnail = computed(() => Boolean(loopingThumbnail.value.url))
-const thumbnailImageUrl = computed(
-  () => props.video.thumbnailImageUrl || props.video.thumbnailImage?.asset?.url || '',
+const hasLoopingThumbnail = computed(
+  () => thumbnailType.value === 'video' && Boolean(loopingThumbnail.value.url),
 )
+const thumbnailImageUrl = computed(() => {
+  if (thumbnailType.value !== 'image') return ''
+  return props.video.thumbnailImageUrl || props.video.thumbnailImage?.asset?.url || ''
+})
 const vimeoId = computed(() => {
   if (props.video.vimeoId) return props.video.vimeoId
   return parseVimeoData(props.video.vimeoUrl)?.id || null
@@ -260,10 +264,10 @@ onMounted(() => {
 }
 
 .videos-item__stack-title {
-  margin: clamp(0.65rem, 2vw, 0.85rem) 0 0;
+  margin: 1.2em 0;
   padding: 0;
   color: var(--text-color);
-  font-size: clamp(18px, 4.5vw, 24px);
+  font-size: clamp(18px, 4vw, 24px);
   font-weight: 400;
   letter-spacing: 0.03em;
   line-height: 1.15;

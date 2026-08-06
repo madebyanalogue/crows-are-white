@@ -19,11 +19,19 @@ const props = defineProps({
   },
 })
 
-const { isSamePageHref, scrollToTop } = useMenuLinks()
+const { isSamePageHref, getUrlHash, scrollToTop, scrollToHash } = useMenuLinks()
 
 function onRichTextLinkClick(event, href) {
   if (!isSamePageHref(href)) return
+
+  const hash = getUrlHash(href)
   event.preventDefault()
+
+  if (hash) {
+    scrollToHash(hash)
+    return
+  }
+
   scrollToTop()
 }
 

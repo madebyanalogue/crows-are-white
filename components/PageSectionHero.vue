@@ -1,6 +1,8 @@
 <script setup>
-import { resolveSanityAssetUrl } from '~/utils/sanity'
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { getHeroFeatureColorVar } from '~/utils/heroChrome'
+import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
+import { isLightColor } from '~/utils/pageColors'
 
 const props = defineProps({
   section: {
@@ -10,7 +12,8 @@ const props = defineProps({
 })
 
 const loop = computed(() => resolveSectionLoopVideo(props.section, 'hero'))
-const logoUrl = computed(() => resolveSanityAssetUrl(props.section?.heroLogo?.asset) || '')
+const showLogo = computed(() => props.section?.heroShowLogo !== false)
+const logoLabel = computed(() => props.section?.heroLogoAlt?.trim() || 'Crows Are White')
 
 const buttons = computed(() => {
   const items = props.section?.heroButtons || []
@@ -24,57 +27,104 @@ const buttons = computed(() => {
         url: item.url,
       },
       isButton: item.style !== 'secondary',
+      style: item.style === 'secondary' ? 'secondary' : 'primary',
     }))
     .filter((item) => item.text)
 })
 
-const showScrim = computed(() => props.section?.heroShowScrim !== false)
+const byline = computed(() => props.section?.heroByline?.trim() || '')
+const scrimOpacity = computed(() => {
+  const value = props.section?.heroScrimOpacity
+  if (value == null) return 1
+  return Math.min(100, Math.max(0, value)) / 100
+})
+const showScrim = computed(() => props.section?.heroShowScrim !== false && scrimOpacity.value > 0)
+const videoTransform = computed(() => props.section?.heroVideoTransform?.trim() || '')
+
+const heroStyle = computed(() => ({
+  '--hero-feature-color': getHeroFeatureColorVar(props.section),
+  '--hero-primary-text-color': isLightColor(props.section?.heroFeatureColor)
+    ? 'var(--obsidian, #000e0a)'
+    : 'var(--fuji, #fff)',
+}))
+
+const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
+
+useHead(() => ({
+  link: getLoopVideoHeadLinks(loop.value),
+}))
 </script>
 
 <template>
   <section
     id="hero"
+    ref="sectionRef"
     class="page-section-hero"
     data-hero-section
+    :style="heroStyle"
   >
     <div class="page-section-hero__media-wrap">
       <SectionLoopVideo
         :loop="loop"
         title="Hero background"
         aspect-class="page-section-hero__media"
+        :media-transform="videoTransform"
+        priority
       />
       <div
         v-if="showScrim"
         class="page-section-hero__scrim"
+        :style="{ opacity: scrimOpacity }"
         aria-hidden="true"
       />
     </div>
 
-    <img
-      v-if="logoUrl"
-      class="page-section-hero__logo"
-      :src="logoUrl"
-      :alt="section.heroLogoAlt || 'Crows Are White'"
-      draggable="false"
+    <div
+      v-if="showLogo"
+      class="page-section-hero__logo-wrap"
     >
+      <HeroWordmarkLogo :label="logoLabel" />
+    </div>
 
     <div
-      v-if="buttons.length"
-      class="page-section-hero__cta-group"
+      v-if="buttons.length || byline"
+      class="page-section-hero__bottom"
     >
-      <MenuLink
-        v-for="button in buttons"
-        :key="button._key"
-        :item="button"
-        :link-class="button.isButton ? 'btn-primary' : 'btn-secondary'"
-        :show-arrow="false"
-      />
+      <div class="page-section-hero__bottom-spacer" aria-hidden="true" />
+
+      <div
+        v-if="buttons.length"
+        class="page-section-hero__buttons"
+      >
+        <MenuLink
+          v-for="button in buttons"
+          :key="button._key"
+          :item="button"
+          :link-class="[
+            'page-section-hero__button',
+            button.style === 'secondary'
+              ? 'page-section-hero__button--secondary'
+              : 'page-section-hero__button--primary',
+          ]"
+          :show-arrow="false"
+        />
+      </div>
+
+      <p
+        v-if="byline"
+        class="page-section-hero__byline handwritten"
+      >
+        {{ byline }}
+      </p>
     </div>
   </section>
 </template>
 
 <style scoped>
 .page-section-hero {
+  --site-header-panel-width-closed: 360px;
+  --hero-feature-color: var(--menu-highlight-color, var(--arancio, #ff9944));
+
   position: relative;
   min-height: 100svh;
   overflow: hidden;
@@ -105,7 +155,7 @@ const showScrim = computed(() => props.section?.heroShowScrim !== false)
 .page-section-hero :deep(.video-loop__native),
 .page-section-hero :deep(.video-loop__iframe),
 .page-section-hero :deep(.section-loop-video__el) {
-  object-position: center 20%;
+  object-position: center center;
 }
 
 .page-section-hero__scrim {
@@ -115,32 +165,154 @@ const showScrim = computed(() => props.section?.heroShowScrim !== false)
   pointer-events: none;
 }
 
-.page-section-hero__logo {
+.page-section-hero__logo-wrap {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  inset: 0;
   z-index: 2;
-  width: min(72vw, 520px);
-  height: auto;
-  transform: translate(-50%, -58%);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   pointer-events: none;
   user-select: none;
+  color: var(--hero-feature-color);
 }
 
-.page-section-hero__cta-group {
+.page-section-hero__logo-wrap :deep(.hero-wordmark-logo) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.page-section-hero__bottom {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: clamp(2rem, 8vh, 5rem);
   z-index: 3;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.75rem 1rem;
-  width: min(92vw, 640px);
-  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr min(var(--site-header-panel-width-closed), 100%) 1fr;
+  grid-template-areas:
+    "spacer buttons byline";
+  align-items: end;
+  gap: 1rem 1.5rem;
+  padding: 0 1rem;
+  pointer-events: none;
 }
 
-.page-section-hero__cta-group :deep(.menu-link) {
+.page-section-hero__bottom-spacer {
+  min-height: 0;
+}
+
+.page-section-hero__buttons {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
   pointer-events: auto;
+}
+
+.page-section-hero__byline {
+  grid-column: 3;
+  margin: 0;
+  align-self: end;
+  width: 100%;
+  font-size: clamp(18px, 2vw, 42px);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: var(--hero-feature-color);
+  grid-area: byline;
+}
+
+.page-section-hero__buttons :deep(.menu-link) {
+  display: flex;
+  padding: 0;
+  line-height: 1;
+
+  font-size: 17px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.page-section-hero__buttons :deep(.menu-link__content) {
+  display: block;
+}
+
+.page-section-hero__buttons :deep(.menu-link__label) {
+  display: block;
+  width: 100%;
+}
+
+.page-section-hero__buttons :deep(.menu-link__underline) {
+  display: none;
+}
+
+.page-section-hero__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 50px;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0;
+  font-family: var(--serif);
+  font-size: var(--header);
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.page-section-hero__button--primary {
+  background-color: var(--hero-feature-color);
+  border: 1px solid var(--hero-feature-color);
+  color: var(--hero-primary-text-color);
+}
+
+.page-section-hero__button--primary:hover {
+  filter: brightness(1.05);
+}
+
+.page-section-hero__button--secondary {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--hero-feature-color);
+  color: var(--hero-feature-color);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.page-section-hero__button--secondary:hover {
+  background: rgba(0, 0, 0, 0.52);
+}
+
+@media (max-width: 1000px) {
+  .page-section-hero__bottom {
+    grid-template-columns: 1fr;
+  grid-template-rows:repeat(2, 1fr);
+  grid-template-areas:
+    "byline"
+    "buttons";
+    justify-items: center;
+  }
+
+  .page-section-hero__buttons {
+    grid-column: auto;
+    width: min(100%, var(--site-header-panel-width-closed));
+  }
+
+  .page-section-hero__byline {
+    grid-column: auto;
+    font-size: clamp(24px, 3vw, 42px);
+    margin-bottom: 1rem;
+  }
+
+  .page-section-hero__bottom-spacer {
+    display: none;
+  }
 }
 </style>

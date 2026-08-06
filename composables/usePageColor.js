@@ -27,17 +27,6 @@ function getKnownPageColorsForPath(nuxtApp, path) {
     return extractPageChromeColors({ pageColor: 'crayon' })
   }
 
-  if (path === '/host-a-screening' || path === '/book-a-screening') {
-    return extractPageChromeColors({
-      pageColor: '#141414',
-      pageTextColor: '#4f4f4e',
-      menuBackgroundColor: '#ffffff',
-      menuTextColor: '#1a1a1a',
-      menuHighlightColor: '#ff59d0',
-      basketIconColor: '#1a1a1a',
-    })
-  }
-
   if (
     path === '/shop'
     || path === '/shop/'

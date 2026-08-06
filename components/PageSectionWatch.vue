@@ -408,7 +408,7 @@ const platforms = computed(() => {
     background: var(--watch-accent);
     color: var(--watch-accent-text);
     font-family: var(--serif);
-    font-size: clamp(16px, 3vw, 19px);
+    font-size: clamp(16px, 3vw, 18px);
     font-weight: 400;
     letter-spacing: 0.04em;
     line-height: 1.15;

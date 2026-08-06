@@ -1,6 +1,6 @@
 <template>
   <header class="page-header">
-    <h1 class="page-header__title serif">
+    <h1 class="page-header__title large-title">
       <slot name="title">{{ title }}</slot>
     </h1>
     <p v-if="subtitle || $slots.subtitle" class="page-header__subtitle">
@@ -28,14 +28,6 @@ defineProps({
   margin-bottom: clamp(2rem, 5vw, 3.5rem);
 }
 
-.page-header__title {
-  margin: 0;
-  font-size: clamp(36px, 5.5vw, 58px);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
-  text-transform: uppercase;
-}
 
 .page-header__subtitle {
   margin: 0.85rem auto 0;

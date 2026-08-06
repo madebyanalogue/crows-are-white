@@ -1,9 +1,11 @@
 <template>
   <div
+    ref="sectionRef"
     class="page-section-videos"
     :class="{
       'is-stack-layout': isStackLayout,
       'is-player-open': isPlayerOpen,
+      'is-navigation-suspended': isNavigationSuspended,
     }"
   >
     <div
@@ -131,6 +133,7 @@ watch(
 )
 
 const sliderElement = ref(null)
+const sectionRef = ref(null)
 const reelRef = ref(null)
 const currentIndex = ref(0)
 const focusedIndex = ref(0)
@@ -138,6 +141,7 @@ const isDragging = ref(false)
 const sliderSettled = ref(false)
 const isPlayerOpen = ref(false)
 const isStackLayout = ref(false)
+const isNavigationSuspended = ref(false)
 const itemRefs = []
 let lenisWasStopped = false
 let parallaxNodes = []
@@ -217,7 +221,7 @@ function setReelToIndex(index, { animate = true, direction = 1 } = {}) {
   })
 }
 
-const { slider, destroy: destroySlider } = useSmooothy(sliderElement, () => ({
+const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderElement, () => ({
   vertical: true,
   infinite: true,
   snap: true,
@@ -254,6 +258,7 @@ const { slider, destroy: destroySlider } = useSmooothy(sliderElement, () => ({
     if (slider.value) slider.value.paused = false
   },
   onUpdate: (instance) => {
+    if (isNavigationSuspended.value) return
     const dragging = Boolean(instance.isDragging)
     isDragging.value = dragging
     applyParallax(instance)
@@ -261,7 +266,7 @@ const { slider, destroy: destroySlider } = useSmooothy(sliderElement, () => ({
     if (!dragging) syncCurrentToCenter(instance)
   },
   onResize: (instance) => {
-    if (instance.isDragging || snapLock) return
+    if (instance.isDragging || snapLock || isNavigationSuspended.value) return
     syncSliderPosition(currentIndex.value, instance)
   },
   onReady: (instance) => {
@@ -441,7 +446,7 @@ function handleKeydown(event) {
 watch(
   () => videos.value.length,
   async (count) => {
-    if (!count || isStackLayout.value) return
+    if (!count || isStackLayout.value || isNavigationSuspended.value) return
     await nextTick()
     collectParallaxNodes()
     snapSliderInstant(currentIndex.value)
@@ -451,7 +456,7 @@ watch(
 watch(
   slider,
   (instance) => {
-    if (!instance || isStackLayout.value) return
+    if (!instance || isStackLayout.value || isNavigationSuspended.value) return
     nextTick(() => snapSliderInstant(currentIndex.value, instance))
   },
   { flush: 'post' },
@@ -471,15 +476,19 @@ function bootSlider() {
   })
 }
 
-function teardownSlider() {
+function teardownSlider({ unlockScroll = true } = {}) {
   window.removeEventListener('keydown', handleKeydown)
   if (reelTween) reelTween.kill()
   stopAllExcept(-1)
   destroySlider()
-  unlockPageScroll()
-  startLenis()
   isPlayerOpen.value = false
-  sliderSettled.value = false
+  isNavigationSuspended.value = false
+
+  if (unlockScroll) {
+    releaseDeferredScrollUnlock()
+  } else {
+    scheduleDeferredScrollUnlock()
+  }
 }
 
 watch(isStackLayout, (stack) => {
@@ -493,9 +502,56 @@ watch(isStackLayout, (stack) => {
 })
 
 function holdNativeScrollOff() {
-  if (isStackLayout.value) return
+  if (isStackLayout.value || isNavigationSuspended.value) return
+  const isTransitioning = useState('pageTransitioning', () => false)
+  if (isTransitioning.value) return
   lockPageScroll()
   stopLenis()
+}
+
+function suspendForNavigation() {
+  if (isNavigationSuspended.value || isStackLayout.value) return
+
+  isNavigationSuspended.value = true
+  pauseUpdates()
+
+  const instance = slider.value
+  if (instance) {
+    instance.paused = true
+    instance.target = instance.current
+  }
+
+  if (reelTween) {
+    reelTween.kill()
+    reelTween = null
+  }
+}
+
+function suspendForPageLeave(event) {
+  const section = sectionRef.value
+  const leavingRoot = event?.detail?.leavingRoot
+  if (!section || !leavingRoot?.contains(section)) return
+  suspendForNavigation()
+}
+
+function releaseDeferredScrollUnlock() {
+  unlockPageScroll()
+  startLenis()
+}
+
+function scheduleDeferredScrollUnlock() {
+  const isTransitioning = useState('pageTransitioning', () => false)
+  if (!isTransitioning.value) {
+    releaseDeferredScrollUnlock()
+    return
+  }
+
+  const handler = () => {
+    document.removeEventListener('page-transition-complete', handler)
+    releaseDeferredScrollUnlock()
+  }
+
+  document.addEventListener('page-transition-complete', handler, { once: true })
 }
 
 onMounted(() => {
@@ -508,6 +564,7 @@ onMounted(() => {
   if (!isStackLayout.value) {
     holdNativeScrollOff()
     window.addEventListener('keydown', handleKeydown)
+    document.addEventListener('crows:page-transition-before-leave', suspendForPageLeave)
   }
 
   const boot = () => {
@@ -530,12 +587,19 @@ onMounted(() => {
   }
 })
 
+onBeforeRouteLeave(() => {
+  suspendForNavigation()
+})
+
 onBeforeUnmount(() => {
   stackMediaQuery?.removeEventListener('change', updateStackLayout)
   window.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('crows:page-transition-before-leave', suspendForPageLeave)
   document.removeEventListener('crows:lenis-ready', holdNativeScrollOff)
   document.removeEventListener('crows:scroll-system-ready', holdNativeScrollOff)
-  teardownSlider()
+
+  const isTransitioning = useState('pageTransitioning', () => false)
+  teardownSlider({ unlockScroll: !isTransitioning.value })
 })
 </script>
 

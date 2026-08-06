@@ -31,6 +31,8 @@ export default defineNuxtConfig({
         },
       ],
       link: [
+        { rel: 'preconnect', href: 'https://use.typekit.net', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://use.typekit.net/qfm4jik.css' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {

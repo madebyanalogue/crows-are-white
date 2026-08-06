@@ -40,10 +40,16 @@ export function resolveSanityAssetUrl(asset) {
   const ref = asset._ref || asset._id
   if (typeof ref !== 'string') return null
 
-  const match = ref.match(/image-([^-]+)-(\d+)x(\d+)-(\w+)/)
-  if (match) {
-    const [, assetId, width, height, ext] = match
+  const imageMatch = ref.match(/image-([^-]+)-(\d+)x(\d+)-(\w+)/)
+  if (imageMatch) {
+    const [, assetId, width, height, ext] = imageMatch
     return `https://cdn.sanity.io/images/11cdscj2/production/${assetId}-${width}x${height}.${ext}`
+  }
+
+  const fileMatch = ref.match(/file-([^-]+)-(\w+)/)
+  if (fileMatch) {
+    const [, assetId, ext] = fileMatch
+    return `https://cdn.sanity.io/files/11cdscj2/production/${assetId}.${ext}`
   }
 
   return null

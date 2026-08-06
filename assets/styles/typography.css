@@ -44,7 +44,8 @@
 
 :root {
   --sans: 'Basis Grotesque', system-ui, sans-serif;
-  --serif: 'Sirca Display', ui-serif, Georgia, serif;
+  --serif: "Sirca Display", ui-serif, Georgia, serif;
+  --serif-body: "athelas", ui-serif, Georgia, serif;
   --quote: 'Aktiv Grotesk', system-ui, sans-serif;
   --handwritten: 'Biro Script', 'Segoe Print', 'Comic Sans MS', cursive;
 
@@ -110,6 +111,8 @@ body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.000em; }
 .h8 { font-size: var(--h8); line-height: 1.0; letter-spacing: -0.000em; }
 .body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.0175em; }
 
+.large-title { font-size: clamp(30px, 2.5vw, 70px); line-height: 1.1; letter-spacing: -0.000em; font-weight: 300; font-style: normal; font-family: var(--serif); }
+
 .goudy {
   font-family: var(--goudy);
 }
@@ -152,6 +155,7 @@ header {
 .headline {
   font-family: var(--serif);
   font-weight: 400;
+  font-style: normal;
 }
 
 .quote {

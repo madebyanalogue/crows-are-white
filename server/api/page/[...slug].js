@@ -364,13 +364,22 @@ function pageSectionProjection() {
         mimeType
       }
     },
-    heroLogo ${imageProjection},
+    heroShowLogo,
     heroLogoAlt,
     heroShowScrim,
+    heroScrimOpacity,
+    heroByline,
+    heroFeatureColor,
+    heroMenuFrosted,
+    heroMenuBackgroundColor,
+    heroMenuTextColor,
+    heroMenuBorderColorMode,
+    heroMenuBorderColor,
     heroVideoSource,
     heroLoopCloudflare720,
     heroLoopCloudflare1080,
     heroVideoId,
+    heroVideoTransform,
     heroVideoFile {
       asset-> {
         _id,
@@ -449,6 +458,7 @@ function pageSectionProjection() {
     },
     pressQuotesTitle,
     pressQuotesShowTitle,
+    pressQuotesStackMode,
     pressQuotesItems[]-> {
       _id,
       quote,
@@ -459,6 +469,28 @@ function pageSectionProjection() {
       layer2 ${imageProjection},
       layer3 ${imageProjection}
     },
+    screeningsTitle,
+    screeningsLede,
+    screeningsEmptyTitle,
+    screeningsEmptyText,
+    hostScreeningTitle,
+    hostScreeningIntro,
+    ${colorField('hostScreeningFormBackgroundColor')},
+    ${colorField('hostScreeningTextColor')},
+    ${colorField('hostScreeningAccentColor')},
+    hostScreeningMediaType,
+    hostScreeningOverlayOpacity,
+    hostScreeningImage ${imageProjection},
+    hostScreeningVideo {
+      asset-> {
+        _id,
+        url,
+        mimeType
+      }
+    },
+    hostScreeningVideoSource,
+    hostScreeningLoopCloudflare720,
+    hostScreeningLoopCloudflare1080,
     assembleWidgetFilmIds,
     assembleWidgetMxId,
     assembleWidgetTabs,
@@ -485,13 +517,14 @@ export default defineEventHandler(async (event) => {
   try {
     const client = getSanityClient(useRuntimeConfig())
     const sectionFields = pageSectionProjection()
-    const query = `*[${pageDocumentFilter(slug)}][0] {
+    const query = `*[${pageDocumentFilter()}][0] {
       _id,
       title,
       slug,
       ${colorField('pageColor')},
       ${colorField('pageTextColor')},
       ${colorField('menuBackgroundColor')},
+      ${colorField('menuBorderColor')},
       ${colorField('menuTextColor')},
       ${colorField('menuHighlightColor')},
       ${colorField('basketIconColor')},

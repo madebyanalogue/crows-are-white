@@ -1,13 +1,4 @@
-export const PAGE_DOCUMENT_IDS = {
-  home: 'page-home',
-  watch: 'page-watch',
-}
-
-export function pageDocumentFilter(slug) {
-  const documentId = PAGE_DOCUMENT_IDS[slug]
-  if (documentId) {
-    return `_type == "page" && _id == "${documentId}"`
-  }
+export function pageDocumentFilter() {
   return '_type == "page" && slug.current == $slug'
 }
 

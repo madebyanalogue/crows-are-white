@@ -11,6 +11,7 @@ export function useSmooothy(elementRef, config = {}) {
   const ready = ref(false)
   let tickerFn = null
   let initPromise = null
+  let updatesPaused = false
 
   async function init() {
     if (!import.meta.client || slider.value || !elementRef.value) return slider.value
@@ -48,6 +49,19 @@ export function useSmooothy(elementRef, config = {}) {
       slider.value = null
     }
     ready.value = false
+    updatesPaused = false
+  }
+
+  function pauseUpdates() {
+    if (updatesPaused || !tickerFn) return
+    gsap.ticker.remove(tickerFn)
+    updatesPaused = true
+  }
+
+  function resumeUpdates() {
+    if (!updatesPaused || !slider.value || !tickerFn) return
+    gsap.ticker.add(tickerFn)
+    updatesPaused = false
   }
 
   watch(
@@ -71,5 +85,7 @@ export function useSmooothy(elementRef, config = {}) {
     ready,
     init,
     destroy,
+    pauseUpdates,
+    resumeUpdates,
   }
 }

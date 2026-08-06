@@ -1,7 +1,11 @@
 <template>
   <header
     class="site-header"
-    :class="{ 'is-open': menuOpen }"
+    :class="{
+      'is-open': menuOpen,
+      'is-over-hero': heroMenuActive,
+      'is-over-hero-frosted': heroMenuFrosted,
+    }"
   >
     <div
       v-if="menuOpen"
@@ -150,6 +154,8 @@ const { primaryMenu, secondaryMenu } = useSiteSettings()
 const { count: cartCount, isOpen: cartOpen, toggleCart } = useCart()
 const route = useRoute()
 const menuOpen = ref(false)
+const heroMenuActive = useHeroMenuActive()
+const heroMenuFrosted = useHeroMenuFrosted()
 const pageTitle = useState('pageTitle', () => '')
 const { getMenuItemUrl } = useMenuLinks()
 const navInnerRef = ref(null)
@@ -548,6 +554,7 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 0;
   background-color: var(--menu-background-color, var(--crema));
+  border: 1px solid var(--menu-border-color, var(--menu-background-color, var(--crema)));
   pointer-events: none;
   transition: inset 0.32s ease;
 }
@@ -563,6 +570,13 @@ onBeforeUnmount(() => {
 
 .site-header.is-open .site-header__panel::before {
   inset: 0;
+}
+
+.site-header.is-over-hero-frosted .site-header__panel::before {
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: var(--menu-border-color, transparent);
 }
 
 .site-header__bar {

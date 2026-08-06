@@ -127,7 +127,7 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
 
     if (overlay) tl.to(overlay, { autoAlpha: 0, duration: 0.2 }, 0)
     if (dialog) tl.to(dialog, { autoAlpha: 1, duration: 0.35 }, 0)
-    if (darken) tl.to(darken, { autoAlpha: 0.9, scale: 4, duration: 0.55 }, 0)
+    if (darken) tl.to(darken, { autoAlpha: 0.9, scale: 4, duration: 0.55 }, 0.2)
     if (thumbnail) tl.to(thumbnail, { autoAlpha: 0, duration: 0.35 }, 0.25)
     if (controls.length) {
       tl.to(
@@ -146,6 +146,12 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     isOpening.value = true
     controlsHovered = false
 
+    await beforeOpen?.()
+    if (token !== openToken) {
+      isOpening.value = false
+      return false
+    }
+
     isOpen.value = true
     playerReady.value = true
     await nextTick()
@@ -153,13 +159,12 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     startOpenAnimation(token)
     onOpen?.()
 
-    player.primePlayer()
-    player.play()
+    const playerSession = player.primePlayer()
+    if (player.isNative()) player.play()
 
     void (async () => {
-      await beforeOpen?.()
       if (token !== openToken) return
-      await player.completeEmbedPlayer()
+      await player.completeEmbedPlayer(playerSession)
     })()
 
     return true
@@ -169,13 +174,14 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     if (!isOpen.value || isOpening.value) return
     openToken += 1
     isOpening.value = true
+    playerReady.value = false
     controlsHovered = false
     if (controlsTween) {
       controlsTween.kill()
       controlsTween = null
     }
 
-    player.pause()
+    player.destroyPlayer()
     onClose?.()
 
     const overlay = refs.overlayRef?.value
