@@ -379,7 +379,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.screenings-row:not(.screenings-row--disabled) .screenings-row__action:hover .screenings-book,
+.screenings-row:not(.screenings-row--disabled) .screenings-row__action .screenings-book,
 .screenings-row:not(.screenings-row--disabled) .screenings-row__link:focus-visible .screenings-row__action .screenings-book {
   background-color: var(--screenings-ink);
   color: #fff;
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   width: 100%;
   min-height: 2.85rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0.6rem 0.75rem .5rem;
   border: 3px double var(--screenings-ink);
   font-family: var(--sans);
   font-size: var(--screenings-ui);
@@ -459,7 +459,7 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   color: var(--screenings-ink);
   border-radius: 5px;
-    corner-shape: notch;
+    corner-shape: rounded;
   transition: background-color 0.15s ease, color 0.15s ease;
   pointer-events: none;
 }
