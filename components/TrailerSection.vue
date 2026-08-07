@@ -136,7 +136,7 @@ defineExpose(api)
 }
 
 .trailer-section:has(.is-open) {
-  z-index: 450;
+  z-index: var(--z-cinematic-video);
 }
 
 .trailer-section :deep(.trailer-section__frame) {

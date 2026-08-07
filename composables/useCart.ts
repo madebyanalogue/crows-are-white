@@ -5,6 +5,8 @@ export function useCart() {
   const loading = useState('shopify-cart-loading', () => false)
   const checkoutLoading = useState('shopify-checkout-loading', () => false)
   const isOpen = useState('cart-drawer-open', () => false)
+  const lastAddedLineId = useState<string | null>('cart-last-added-line-id', () => null)
+  const isAddingItem = useState('cart-adding-item', () => false)
 
   const count = computed(() => cart.value?.totalQuantity ?? 0)
   const subtotal = computed(() => cart.value?.subtotal ?? '0.00')
@@ -40,8 +42,39 @@ export function useCart() {
     }
   }
 
-  function addToCart(variantId: string, quantity = 1) {
-    return mutateCart({action: 'add', variantId, quantity})
+  async function addToCart(variantId: string, quantity = 1) {
+    await mutateCart({action: 'add', variantId, quantity})
+    const line = cart.value?.lines.find((entry) => entry.variantId === variantId)
+    if (line) {
+      lastAddedLineId.value = line.id
+    }
+  }
+
+  function clearLastAddedLineId() {
+    lastAddedLineId.value = null
+  }
+
+  function waitForCartOpen() {
+    if (!import.meta.client) return Promise.resolve()
+
+    const { cartDisplayMode } = useSiteSettings()
+    const duration = cartDisplayMode.value === 'drawer' ? 450 : 320
+    return new Promise<void>((resolve) => {
+      window.setTimeout(resolve, duration)
+    })
+  }
+
+  async function addToCartWithOpen(variantId: string, quantity = 1) {
+    isAddingItem.value = true
+    try {
+      if (!isOpen.value) {
+        openCart()
+        await waitForCartOpen()
+      }
+      await addToCart(variantId, quantity)
+    } finally {
+      isAddingItem.value = false
+    }
   }
 
   function updateQty(lineId: string, quantity: number) {
@@ -94,8 +127,13 @@ export function useCart() {
     loading,
     checkoutLoading,
     isOpen,
+    lastAddedLineId,
+    isAddingItem,
     refreshCart,
     addToCart,
+    addToCartWithOpen,
+    clearLastAddedLineId,
+    waitForCartOpen,
     updateQty,
     removeFromCart,
     checkout,

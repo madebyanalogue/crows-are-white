@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
 }
 
 .page-section-trailer:has(.is-open) {
-  z-index: 450;
+  z-index: var(--z-cinematic-video);
 }
 
 .page-section-trailer :deep(.page-section-trailer__frame) {

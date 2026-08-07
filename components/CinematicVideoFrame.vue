@@ -398,7 +398,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 }
 
 .cinematic-video-frame.is-open {
-  z-index: 450;
+  z-index: var(--z-cinematic-video);
 }
 
 .cinematic-video-frame__stage {
@@ -462,6 +462,11 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   position: absolute;
   inset: 0;
   z-index: 3;
+  pointer-events: none;
+}
+
+.cinematic-video-frame.is-open .cinematic-video-frame__overlay-wrap {
+  z-index: 5;
 }
 
 .cinematic-video-frame__dialog {
@@ -546,16 +551,17 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 .cinematic-video-frame.is-open .cinematic-video-frame__darken {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 1;
   pointer-events: auto;
 }
 
 .cinematic-video-frame.is-open .cinematic-video-frame__stage {
-  z-index: 55;
+  z-index: 2;
   cursor: pointer;
 }
 
 .cinematic-video-frame.is-open .cinematic-video-frame__dialog {
+  z-index: 3;
   cursor: pointer;
 }
 

@@ -60,9 +60,14 @@ export function shopIndexLink(filter: ShopFilterId = 'all') {
   return { path: '/shop', query: { filter } }
 }
 
+export function shopIndexHref(filter: ShopFilterId = 'all') {
+  if (filter === 'all') return '/shop'
+  return `/shop?filter=${encodeURIComponent(filter)}`
+}
+
 export function shopProductLink(handle: string, filter: ShopFilterId = 'all') {
   if (filter === 'all') return `/shop/${handle}`
-  return { path: `/shop/${handle}`, query: { filter } }
+  return `/shop/${handle}?filter=${encodeURIComponent(filter)}`
 }
 
 function normalizeToken(value = '') {

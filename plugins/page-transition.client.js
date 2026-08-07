@@ -2,6 +2,7 @@ import {
   resumePageColorTransitions,
   suspendPageColorTransitions,
 } from '~/composables/usePageColor'
+import { isShopRoute } from '~/utils/shopColors'
 
 export default defineNuxtPlugin((nuxtApp) => {
   if (typeof window === 'undefined') return
@@ -11,6 +12,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const isInitialPageLoad = useState('dorsia_isInitialPageLoad', () => true)
   const pageColorSwapped = useState('crows_pageColorSwapped', () => false)
   const pendingRoutePath = useState('dorsia_pendingRoutePath', () => '')
+  const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
   let isAppMounted = false
 
   function shouldAnimate(from) {
@@ -33,9 +35,14 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (from.matched.length === 0) return true
     if (to.fullPath === from.fullPath) return true
 
+    skipNextPageTransition.value = isShopRoute(from.path) && isShopRoute(to.path)
+
     suspendPageColorTransitions()
 
-    if (!shouldAnimate(from)) return true
+    if (!shouldAnimate(from) || skipNextPageTransition.value) {
+      isTransitioning.value = false
+      return true
+    }
 
     pageColorSwapped.value = false
     pendingRoutePath.value = to.path

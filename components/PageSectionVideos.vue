@@ -623,6 +623,10 @@ onBeforeUnmount(() => {
   --videos-slide-gap: clamp(24px, 7vw, 200px);
 }
 
+.page-section-videos:has(.is-open) {
+  z-index: var(--z-cinematic-video);
+}
+
 .page-section-videos.is-stack-layout {
   height: auto;
   min-height: 100svh;

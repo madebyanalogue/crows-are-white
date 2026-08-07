@@ -365,7 +365,7 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 
   /* 2x2 feature cell: divider from column 1 and a baseline when row 3 is empty. */
   .shop-grid--feature .shop-cell:nth-child(6n + 3) {
-    border-left: 1px solid var(--shop-line);
+    /* border-left: 1px solid var(--shop-line); */
     border-bottom: 1px solid var(--shop-line);
   }
 

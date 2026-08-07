@@ -9,6 +9,7 @@ import {
   DEFAULT_PAGE_TRANSITION_WIPE_COLOR,
   resolvePageColorCssValue,
 } from '~/utils/pageColors'
+import { isShopRoute } from '~/utils/shopColors'
 
 export const LEAVE_PAGE_DURATION = 0.7
 export const WIPE_COVER_DURATION = 0.7
@@ -332,7 +333,15 @@ export function usePageTransition() {
   }
 
   function shouldSkipTransition() {
-    return getReducedMotion()
+    if (getReducedMotion()) return true
+
+    const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
+    if (skipNextPageTransition.value) {
+      skipNextPageTransition.value = false
+      return true
+    }
+
+    return false
   }
 
   function stopLenis() {

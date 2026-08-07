@@ -159,7 +159,7 @@
 <script setup>
 import gsap from 'gsap'
 import { defaultMainMenu, defaultMainMenuSub } from '~/data/site'
-import { shopFilterFromQuery, shopIndexLink } from '~/utils/shopCollections'
+import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
 
 const { primaryMenu, secondaryMenu, cartDisplayMode } = useSiteSettings()
 const { count: cartCount, isOpen: cartOpen, toggleCart, closeCart } = useCart()
@@ -252,7 +252,7 @@ const currentPageName = computed(() => {
 const pageNameLink = computed(() => {
   if (cartOpen.value) return null
   if (isShopProductPath(route.path)) {
-    return shopIndexLink(shopFilterFromQuery(route.query.filter))
+    return shopIndexHref(shopFilterFromQuery(route.query.filter))
   }
   return null
 })
@@ -284,8 +284,9 @@ function openMenu() {
   if (!menuOpen.value) menuOpen.value = true
 }
 
-function onBarClick() {
+function onBarClick(event) {
   if (menuOpen.value) return
+  if (event.target.closest('a, button')) return
   openMenu()
 }
 

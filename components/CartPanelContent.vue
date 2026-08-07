@@ -18,6 +18,9 @@ const {
   checkout,
   checkoutLoading,
   loading,
+  lastAddedLineId,
+  isAddingItem,
+  clearLastAddedLineId,
 } = useCart()
 
 function formatPrice(amount: string, currency = 'USD') {
@@ -30,6 +33,13 @@ function lineTotal(price: string, qty: number) {
 
 function onClose() {
   emit('close')
+}
+
+function onItemEnterEnd(lineId: string, event: AnimationEvent) {
+  if (event.animationName !== 'cart-item-enter') return
+  if (lineId === lastAddedLineId.value) {
+    clearLastAddedLineId()
+  }
 }
 </script>
 
@@ -51,10 +61,17 @@ function onClose() {
     </header>
 
     <div
-      v-if="loading && items.length === 0"
+      v-if="loading && items.length === 0 && !isAddingItem"
       class="cart-panel__empty"
     >
       Loading cart…
+    </div>
+
+    <div
+      v-else-if="items.length === 0 && isAddingItem"
+      class="cart-panel__empty"
+    >
+      Adding to cart…
     </div>
 
     <div
@@ -77,6 +94,8 @@ function onClose() {
           v-for="item in items"
           :key="item.id"
           class="cart-panel__item"
+          :class="{ 'cart-panel__item--entering': item.id === lastAddedLineId }"
+          @animationend="onItemEnterEnd(item.id, $event)"
         >
           <component
             :is="item.handle ? 'NuxtLink' : 'div'"
@@ -255,6 +274,22 @@ function onClose() {
   gap: 12px;
   padding: 14px 4px;
   border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.cart-panel__item--entering {
+  animation: cart-item-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cart-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .cart-panel__thumb {

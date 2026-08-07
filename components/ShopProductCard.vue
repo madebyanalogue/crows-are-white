@@ -24,26 +24,30 @@ const productTo = computed(() => {
   >
     <ShopSaleBadge :on-sale="product.onSale" />
     <div class="shop-product-card__media">
-      <img
-        v-if="product.imageUrl"
-        :src="product.imageUrl"
-        :alt="product.imageAlt || product.title"
-        class="shop-product-card__image shop-product-card__image--primary"
-        draggable="false"
-        loading="lazy"
-        @dragstart.prevent
-      >
-      <img
-        v-if="product.hoverImageUrl"
-        :src="product.hoverImageUrl"
-        :alt="product.hoverImageAlt || product.imageAlt || product.title"
-        class="shop-product-card__image shop-product-card__image--hover"
-        draggable="false"
-        loading="lazy"
-        @dragstart.prevent
-      >
       <div
-        v-if="!product.imageUrl"
+        v-if="product.imageUrl"
+        class="shop-product-card__image-stack"
+      >
+        <img
+          :src="product.imageUrl"
+          :alt="product.imageAlt || product.title"
+          class="shop-product-card__image shop-product-card__image--primary"
+          draggable="false"
+          loading="lazy"
+          @dragstart.prevent
+        >
+        <img
+          v-if="product.hoverImageUrl"
+          :src="product.hoverImageUrl"
+          :alt="product.hoverImageAlt || product.imageAlt || product.title"
+          class="shop-product-card__image shop-product-card__image--hover"
+          draggable="false"
+          loading="lazy"
+          @dragstart.prevent
+        >
+      </div>
+      <div
+        v-else
         class="shop-product-card__placeholder"
         aria-hidden="true"
       />
@@ -88,6 +92,15 @@ const productTo = computed(() => {
   padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem) clamp(3.5rem, 7vw, 5rem);
 }
 
+.shop-product-card__image-stack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .shop-product-card__image {
   display: block;
   max-width: 100%;
@@ -103,7 +116,10 @@ const productTo = computed(() => {
 .shop-product-card__image--hover {
   position: absolute;
   inset: 0;
-  margin: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
   opacity: 0;
 }
 

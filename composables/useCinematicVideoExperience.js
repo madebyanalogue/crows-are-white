@@ -38,6 +38,7 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
 
   let openToken = 0
   let controlsTween = null
+  let overlayTween = null
   let controlsHovered = false
 
   const mediaComponentRef = refs.mediaComponentRef
@@ -51,6 +52,22 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     const closeBtn = resolveExposedRef(refs.closeRef)
     if (closeBtn) items.push(closeBtn)
     return items
+  }
+
+  function fadeOverlayOut() {
+    const overlay = refs.overlayRef?.value
+    if (!overlay || !isOpen.value) return
+
+    if (overlayTween) overlayTween.kill()
+
+    overlayTween = gsap.to(overlay, {
+      autoAlpha: 0,
+      duration: 0.4,
+      ease: 'power2.out',
+      onComplete: () => {
+        overlayTween = null
+      },
+    })
   }
 
   function fadeControls(show) {
@@ -87,8 +104,9 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
 
   watch(
     () => player.isPlaying.value,
-    () => {
+    (playing) => {
       updateControlsVisibility()
+      if (playing && isOpen.value) fadeOverlayOut()
     },
   )
 
@@ -112,6 +130,7 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
 
     gsapSet(darken, { scale: 1, autoAlpha: 0 })
     if (shell) gsapSet(shell, { autoAlpha: 1 })
+    if (overlay) gsapSet(overlay, { autoAlpha: 1 })
 
     const tl = gsap.timeline({
       defaults: { ease: 'power2.out' },
@@ -125,7 +144,6 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
 
     const controls = controlUiRefs()
 
-    if (overlay) tl.to(overlay, { autoAlpha: 0, duration: 0.2 }, 0)
     if (dialog) tl.to(dialog, { autoAlpha: 1, duration: 0.35 }, 0)
     if (darken) tl.to(darken, { autoAlpha: 0.9, scale: 4, duration: 0.55 }, 0.2)
     if (thumbnail) tl.to(thumbnail, { autoAlpha: 0, duration: 0.35 }, 0.25)
@@ -178,6 +196,10 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     if (controlsTween) {
       controlsTween.kill()
       controlsTween = null
+    }
+    if (overlayTween) {
+      overlayTween.kill()
+      overlayTween = null
     }
 
     player.pause()
