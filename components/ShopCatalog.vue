@@ -2,45 +2,39 @@
 import {
   SHOP_FILTERS,
   filterProductsByCollection,
-  formatShopPrice,
-  resolveShopFilterId,
+  shopFilterFromQuery,
+  shopIndexLink,
   type ShopFilterId,
 } from '~/utils/shopCollections'
 
 const route = useRoute()
+const router = useRouter()
 const {data: productData, pending} = useShopifyProducts()
 const viewMode = ref<'feature' | 'grid'>('feature')
 
-function filterFromRoute(): ShopFilterId {
-  const raw = Array.isArray(route.query.filter) ? route.query.filter[0] : route.query.filter
-  return resolveShopFilterId(typeof raw === 'string' ? raw : 'all')
-}
+const activeFilter = ref<ShopFilterId>(shopFilterFromQuery(route.query.filter))
 
-const activeFilter = ref<ShopFilterId>(filterFromRoute())
+watch(
+  () => route.query.filter,
+  (value) => {
+    activeFilter.value = shopFilterFromQuery(value)
+  },
+)
 
 const products = computed(() =>
   filterProductsByCollection(productData.value?.products ?? [], activeFilter.value),
 )
 
 function setFilter(id: ShopFilterId) {
+  if (activeFilter.value === id) return
   activeFilter.value = id
+  router.replace(shopIndexLink(id))
 }
 
 const pageTitle = useState('pageTitle', () => '')
 pageTitle.value = 'Shop'
 
 useHead({title: 'Shop — Crows Are White'})
-
-const SHOP_COLORS = {
-  pageColor: '#ffffff',
-  pageTextColor: '#111010',
-  menuBackgroundColor: '#ffffff',
-  menuTextColor: '#111010',
-  menuHighlightColor: '#111010',
-  basketIconColor: '#111010',
-}
-
-usePageColor(SHOP_COLORS)
 
 // Both icons are 11x11 pixel grids: 3px blocks in a 3x3, 2px blocks in a 4x4.
 function iconCells(offsets: number[]) {
@@ -146,10 +140,11 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
       aria-busy="true"
       aria-label="Loading products"
     >
-      <div
+      <ShopProductCard
         v-for="n in 6"
         :key="n"
-        class="shop-cell shop-cell--loading"
+        loading
+        class="shop-cell"
       />
     </div>
 
@@ -165,44 +160,22 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
       class="shop-grid"
       :class="`shop-grid--${viewMode}`"
     >
-      <NuxtLink
+      <ShopProductCard
         v-for="product in products"
         :key="product.variantId"
-        :to="`/shop/${product.handle}`"
+        :product="product"
         class="shop-cell"
-      >
-        <ShopSaleBadge :on-sale="product.onSale" />
-        <div class="shop-cell__media">
-          <img
-            v-if="product.imageUrl"
-            :src="product.imageUrl"
-            :alt="product.imageAlt || product.title"
-            class="shop-cell__image"
-            loading="lazy"
-          >
-          <div
-            v-else
-            class="shop-cell__placeholder"
-            aria-hidden="true"
-          />
-        </div>
-        <div class="shop-cell__meta">
-          <span class="shop-cell__title">{{ product.title }}</span>
-          <span class="shop-cell__price">{{ formatShopPrice(product.price, product.currencyCode) }}</span>
-        </div>
-      </NuxtLink>
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
 .shop-page {
-  --shop-bg: #fff;
-  --shop-line: #111010;
   min-height: 100dvh;
   padding-top: calc(var(--header-height, 112) * 1px);
   background: var(--shop-bg);
-  color: var(--shop-line);
+  color: var(--shop-text);
 }
 
 .shop-toolbar {
@@ -321,7 +294,87 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   display: grid;
   gap: 0;
   background: var(--shop-bg);
+  border-bottom: 1px solid var(--shop-line);
+}
+
+.shop-grid--grid .shop-cell:not(:nth-child(2n + 1)) {
   border-left: 1px solid var(--shop-line);
+}
+
+@media (max-width: 699px) {
+  .shop-grid--grid .shop-cell:nth-child(2n + 1):last-child {
+    border-right: 1px solid var(--shop-line);
+  }
+}
+
+@media (min-width: 700px) {
+  .shop-grid--grid .shop-cell {
+    border-right: none;
+  }
+
+  .shop-grid--grid .shop-cell:not(:nth-child(2n + 1)) {
+    border-left: none;
+  }
+
+  .shop-grid--grid .shop-cell:not(:nth-child(3n + 1)) {
+    border-left: 1px solid var(--shop-line);
+  }
+
+  .shop-grid--grid .shop-cell:nth-child(3n + 1):last-child,
+  .shop-grid--grid .shop-cell:nth-child(3n + 2):last-child {
+    border-right: 1px solid var(--shop-line);
+  }
+}
+
+@media (min-width: 900px) {
+  .shop-grid--grid .shop-cell {
+    border-right: none;
+  }
+
+  .shop-grid--grid .shop-cell:not(:nth-child(3n + 1)) {
+    border-left: none;
+  }
+
+  .shop-grid--grid .shop-cell:not(:nth-child(4n + 1)) {
+    border-left: 1px solid var(--shop-line);
+  }
+
+  /* Close incomplete last rows without touching the viewport edge on full rows. */
+  .shop-grid--grid .shop-cell:nth-child(4n + 1):last-child,
+  .shop-grid--grid .shop-cell:nth-child(4n + 2):last-child,
+  .shop-grid--grid .shop-cell:nth-child(4n + 3):last-child {
+    border-right: 1px solid var(--shop-line);
+  }
+}
+
+.shop-grid--feature .shop-cell:not(:nth-child(2n + 1)) {
+  border-left: 1px solid var(--shop-line);
+}
+
+@media (min-width: 900px) {
+  .shop-grid--feature .shop-cell:not(:nth-child(2n + 1)) {
+    border-left: none;
+  }
+
+  /* Column 1 stack beside the 2x2 feature cell. */
+  .shop-grid--feature .shop-cell:nth-child(6n + 1),
+  .shop-grid--feature .shop-cell:nth-child(6n + 2),
+  .shop-grid--feature .shop-cell:nth-child(6n + 4) {
+    border-right: 1px solid var(--shop-line);
+  }
+
+  /* 2x2 feature cell: divider from column 1 and a baseline when row 3 is empty. */
+  .shop-grid--feature .shop-cell:nth-child(6n + 3) {
+    border-left: 1px solid var(--shop-line);
+    border-bottom: 1px solid var(--shop-line);
+  }
+
+  /* Row below the 2x2 — avoid doubling the line from the feature cell bottom border. */
+  .shop-grid--feature .shop-cell:nth-child(6n + 5),
+  .shop-grid--feature .shop-cell:nth-child(6n + 6) {
+    border-left: 1px solid var(--shop-line);
+    border-top: none;
+  }
 }
 
 .shop-grid--grid {
@@ -373,87 +426,52 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   color: inherit;
   text-decoration: none;
   background: var(--shop-bg);
-  border-right: 1px solid var(--shop-line);
-  border-bottom: 1px solid var(--shop-line);
+  border-top: 1px solid var(--shop-line);
   overflow: hidden;
+}
+
+.shop-grid--grid .shop-cell:nth-child(-n + 2) {
+  border-top: none;
+}
+
+@media (min-width: 700px) {
+  .shop-grid--grid .shop-cell:nth-child(-n + 2) {
+    border-top: 1px solid var(--shop-line);
+  }
+
+  .shop-grid--grid .shop-cell:nth-child(-n + 3) {
+    border-top: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .shop-grid--grid .shop-cell:nth-child(-n + 3) {
+    border-top: 1px solid var(--shop-line);
+  }
+
+  .shop-grid--grid .shop-cell:nth-child(-n + 4) {
+    border-top: none;
+  }
+}
+
+.shop-grid--feature .shop-cell:nth-child(-n + 2) {
+  border-top: none;
+}
+
+@media (min-width: 900px) {
+  .shop-grid--feature .shop-cell:nth-child(-n + 2) {
+    border-top: 1px solid var(--shop-line);
+  }
+
+  /* Only the first-row cells in the opening feature block sit flush under the toolbar. */
+  .shop-grid--feature .shop-cell:nth-child(1),
+  .shop-grid--feature .shop-cell:nth-child(3) {
+    border-top: none;
+  }
 }
 
 .shop-grid .shop-cell {
   aspect-ratio: 1;
 }
 
-.shop-cell__media {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem) clamp(3.5rem, 7vw, 5rem);
-}
-
-.shop-cell__image {
-  display: block;
-  max-width: 72%;
-  max-height: 72%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-.shop-cell__placeholder {
-  width: min(56%, 10rem);
-  aspect-ratio: 1;
-  border: 1px solid rgba(17, 16, 16, 0.18);
-  background: rgba(17, 16, 16, 0.04);
-}
-
-.shop-cell__meta {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: clamp(0.85rem, 2vw, 1.35rem);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0 0.75rem;
-  text-align: center;
-  pointer-events: none;
-}
-
-.shop-cell__title,
-.shop-cell__price {
-  font-size: clamp(10px, 1vw, 12px);
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1.2;
-}
-
-.shop-cell__price {
-  opacity: 0.72;
-}
-
-.shop-cell:hover .shop-cell__title,
-.shop-cell:focus-visible .shop-cell__title {
-  opacity: 0.7;
-}
-
-.shop-cell--loading {
-  pointer-events: none;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(17, 16, 16, 0.02) 0%,
-      rgba(17, 16, 16, 0.07) 50%,
-      rgba(17, 16, 16, 0.02) 100%
-    );
-  background-size: 200% 100%;
-  animation: shop-shimmer 1.2s ease-in-out infinite;
-}
-
-@keyframes shop-shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
 </style>

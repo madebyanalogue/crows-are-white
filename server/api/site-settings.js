@@ -114,6 +114,16 @@ export default defineEventHandler(async () => {
       mxId,
       countries
     },
+    cartDisplayMode,
+    shopColors {
+      ${colorField('pageColor')},
+      ${colorField('pageTextColor')},
+      ${colorField('menuBackgroundColor')},
+      ${colorField('menuBorderColor')},
+      ${colorField('menuTextColor')},
+      ${colorField('menuHighlightColor')},
+      ${colorField('basketIconColor')}
+    },
     shopNewsletterBackground {
       mediaType,
       textColor,

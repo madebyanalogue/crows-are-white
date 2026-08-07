@@ -40,6 +40,10 @@
           v-else-if="section.sectionType === 'featuredProducts'"
           :section="section"
         />
+        <PageSectionRelatedProducts
+          v-else-if="section.sectionType === 'relatedProducts'"
+          :section="section"
+        />
         <PageSectionNewsletter
           v-else-if="section.sectionType === 'newsletter'"
           :section="section"

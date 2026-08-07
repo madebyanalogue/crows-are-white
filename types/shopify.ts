@@ -9,6 +9,8 @@ export type ShopifyProduct = {
   onSale: boolean
   imageUrl?: string
   imageAlt?: string
+  hoverImageUrl?: string
+  hoverImageAlt?: string
   productType?: string
   tags?: string[]
   collections?: string[]

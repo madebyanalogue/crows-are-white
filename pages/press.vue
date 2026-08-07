@@ -14,9 +14,7 @@ const PRESS_PAGE_COLORS_FALLBACK = {
   basketIconColor: 'obsidian',
 }
 
-const { data: page } = await useAsyncData('page-press', () =>
-  $fetch('/api/page/press').catch(() => null),
-)
+const { data: page } = await useCmsPage('press')
 
 const pageTitle = useState('pageTitle', () => '')
 

@@ -66,6 +66,12 @@ const PRODUCT_FIELDS = `
     url
     altText
   }
+  images(first: 2) {
+    nodes {
+      url
+      altText
+    }
+  }
   priceRange {
     minVariantPrice {
       amount
@@ -105,6 +111,9 @@ const CART_FIELDS = `
         ... on ProductVariant {
           id
           title
+          image {
+            url
+          }
           product {
             title
             handle
@@ -132,6 +141,7 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
       tags?: string[]
       collections?: {nodes: Array<{handle: string}>}
       featuredImage?: {url: string; altText?: string}
+      images?: {nodes: Array<{url: string; altText?: string}>}
       priceRange: {minVariantPrice: {amount: string; currencyCode: string}}
       variants: {nodes: Array<{
         id: string
@@ -154,6 +164,8 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
     .map((product) => {
       const variant = product.variants.nodes[0]
       const compareAtPrice = variant.compareAtPrice?.amount
+      const galleryImages = product.images?.nodes || []
+      const hoverImage = galleryImages[1]
 
       return {
         id: product.id,
@@ -166,6 +178,8 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
         onSale: isOnSale(variant.price.amount, compareAtPrice),
         imageUrl: product.featuredImage?.url,
         imageAlt: product.featuredImage?.altText,
+        hoverImageUrl: hoverImage?.url,
+        hoverImageAlt: hoverImage?.altText,
         productType: product.productType || '',
         tags: product.tags || [],
         collections: (product.collections?.nodes || []).map((item) => item.handle),
@@ -177,6 +191,7 @@ const PRODUCT_DETAIL_FIELDS = `
   id
   title
   handle
+  productType
   description
   featuredImage {
     url
@@ -221,6 +236,7 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
       id: string
       title: string
       handle: string
+      productType?: string
       description: string
       featuredImage?: {url: string; altText?: string}
       images: {nodes: Array<{url: string; altText?: string}>}
@@ -268,6 +284,7 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
     variantId: firstVariant.id,
     handle: product.handle,
     title: product.title,
+    productType: product.productType || '',
     price: firstVariant.price.amount,
     currencyCode: firstVariant.price.currencyCode,
     compareAtPrice: firstCompareAtPrice,
@@ -292,6 +309,7 @@ function mapCart(cart: {
       merchandise: {
         id: string
         title: string
+        image?: {url: string}
         product: {title: string; handle: string; featuredImage?: {url: string}}
         price: {amount: string; currencyCode: string}
       }
@@ -313,7 +331,7 @@ function mapCart(cart: {
       handle: line.merchandise.product.handle,
       price: line.merchandise.price.amount,
       currencyCode: line.merchandise.price.currencyCode,
-      imageUrl: line.merchandise.product.featuredImage?.url,
+      imageUrl: line.merchandise.image?.url || line.merchandise.product.featuredImage?.url,
     })),
   }
 }

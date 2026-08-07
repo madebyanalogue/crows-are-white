@@ -1,4 +1,5 @@
 import { resolveSanityAssetUrl } from '~/utils/sanity'
+import { extractPageChromeColors } from '~/utils/pageColors'
 import {
   defaultFooterMenus,
   defaultMainMenu,
@@ -95,6 +96,10 @@ export function useSiteSettings() {
   const watchNowDropdown = computed(() => settings.value?.watchNowDropdown || null)
   const socialLinks = computed(() => settings.value?.socialLinks || [])
   const mailchimpAction = computed(() => settings.value?.mailchimpAction || '')
+  const cartDisplayMode = computed(() =>
+    settings.value?.cartDisplayMode === 'drawer' ? 'drawer' : 'dropdown',
+  )
+  const shopColors = computed(() => extractPageChromeColors(settings.value?.shopColors || {}))
   const shopNewsletterBackground = computed(() => {
     const background = settings.value?.shopNewsletterBackground
     const mediaType = background?.mediaType || 'none'
@@ -162,6 +167,8 @@ export function useSiteSettings() {
     watchNowDropdown,
     socialLinks,
     mailchimpAction,
+    cartDisplayMode,
+    shopColors,
     shopNewsletterBackground,
   }
 }

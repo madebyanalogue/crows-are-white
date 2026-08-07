@@ -6,11 +6,7 @@ definePageMeta({
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
 import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
 
-const { data: page, error } = await useAsyncData('page-home', async () => {
-  const home = await $fetch('/api/page/home').catch(() => null)
-  if (home) return home
-  return $fetch('/api/page/homepage').catch(() => null)
-})
+const { data: page, error } = await useCmsPage('home')
 
 const pageTitle = useState('pageTitle', () => '')
 

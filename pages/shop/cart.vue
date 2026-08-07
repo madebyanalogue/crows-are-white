@@ -1,4 +1,8 @@
 <script setup lang="ts">
+useShopPageColor()
+
+await useShopPage()
+
 const {items, subtotal, currencyCode, updateQty, removeFromCart, checkout, checkoutLoading, loading} =
   useCart()
 

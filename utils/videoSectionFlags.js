@@ -46,3 +46,15 @@ export function getCachedPageForRoute(nuxtApp, path) {
 
   return data[`page-${slug}`] ?? null
 }
+
+export function getCachedPageForFooter(nuxtApp, path) {
+  if (!path) return null
+  if (path === '/shop' || path.startsWith('/shop/')) {
+    return getCachedPageForRoute(nuxtApp, '/shop')
+  }
+  return getCachedPageForRoute(nuxtApp, path)
+}
+
+export function pageShowsFooter(page) {
+  return page?.showFooter === true
+}

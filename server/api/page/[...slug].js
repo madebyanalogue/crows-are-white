@@ -430,6 +430,10 @@ function pageSectionProjection() {
     featuredProductsTitle,
     featuredProductsCollection,
     featuredProductsLimit,
+    relatedProductsTitle,
+    relatedProductsCollection,
+    relatedProductsLimit,
+    relatedProductsExcludeCurrent,
     pressDefaultMedia {
       mediaType,
       alt,
@@ -589,6 +593,7 @@ export default defineEventHandler(async (event) => {
       ${colorField('menuHighlightColor')},
       ${colorField('basketIconColor')},
       showNewsletterPopup,
+      showFooter,
       seoTitle,
       seoDescription,
       seoImage {

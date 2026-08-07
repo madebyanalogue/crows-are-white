@@ -13,9 +13,7 @@ const VIDEOS_PAGE_COLORS_FALLBACK = {
   menuHighlightColor: 'arancio',
 }
 
-const { data: page } = await useAsyncData('page-videos', () =>
-  $fetch('/api/page/videos').catch(() => null),
-)
+const { data: page } = await useCmsPage('videos')
 
 const pageTitle = useState('pageTitle', () => '')
 

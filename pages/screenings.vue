@@ -14,9 +14,7 @@ const SCREENINGS_PAGE_COLORS_FALLBACK = {
   basketIconColor: '#111010',
 }
 
-const { data: page } = await useAsyncData('page-screenings', () =>
-  $fetch('/api/page/screenings').catch(() => null),
-)
+const { data: page } = await useCmsPage('screenings')
 
 const pageTitle = useState('pageTitle', () => '')
 

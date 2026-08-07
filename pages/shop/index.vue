@@ -1,28 +1,14 @@
 <script setup>
-import { extractPageChromeColors } from '~/utils/pageColors'
-
-const SHOP_COLORS_FALLBACK = {
-  pageColor: '#ffffff',
-  pageTextColor: '#111010',
-  menuBackgroundColor: '#ffffff',
-  menuTextColor: '#111010',
-  menuHighlightColor: '#111010',
-  basketIconColor: '#111010',
-}
-
-const { data: page } = await useAsyncData('page-shop', () =>
-  $fetch('/api/page/shop').catch(() => null),
-)
+const { data: page } = await useShopPage()
 
 usePageSeo(page)
-
-usePageColor(computed(() =>
-  page.value ? extractPageChromeColors(page.value) : SHOP_COLORS_FALLBACK,
-))
+useShopPageColor(page)
 
 const builderSections = computed(() =>
   (page.value?.sections || []).filter((section) =>
-    section?.sectionType === 'newsletter' || section?.sectionType === 'featuredProducts',
+    section?.sectionType === 'newsletter'
+    || section?.sectionType === 'featuredProducts'
+    || section?.sectionType === 'relatedProducts',
   ),
 )
 

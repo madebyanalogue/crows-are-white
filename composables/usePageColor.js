@@ -1,5 +1,6 @@
 import { getPageColorHtmlAttrs, pageBackgroundVar, extractPageChromeColors } from '~/utils/pageColors'
 import { getCachedPageForRoute } from '~/utils/videoSectionFlags'
+import { isShopRoute, resolveShopChromeColors } from '~/utils/shopColors'
 
 export function useAppliedPageColors() {
   return {
@@ -27,19 +28,23 @@ function getKnownPageColorsForPath(nuxtApp, path) {
     return extractPageChromeColors({ pageColor: 'crayon' })
   }
 
-  if (
-    path === '/shop'
-    || path === '/shop/'
-    || path.startsWith('/shop/collections/')
-  ) {
-    return extractPageChromeColors({
-      pageColor: '#ffffff',
-      pageTextColor: '#111010',
-      menuBackgroundColor: '#ffffff',
-      menuTextColor: '#111010',
-      menuHighlightColor: '#111010',
-      basketIconColor: '#111010',
-    })
+  if (isShopRoute(path)) {
+    const shopColors = useState('shopChromeColors').value
+    if (shopColors) return shopColors
+
+    const shopPage = getCachedPageForRoute(nuxtApp, '/shop')
+      ?? nuxtApp?.payload?.data?.['page-shop-color']
+      ?? nuxtApp?.static?.data?.['page-shop-color']
+      ?? null
+
+    const siteSettings = nuxtApp?.payload?.data?.siteSettings
+      ?? nuxtApp?.static?.data?.siteSettings
+      ?? null
+
+    return resolveShopChromeColors(
+      shopPage,
+      siteSettings?.shopColors,
+    )
   }
 
   const page = getCachedPageForRoute(nuxtApp, path)

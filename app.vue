@@ -42,7 +42,7 @@
     </div>
 
     <ClientOnly>
-      <CartDrawer />
+      <CartDrawer v-if="cartDisplayMode === 'drawer'" />
     </ClientOnly>
   </div>
 </template>
@@ -60,6 +60,7 @@ const {
   googleTagManagerId,
   metaPixelId,
   preloaderDisabled,
+  cartDisplayMode,
 } = useSiteSettings()
 
 const { nuxtPageTransition, pageTransitionWipeColor } = usePageTransition()

@@ -11,8 +11,9 @@ body {
 
 :root {
   --unit: 12px;
-  --shop-bg: #fff;
-  --shop-line: #000;
+  --shop-bg: var(--background-color, #fff);
+  --shop-text: var(--text-color, #111010);
+  --shop-line: #ddd;
 
   --header-padding-top: 20px;
   --header-padding: 25px;

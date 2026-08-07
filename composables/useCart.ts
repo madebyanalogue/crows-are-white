@@ -78,8 +78,10 @@ export function useCart() {
     else openCart()
   }
 
+  const { cartDisplayMode } = useSiteSettings()
+
   watch(isOpen, (open) => {
-    if (!import.meta.client) return
+    if (!import.meta.client || cartDisplayMode.value !== 'drawer') return
     document.body.style.overflow = open ? 'hidden' : ''
   })
 

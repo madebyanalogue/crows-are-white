@@ -1,11 +1,31 @@
 <script setup lang="ts">
+import { buildDefaultRelatedProductsSection } from '~/utils/shopProductsSection'
+import { shopFilterFromQuery, shopIndexLink } from '~/utils/shopCollections'
+
+useShopPageColor()
+
+const { data: shopPage } = await useShopPage()
+
 const route = useRoute()
 const handle = computed(() => route.params.handle as string)
+const shopFilter = computed(() => shopFilterFromQuery(route.query.filter))
+const shopBackLink = computed(() => shopIndexLink(shopFilter.value))
 
 const {data, pending, error} = useShopifyProduct(handle)
 const {addToCart, openCart} = useCart()
 
 const product = computed(() => data.value?.product)
+
+const relatedProductSections = computed(() => {
+  const cmsSections = (shopPage.value?.sections || []).filter(
+    (section) => section?.sectionType === 'relatedProducts',
+  )
+
+  if (cmsSections.length) return cmsSections
+  if (!product.value) return []
+
+  return [buildDefaultRelatedProductsSection(product.value)]
+})
 const selectedVariantId = ref('')
 
 watch(product, (value) => {
@@ -68,7 +88,13 @@ useHead(() => ({
   <div class="shop-page">
     <header class="shop-page__header shop-page__row">
       <div class="shop-page__header-inner">
-        <NuxtLink to="/shop" class="shop-page__back">← Shop</NuxtLink>
+        <NuxtLink :to="shopBackLink" class="shop-page__back">← Shop</NuxtLink>
+        <p
+          v-if="product?.productType"
+          class="shop-page__type"
+        >
+          {{ product.productType }}
+        </p>
         <h1 v-if="product" class="shop-page__title shop-page__title--product">
           {{ product.title }}
         </h1>
@@ -130,15 +156,21 @@ useHead(() => ({
         </button>
       </div>
     </article>
+
+    <PageSectionRelatedProducts
+      v-for="(section, index) in relatedProductSections"
+      :key="section._id || `related-${index}`"
+      :section="section"
+    />
   </div>
 </template>
 
 <style scoped>
 .shop-page {
-  
   min-height: 100dvh;
+  padding-top: calc(var(--header-height, 112) * 1px);
   background: var(--shop-bg);
-  color: var(--shop-line);
+  color: var(--shop-text);
 }
 
 .shop-page__row {
@@ -163,6 +195,15 @@ useHead(() => ({
 
 .shop-page__back:hover {
   opacity: 1;
+}
+
+.shop-page__type {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 
 .shop-page__title {
@@ -263,7 +304,7 @@ useHead(() => ({
   align-self: flex-start;
   padding: 0.85rem 1.5rem;
   border: 1px solid var(--shop-line);
-  background: var(--shop-line);
+  background: var(--shop-text);
   color: var(--shop-bg);
   font: inherit;
   font-size: 0.8125rem;

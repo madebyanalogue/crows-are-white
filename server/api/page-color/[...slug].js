@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
     const client = getSanityClient(useRuntimeConfig())
     const colors = await client.fetch(
       `*[${pageDocumentFilter()}][0] {
+        showFooter,
         ${colorField('pageColor')},
         ${colorField('pageTextColor')},
         ${colorField('menuBackgroundColor')},

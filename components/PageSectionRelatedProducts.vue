@@ -11,22 +11,41 @@ const props = defineProps({
   },
 })
 
+const route = useRoute()
 const { data: productData, pending } = useShopifyProducts()
+
+const excludeHandle = computed(() => {
+  if (props.section?.relatedProductsExcludeCurrent === false) return null
+
+  const handle = route.params.handle
+  if (
+    route.path.startsWith('/shop/')
+    && typeof handle === 'string'
+    && handle
+    && handle !== 'cart'
+    && !route.path.startsWith('/shop/collections/')
+  ) {
+    return handle
+  }
+
+  return null
+})
 
 const products = computed(() =>
   resolveShopSectionProducts(productData.value?.products ?? [], {
-    collection: props.section?.featuredProductsCollection,
-    limit: resolveShopSectionLimit(props.section?.featuredProductsLimit),
+    collection: props.section?.relatedProductsCollection,
+    limit: resolveShopSectionLimit(props.section?.relatedProductsLimit),
+    excludeHandle: excludeHandle.value,
   }),
 )
 
-const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
+const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
 </script>
 
 <template>
   <section
     class="shop-products-section"
-    aria-label="Featured products"
+    aria-label="Related products"
   >
     <h2
       v-if="title"
@@ -38,7 +57,7 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
     <ShopProductCarousel
       :products="products"
       :pending="pending"
-      aria-label="Featured products carousel"
+      aria-label="Related products carousel"
     />
   </section>
 </template>

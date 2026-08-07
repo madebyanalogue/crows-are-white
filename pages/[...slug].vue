@@ -15,11 +15,7 @@ const slug = computed(() => {
   return Array.isArray(param) ? param.join('/') : param
 })
 
-const { data: page, pending, error, status } = useAsyncData(
-  () => `page-${slug.value}`,
-  () => $fetch(`/api/page/${slug.value}`),
-  { watch: [slug], lazy: true, ...freshDataOptions },
-)
+const { data: page, pending, error, status } = useCmsPage(slug, { lazy: true })
 
 const showLoading = computed(() => status.value === 'pending' || (pending.value && !page.value))
 

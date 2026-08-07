@@ -8,17 +8,20 @@
         >
           <component :is="pageComponent" />
         </div>
-        <!-- Footer temporarily disabled while simplifying the site -->
-        <!-- <Footer /> -->
+        <Footer v-if="showFooter" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// import Footer from '~/components/Footer.vue'
+import Footer from '~/components/Footer.vue'
 import { routeRemovesHeaderPadding } from '~/utils/headerPadding'
-import { getCachedPageForRoute, pageRemovesHeaderPadding } from '~/utils/videoSectionFlags'
+import {
+  getCachedPageForRoute,
+  pageRemovesHeaderPadding,
+  pageShowsFooter,
+} from '~/utils/videoSectionFlags'
 
 defineProps({
   pageComponent: {
@@ -29,6 +32,17 @@ defineProps({
 
 const route = useRoute()
 const nuxtApp = useNuxtApp()
+
+const footerPageSlug = computed(() => {
+  if (route.path.startsWith('/shop')) return 'shop'
+  if (route.path === '/') return 'home'
+  const slug = route.path.replace(/^\//, '').replace(/\/$/, '')
+  return slug || null
+})
+
+const { data: footerPage } = useCmsPage(footerPageSlug)
+
+const showFooter = computed(() => pageShowsFooter(footerPage.value))
 
 const mountPath = route.path
 const mountMeta = route.meta

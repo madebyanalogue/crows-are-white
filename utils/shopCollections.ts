@@ -50,6 +50,21 @@ export function resolveShopFilterId(value?: string | null): ShopFilterId {
   return 'all'
 }
 
+export function shopFilterFromQuery(value?: string | string[] | null): ShopFilterId {
+  const raw = Array.isArray(value) ? value[0] : value
+  return resolveShopFilterId(typeof raw === 'string' ? raw : undefined)
+}
+
+export function shopIndexLink(filter: ShopFilterId = 'all') {
+  if (filter === 'all') return '/shop'
+  return { path: '/shop', query: { filter } }
+}
+
+export function shopProductLink(handle: string, filter: ShopFilterId = 'all') {
+  if (filter === 'all') return `/shop/${handle}`
+  return { path: `/shop/${handle}`, query: { filter } }
+}
+
 function normalizeToken(value = '') {
   return value.trim().toLowerCase()
 }

@@ -3,6 +3,7 @@
     class="site-header"
     :class="{
       'is-open': menuOpen,
+      'is-cart-open': cartOpen && cartDisplayMode === 'dropdown',
       'is-over-hero': heroMenuActive,
       'is-over-hero-frosted': heroMenuFrosted,
     }"
@@ -12,6 +13,13 @@
       class="site-header__backdrop"
       aria-hidden="true"
       @click="closeMenu"
+    />
+
+    <div
+      v-if="cartOpen && cartDisplayMode === 'dropdown'"
+      class="site-header__backdrop site-header__cart-backdrop"
+      aria-hidden="true"
+      @click="closeCart"
     />
 
     <div class="site-header__panel">
@@ -42,7 +50,7 @@
             v-if="pageNameLink"
             :to="pageNameLink"
             class="site-header__page-name site-header__page-name--link serif"
-            :tabindex="menuOpen ? -1 : undefined"
+            :tabindex="menuOpen || cartOpen ? -1 : undefined"
             :aria-hidden="menuOpen ? 'true' : undefined"
           >
             <span
@@ -142,6 +150,8 @@
           </ul>
         </div>
       </nav>
+
+      <CartDropdown v-if="cartDisplayMode === 'dropdown'" />
     </div>
   </header>
 </template>
@@ -149,9 +159,10 @@
 <script setup>
 import gsap from 'gsap'
 import { defaultMainMenu, defaultMainMenuSub } from '~/data/site'
+import { shopFilterFromQuery, shopIndexLink } from '~/utils/shopCollections'
 
-const { primaryMenu, secondaryMenu } = useSiteSettings()
-const { count: cartCount, isOpen: cartOpen, toggleCart } = useCart()
+const { primaryMenu, secondaryMenu, cartDisplayMode } = useSiteSettings()
+const { count: cartCount, isOpen: cartOpen, toggleCart, closeCart } = useCart()
 const route = useRoute()
 const menuOpen = ref(false)
 const heroMenuActive = useHeroMenuActive()
@@ -239,7 +250,10 @@ const currentPageName = computed(() => {
 })
 
 const pageNameLink = computed(() => {
-  if (isShopProductPath(route.path)) return '/shop'
+  if (cartOpen.value) return null
+  if (isShopProductPath(route.path)) {
+    return shopIndexLink(shopFilterFromQuery(route.query.filter))
+  }
   return null
 })
 
@@ -252,7 +266,17 @@ watch(() => route.path, () => {
   pageTitle.value = ''
 }, { flush: 'pre' })
 
+async function swapPageName(name) {
+  await dropPageName()
+  await revealPageName(name)
+}
+
 function toggleMenu() {
+  if (!menuOpen.value && cartOpen.value) {
+    menuOpen.value = true
+    closeCart()
+    return
+  }
   menuOpen.value = !menuOpen.value
 }
 
@@ -427,6 +451,7 @@ async function onRouteChange(path, oldPath) {
   if (!import.meta.client) return
   if (!oldPath || path === oldPath) return
 
+  if (cartOpen.value) closeCart()
   suppressPageNameIn = true
   const dropPromise = dropPageName()
   if (menuOpen.value) closeMenu()
@@ -480,7 +505,19 @@ watch(menuOpen, (open) => {
   }
 
   resetMenuItems()
-  if (!suppressPageNameIn) animatePageNameIn()
+  if (!suppressPageNameIn && !cartOpen.value) animatePageNameIn()
+})
+
+watch(cartOpen, async (open) => {
+  if (!import.meta.client) return
+
+  if (open) {
+    await swapPageName('Cart')
+    return
+  }
+
+  if (menuOpen.value || suppressPageNameIn) return
+  await swapPageName(currentPageName.value)
 })
 
 let keyHandler = null
@@ -528,8 +565,27 @@ onBeforeUnmount(() => {
 .site-header__backdrop {
   position: fixed;
   inset: 0;
+  z-index: 0;
   background: rgba(0, 0, 0, 0.35);
   pointer-events: auto;
+}
+
+.site-header.is-cart-open .site-header__panel {
+  width: min(100%, var(--site-header-panel-width-open));
+  overflow: hidden;
+}
+
+.site-header.is-cart-open .site-header__panel::before {
+  inset: 0;
+}
+
+.site-header.is-cart-open .site-header__bar {
+  padding: 12px;
+  height: calc(var(--site-header-bar-height) + 24px);
+}
+
+.site-header.is-cart-open .site-header__nav {
+  padding-top: 0;
 }
 
 .site-header__panel {
@@ -538,6 +594,7 @@ onBeforeUnmount(() => {
   --site-header-panel-width-open: 440px;
 
   position: relative;
+  z-index: 1;
   width: min(100%, var(--site-header-panel-width-closed));
   max-width: 100%;
   min-height: var(--site-header-bar-height);

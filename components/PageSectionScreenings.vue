@@ -193,8 +193,8 @@ onBeforeUnmount(() => {
             <span
               class="screenings-book"
               :class="{ 'screenings-book--disabled': s.status === 'coming-soon' }"
-            >
-              {{ s.status === 'coming-soon' ? 'Coming soon' : 'Buy tickets' }}
+            ><span></span>
+              <span>{{ s.status === 'coming-soon' ? 'Coming soon' : 'Buy tickets' }}</span>
             </span>
           </div>
         </component>
@@ -458,11 +458,38 @@ onBeforeUnmount(() => {
   text-align: center;
   white-space: nowrap;
   color: var(--screenings-ink);
-  border-radius: 5px;
+  border-radius: 3px;
     corner-shape: rounded;
   transition: background-color 0.15s ease, color 0.15s ease;
   pointer-events: none;
 }
+
+
+/* .screenings-book {
+  background:transparent !important;
+  display:flex !important;
+  border:none !important;
+  border-radius: 0;
+}
+.screenings-row__action {
+  --screenings-action-width: 13rem !important;
+}
+.screenings-book span {
+  border:1px double var(--screenings-ink);
+  color: var(--screenings-ink);
+  border-radius: 7px;
+    corner-shape: scoop;
+    min-width: 40px;
+    padding: 15px;
+    height:50px;
+}
+.screenings-book span:first-child {
+  border-right:1px dashed var(--screenings-ink);
+}
+.screenings-book span:last-child {
+  border-left:0px dashed var(--screenings-ink);
+} */
+
 
 
 

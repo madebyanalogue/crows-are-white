@@ -14,9 +14,7 @@ const WATCH_PAGE_COLORS_FALLBACK = {
   basketIconColor: '#ff555f',
 }
 
-const { data: page } = await useAsyncData('page-watch', () =>
-  $fetch('/api/page/watch').catch(() => null),
-)
+const { data: page } = await useCmsPage('watch')
 
 const pageTitle = useState('pageTitle', () => '')
 
