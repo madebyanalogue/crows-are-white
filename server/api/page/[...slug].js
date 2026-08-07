@@ -472,6 +472,8 @@ function pageSectionProjection() {
       openInNewTab,
       imageAlt,
       imageCaption,
+      hoverText,
+      linkIcon,
       imageAspectRatio,
       image ${imageProjection},
       page-> {

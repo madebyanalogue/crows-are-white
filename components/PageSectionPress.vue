@@ -102,10 +102,13 @@ const links = computed(() => {
         href: getMenuItemUrl(menuItem),
         target: item.openInNewTab ? '_blank' : getMenuItemTarget(menuItem),
         rel: item.openInNewTab ? 'noopener noreferrer' : getMenuItemRel(menuItem),
-        showChevron: /download/i.test(item.linkTitle || ''),
+        linkIcon: item.linkIcon === 'downArrow' || item.linkIcon === 'email'
+          ? item.linkIcon
+          : null,
         imageUrl: resolveSanityAssetUrl(item?.image?.asset) || '',
         imageAlt: item.imageAlt?.trim() || item.linkTitle?.trim() || '',
         imageCaption: item.imageCaption?.trim() || '',
+        hoverText: item.hoverText?.trim() || '',
         imageAspectRatio: aspectRatioFromValue(item.imageAspectRatio),
       }
     })
@@ -117,6 +120,7 @@ const hasLinkMedia = computed(() => links.value.some((link) => link.imageUrl))
 const showMediaPanel = computed(() => hasDefaultMedia.value || hasLinkMedia.value)
 
 const activeMediaKey = ref(DEFAULT_MEDIA_KEY)
+const activeLinkKey = ref(null)
 
 const activeAspectRatio = computed(() => {
   if (activeMediaKey.value === DEFAULT_MEDIA_KEY) {
@@ -144,14 +148,31 @@ watch(
 
 function onLinkHover(index) {
   const link = links.value[index]
-  if (link?.imageUrl) {
+  if (!link) return
+  activeLinkKey.value = link._key
+  if (link.imageUrl) {
     activeMediaKey.value = link._key
   }
 }
 
-function resetToDefaultMedia() {
-  if (!hasDefaultMedia.value) return
-  activeMediaKey.value = DEFAULT_MEDIA_KEY
+function resetToDefault() {
+  activeLinkKey.value = null
+  activeMediaKey.value = hasDefaultMedia.value
+    ? DEFAULT_MEDIA_KEY
+    : links.value.find((link) => link.imageUrl)?._key || DEFAULT_MEDIA_KEY
+}
+
+function onLinkTextLeave(event) {
+  const next = event.relatedTarget
+  if (next instanceof Element && next.closest('.page-section-press__link-text')) return
+  resetToDefault()
+}
+
+function linkDisplayLabel(link) {
+  if (activeLinkKey.value === link._key && link.hoverText) {
+    return link.hoverText
+  }
+  return link.label
 }
 
 function isDefaultActive() {
@@ -172,7 +193,6 @@ function isLinkActive(link) {
       <div
         class="page-section-press__media"
         :class="{ 'page-section-press__media--empty': !showMediaPanel }"
-        @pointerenter="resetToDefaultMedia"
       >
         <div
           v-if="showMediaPanel"
@@ -247,17 +267,60 @@ function isLinkActive(link) {
           <a
             :href="link.href"
             class="page-section-press__link large-title"
+            :class="{ 'is-active': activeLinkKey === link._key }"
             :target="link.target"
             :rel="link.rel"
-            @pointerenter="onLinkHover(index)"
             @focus="onLinkHover(index)"
+            @blur="resetToDefault"
           >
-            <span class="page-section-press__link-text">{{ link.label }}</span>
             <span
-              v-if="link.showChevron"
-              class="page-section-press__link-chevron"
+              class="page-section-press__link-text"
+              @pointerenter="onLinkHover(index)"
+              @pointerleave="onLinkTextLeave"
+            >{{ linkDisplayLabel(link) }}</span>
+            <span
+              v-if="link.linkIcon"
+              class="page-section-press__link-icon"
+              :class="`page-section-press__link-icon--${link.linkIcon}`"
               aria-hidden="true"
-            >▾</span>
+            >
+              <svg
+                v-if="link.linkIcon === 'downArrow'"
+                viewBox="0 0 8 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 0v6.5M4 6.5L1 3.5M4 6.5l3-3"
+                  stroke="currentColor"
+                  stroke-width=".75"
+                  stroke-linecap="square"
+                  stroke-linejoin="miter"
+                />
+              </svg>
+              <svg
+                v-else-if="link.linkIcon === 'email'"
+                viewBox="0 0 10 8"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="0.5"
+                  y="0.5"
+                  width="9"
+                  height="7"
+                  stroke="currentColor"
+                  stroke-width=".75"
+                />
+                <path
+                  d="M0.5 0.5 5 4.25 9.5 0.5"
+                  stroke="currentColor"
+                  stroke-width=".75"
+                  stroke-linecap="square"
+                  stroke-linejoin="miter"
+                />
+              </svg>
+            </span>
           </a>
         </div>
       </nav>
@@ -458,23 +521,22 @@ function isLinkActive(link) {
 
 .page-section-press__link {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 0.35rem;
   text-decoration: none;
   text-align: center;
   color: inherit;
-  cursor: pointer;
+  cursor: default;
   transition: color 0.2s ease;
 }
 
-.page-section-press__link-text,
-.page-section-press__link-chevron {
-  pointer-events: none;
+.page-section-press__link.is-active {
+  color: var(--menu-highlight-color, var(--arancio));
 }
 
-.page-section-press__link:hover {
-  color: var(--menu-highlight-color, var(--arancio));
+.page-section-press__link-text {
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .page-section-press__link:focus-visible {
@@ -482,9 +544,40 @@ function isLinkActive(link) {
   outline-offset: 4px;
 }
 
-.page-section-press__link-chevron {
-  font-size: 0.85em;
-  line-height: 1;
-  transform: translateY(0.08em);
+.page-section-press__link-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  line-height: 0;
+  align-self: flex-end;
+  box-sizing: content-box;
+  width: 0;
+  max-width: 0;
+  padding-left: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.25em);
+  transition:
+    width 0.25s ease,
+    max-width 0.25s ease,
+    padding-left 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.page-section-press__link.is-active .page-section-press__link-icon {
+  width: 0.4em;
+  max-width: 0.4em;
+  padding-left: 0.35em;
+  opacity: 1;
+}
+
+.page-section-press__link-icon--email {
+  transform: translateY(-0.2em);
+}
+
+.page-section-press__link-icon svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 </style>
