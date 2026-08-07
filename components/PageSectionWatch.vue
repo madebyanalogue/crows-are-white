@@ -319,6 +319,11 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
     border-radius: 10px;
     aspect-ratio: 16/9;
 }
+@media all and (min-width:1000px) {
+  .page-section-watch__hero {
+  margin-top:-100px;
+  }
+}
 
 .page-section-watch__hero-media {
   position: absolute;
