@@ -59,6 +59,7 @@ function resolveMediaItem(item) {
       kind: 'video',
       loop,
       alt: item.alt || 'Press media',
+      caption: item.imageCaption?.trim() || '',
     }
   }
 
@@ -69,6 +70,7 @@ function resolveMediaItem(item) {
     kind: 'image',
     imageUrl,
     alt: item.alt || '',
+    caption: item.imageCaption?.trim() || '',
   }
 }
 
@@ -162,9 +164,10 @@ function resetToDefault() {
     : links.value.find((link) => link.imageUrl)?._key || DEFAULT_MEDIA_KEY
 }
 
-function onLinkTextLeave(event) {
+function onLinkLeave(event) {
+  const link = event.currentTarget
   const next = event.relatedTarget
-  if (next instanceof Element && next.closest('.page-section-press__link-text')) return
+  if (next instanceof Node && link.contains(next)) return
   resetToDefault()
 }
 
@@ -182,6 +185,26 @@ function isDefaultActive() {
 function isLinkActive(link) {
   return activeMediaKey.value === link._key && Boolean(link.imageUrl)
 }
+
+const defaultMediaReady = ref(false)
+
+watch(
+  defaultMedia,
+  (media) => {
+    defaultMediaReady.value = media?.kind === 'image'
+  },
+  { immediate: true },
+)
+
+function onDefaultMediaReady() {
+  defaultMediaReady.value = true
+}
+
+const showDefaultCaption = computed(() => {
+  if (!defaultMedia.value?.caption) return false
+  if (defaultMedia.value.kind === 'image') return true
+  return defaultMediaReady.value
+})
 </script>
 
 <template>
@@ -213,6 +236,7 @@ function isLinkActive(link) {
                 :title="defaultMedia.alt"
                 aspect-class="page-section-press__card-media"
                 object-fit="cover"
+                @ready="onDefaultMediaReady"
               />
               <img
                 v-else-if="defaultMedia?.kind === 'image'"
@@ -222,6 +246,16 @@ function isLinkActive(link) {
                 draggable="false"
                 loading="lazy"
               >
+              <p
+                v-if="defaultMedia?.caption"
+                class="page-section-press__caption handwritten"
+                :class="{
+                  'page-section-press__caption--after-video': defaultMedia?.kind === 'video',
+                  'is-visible': showDefaultCaption,
+                }"
+              >
+                {{ defaultMedia.caption }}
+              </p>
             </div>
           </div>
 
@@ -272,12 +306,10 @@ function isLinkActive(link) {
             :rel="link.rel"
             @focus="onLinkHover(index)"
             @blur="resetToDefault"
+            @pointerenter="onLinkHover(index)"
+            @pointerleave="onLinkLeave"
           >
-            <span
-              class="page-section-press__link-text"
-              @pointerenter="onLinkHover(index)"
-              @pointerleave="onLinkTextLeave"
-            >{{ linkDisplayLabel(link) }}</span>
+            <span class="page-section-press__link-text">{{ linkDisplayLabel(link) }}</span>
             <span
               v-if="link.linkIcon"
               class="page-section-press__link-icon"
@@ -400,7 +432,7 @@ function isLinkActive(link) {
     height: 100%;
     overflow: visible;
     container-type: size;
-    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 6vw, 4rem);
+    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 5vw, 9rem);
   }
 }
 
@@ -461,8 +493,8 @@ function isLinkActive(link) {
 
 .page-section-press__caption {
   position: absolute;
-  right: -20px;
-  top: calc(100% + .5em);
+  right: 10px;
+  top: calc(100% + .75em);
   z-index: 2;
   margin: 0;
   max-width: min(72%, 35rem);
@@ -473,6 +505,15 @@ function isLinkActive(link) {
   transform: rotate(-3deg);
   transform-origin: bottom right;
   pointer-events: none;
+}
+
+.page-section-press__caption--after-video {
+  opacity: 0;
+  transition: opacity 0.35s ease 0.15s;
+}
+
+.page-section-press__caption--after-video.is-visible {
+  opacity: 1;
 }
 
 .page-section-press__card-media {
@@ -572,7 +613,7 @@ function isLinkActive(link) {
 }
 
 .page-section-press__link-icon--email {
-  transform: translateY(-0.2em);
+  transform: translateY(-0.25em);
 }
 
 .page-section-press__link-icon svg {

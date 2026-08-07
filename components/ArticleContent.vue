@@ -22,7 +22,7 @@
           </NuxtLink>
           <h1
             v-if="article.title?.length"
-            class="h2 serif article__title text-center line-height-125"
+            class="h2 serif light article__title text-center line-height-125"
           >
             <SanityInline :blocks="article.title" />
           </h1>
@@ -64,7 +64,7 @@
             </NuxtLink>
             <h1
               v-if="article.title?.length"
-              class="h1 serif article__title text-center line-height-125 section-padding pad-top-bottom"
+              class="h1 serif article__title light text-center line-height-125 section-padding pad-top-bottom"
             >
               <SanityInline :blocks="article.title" />
             </h1>
@@ -170,7 +170,6 @@ const globalCta = computed(() => {
 </script>
 
 <style scoped>
-
 .article {
   --max-text-block-width: 480px;
   --max-image-block-width: 1000px;

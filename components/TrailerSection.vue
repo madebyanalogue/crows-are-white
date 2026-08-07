@@ -112,6 +112,7 @@ defineExpose(api)
       :poster-url="posterUrl"
       iframe-title="Crows Are White — Official Trailer"
       frame-class="trailer-section__frame"
+      show-fullscreen
       show-close
       close-on-darken
       close-on-escape

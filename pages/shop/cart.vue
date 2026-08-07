@@ -37,8 +37,19 @@ function lineTotal(price: string, qty: number) {
           :key="item.id"
           class="surface-card flex gap-6"
         >
+          <NuxtLink
+            v-if="item.handle && item.imageUrl"
+            :to="`/shop/${item.handle}`"
+            class="cart-page-thumb"
+          >
+            <img
+              :src="item.imageUrl"
+              :alt="item.title"
+              class="h-24 w-24 shrink-0 rounded object-cover"
+            >
+          </NuxtLink>
           <img
-            v-if="item.imageUrl"
+            v-else-if="item.imageUrl"
             :src="item.imageUrl"
             :alt="item.title"
             class="h-24 w-24 shrink-0 rounded object-cover"
@@ -116,5 +127,18 @@ function lineTotal(price: string, qty: number) {
 
 .cart-remove:hover {
   color: var(--wire-ink, #111010);
+}
+
+.cart-page-thumb {
+  display: block;
+  flex-shrink: 0;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.cart-page-thumb:hover,
+.cart-page-thumb:focus-visible {
+  opacity: 0.82;
 }
 </style>

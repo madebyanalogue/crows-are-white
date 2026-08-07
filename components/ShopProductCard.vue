@@ -78,7 +78,7 @@ const productTo = computed(() => {
   height: 100%;
   color: inherit;
   text-decoration: none;
-  background: var(--shop-bg);
+  background: white;
   overflow: hidden;
 }
 

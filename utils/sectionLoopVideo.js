@@ -1,4 +1,8 @@
-import { cloudflareStreamMp4Url, cloudflareStreamPosterUrl } from '~/utils/cloudflareStream'
+import {
+  cloudflareStreamId,
+  cloudflareStreamMp4Url,
+  cloudflareStreamPosterUrl,
+} from '~/utils/cloudflareStream'
 import { resolveSanityAssetUrl } from '~/utils/sanity'
 
 function pickCloudflarePoster(section, prefix) {
@@ -35,8 +39,12 @@ export function resolveSectionLoopVideo(section, prefix) {
     || Boolean(cloudflare720 || cloudflare1080)
 
   if (usesCloudflare && (cloudflare720 || cloudflare1080)) {
+    const streamId = cloudflareStreamId(section[`${prefix}LoopCloudflare1080`])
+      || cloudflareStreamId(section[`${prefix}LoopCloudflare720`])
+
     return {
       kind: 'cloudflare',
+      streamId,
       url720: cloudflare720 || cloudflare1080,
       url1080: cloudflare1080 || cloudflare720,
       url: cloudflare1080 || cloudflare720,

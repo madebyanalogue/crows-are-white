@@ -3,9 +3,6 @@ definePageMeta({
   transparentHeader: true,
 })
 
-import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
-import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
-
 const { data: page, error } = await useCmsPage('home')
 
 const pageTitle = useState('pageTitle', () => '')
@@ -17,15 +14,6 @@ watchEffect(() => {
 usePageDevBackground(page)
 usePageColor(page)
 usePageSeo(page)
-
-const heroLoop = computed(() => {
-  const heroSection = page.value?.sections?.find((section) => section?.sectionType === 'hero')
-  return heroSection ? resolveSectionLoopVideo(heroSection, 'hero') : null
-})
-
-useHead(() => ({
-  link: getLoopVideoHeadLinks(heroLoop.value),
-}))
 
 const displayPage = computed(() => {
   if (!page.value) return null

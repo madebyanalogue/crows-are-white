@@ -228,6 +228,7 @@ onBeforeUnmount(() => {
 
 .shop-product-carousel__track {
   display: flex;
+  background:white;
 }
 
 .shop-product-carousel__slide {

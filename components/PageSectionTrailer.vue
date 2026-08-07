@@ -189,6 +189,7 @@ onBeforeUnmount(() => {
         :vimeo-hash="vimeoData?.hash || null"
         :iframe-title="title"
         frame-class="page-section-trailer__frame"
+        show-fullscreen
         :scroll-scale="section.trailerScrollScale !== false"
         close-on-darken
         :before-open="beforeOpen"

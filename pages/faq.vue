@@ -48,7 +48,7 @@ const { faqItems } = useSiteContent()
   justify-content: space-between;
   gap: 1rem;
   padding: 1.15rem 1.25rem;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .faq-item__question::-webkit-details-marker {

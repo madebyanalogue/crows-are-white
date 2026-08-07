@@ -93,7 +93,7 @@ body {
     --unit: 1vw;
     --wrapper-padding: calc(var(--unit) * 4);
     --section-padding: clamp(100px, calc(var(--unit) * 7), 300px);
-    --max-central-content: 740px;
+    --max-central-content: 600px;
   }
 }
 @media (min-width: 2060px) {

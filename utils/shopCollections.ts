@@ -105,6 +105,22 @@ export function filterProductsByCollection(
   return products.filter((product) => productMatchesCollection(product, filterId))
 }
 
+export function resolveProductShopFilter(product: ShopifyProduct): ShopFilterId {
+  const productType = normalizeToken(product.productType)
+  if (productType) {
+    if (collectionAliases.posters.includes(productType) || productType === 'prints') {
+      return 'posters'
+    }
+    if (collectionAliases.apparel.includes(productType)) {
+      return 'apparel'
+    }
+  }
+
+  if (productMatchesCollection(product, 'posters')) return 'posters'
+  if (productMatchesCollection(product, 'apparel')) return 'apparel'
+  return 'all'
+}
+
 export function formatShopPrice(amount: string, currencyCode = 'USD') {
   const value = Number(amount)
   return new Intl.NumberFormat('en-US', {

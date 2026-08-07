@@ -144,10 +144,15 @@ const heroOverlayOpacity = computed(() => {
 })
 
 const showHeroOverlay = computed(() => heroOverlayOpacity.value > 0)
+
+const fillScreen = computed(() => props.section?.watchFillScreen === true)
 </script>
 
 <template>
-  <div class="page-section-watch">
+  <div
+    class="page-section-watch"
+    :class="{ 'page-section-watch--fill-screen': fillScreen }"
+  >
     <section
       class="page-section-watch__hero"
       aria-label="Film preview"
@@ -448,7 +453,7 @@ const showHeroOverlay = computed(() => heroOverlayOpacity.value > 0)
     min-width: clamp(200px, 50vw, 280px);
     border-radius: 8px;
     corner-shape: notch;
-    font-family: math;
+    font-family: var(--body-serif);
 }
 
 .page-section-watch__cta:hover {
@@ -534,5 +539,24 @@ const showHeroOverlay = computed(() => heroOverlayOpacity.value > 0)
   .page-section-watch__grid-link {
     text-align: left;
   }
+}
+
+.page-section-watch--fill-screen {
+  --watch-nav-clearance: 0px;
+}
+
+@media (min-width: 700px) {
+  .page-section-watch--fill-screen {
+    --watch-nav-clearance: 0px;
+  }
+}
+
+.page-section-watch--fill-screen .page-section-watch__hero {
+  width: calc(100% + (2 * var(--watch-gutter)));
+  max-width: none;
+  margin-top: 0;
+  margin-left: calc(-1 * var(--watch-gutter));
+  margin-right: calc(-1 * var(--watch-gutter));
+  border-radius: 0;
 }
 </style>

@@ -1,11 +1,15 @@
 import type {ShopifyCart} from '~/types/shopify'
 
+const CART_SLOT_OPEN_MS = 380
+
 export function useCart() {
   const cart = useState<ShopifyCart | null>('shopify-cart', () => null)
   const loading = useState('shopify-cart-loading', () => false)
   const checkoutLoading = useState('shopify-checkout-loading', () => false)
   const isOpen = useState('cart-drawer-open', () => false)
   const lastAddedLineId = useState<string | null>('cart-last-added-line-id', () => null)
+  const lastAddedIsNewLine = useState('cart-last-added-is-new-line', () => false)
+  const pendingNewLineSlot = useState('cart-pending-new-line-slot', () => false)
   const isAddingItem = useState('cart-adding-item', () => false)
 
   const count = computed(() => cart.value?.totalQuantity ?? 0)
@@ -44,14 +48,11 @@ export function useCart() {
 
   async function addToCart(variantId: string, quantity = 1) {
     await mutateCart({action: 'add', variantId, quantity})
-    const line = cart.value?.lines.find((entry) => entry.variantId === variantId)
-    if (line) {
-      lastAddedLineId.value = line.id
-    }
   }
 
   function clearLastAddedLineId() {
     lastAddedLineId.value = null
+    lastAddedIsNewLine.value = false
   }
 
   function waitForCartOpen() {
@@ -64,16 +65,41 @@ export function useCart() {
     })
   }
 
+  function waitForSlotOpen() {
+    if (!import.meta.client) return Promise.resolve()
+    return new Promise<void>((resolve) => {
+      window.setTimeout(resolve, CART_SLOT_OPEN_MS)
+    })
+  }
+
   async function addToCartWithOpen(variantId: string, quantity = 1) {
+    const isNewLine = !cart.value?.lines.some((entry) => entry.variantId === variantId)
     isAddingItem.value = true
+
     try {
       if (!isOpen.value) {
         openCart()
         await waitForCartOpen()
       }
-      await addToCart(variantId, quantity)
+
+      if (isNewLine) {
+        pendingNewLineSlot.value = true
+        await nextTick()
+        await waitForSlotOpen()
+      }
+
+      await mutateCart({action: 'add', variantId, quantity})
+
+      if (isNewLine) {
+        const line = cart.value?.lines.find((entry) => entry.variantId === variantId)
+        if (line) {
+          lastAddedLineId.value = line.id
+          lastAddedIsNewLine.value = true
+        }
+      }
     } finally {
       isAddingItem.value = false
+      pendingNewLineSlot.value = false
     }
   }
 
@@ -128,6 +154,8 @@ export function useCart() {
     checkoutLoading,
     isOpen,
     lastAddedLineId,
+    lastAddedIsNewLine,
+    pendingNewLineSlot,
     isAddingItem,
     refreshCart,
     addToCart,

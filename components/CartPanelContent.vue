@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import gsap from 'gsap'
+
 const props = defineProps({
   variant: {
     type: String,
     default: 'drawer',
     validator: (value: string) => ['drawer', 'dropdown'].includes(value),
+  },
+  revealContent: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -19,6 +25,8 @@ const {
   checkoutLoading,
   loading,
   lastAddedLineId,
+  lastAddedIsNewLine,
+  pendingNewLineSlot,
   isAddingItem,
   clearLastAddedLineId,
 } = useCart()
@@ -37,16 +45,130 @@ function onClose() {
 
 function onItemEnterEnd(lineId: string, event: AnimationEvent) {
   if (event.animationName !== 'cart-item-enter') return
-  if (lineId === lastAddedLineId.value) {
-    clearLastAddedLineId()
-  }
+  if (lineId !== lastAddedLineId.value || !lastAddedIsNewLine.value) return
+  clearLastAddedLineId()
 }
+
+const panelRef = ref<HTMLElement | null>(null)
+let revealTween: gsap.core.Tween | null = null
+let hasRevealedContent = false
+
+function revealTargetEls() {
+  const root = panelRef.value
+  if (!root) return []
+
+  const items = root.querySelectorAll(
+    '.cart-panel__item:not(.cart-panel__item--placeholder)',
+  )
+  const footer = root.querySelector('.cart-panel__footer')
+  const empty = root.querySelector('.cart-panel__empty')
+  const targets = [...items]
+  if (footer) targets.push(footer)
+  else if (empty) targets.push(empty)
+  return targets
+}
+
+function killRevealTween() {
+  revealTween?.kill()
+  revealTween = null
+}
+
+function resetRevealTargets() {
+  if (props.variant !== 'dropdown' || !import.meta.client) return
+  const targets = revealTargetEls()
+  if (targets.length) gsap.set(targets, { autoAlpha: 0, y: 14 })
+}
+
+function animateRevealTargets() {
+  if (props.variant !== 'dropdown' || !import.meta.client) return
+
+  const targets = revealTargetEls()
+  if (!targets.length) return
+
+  killRevealTween()
+  gsap.set(targets, { autoAlpha: 0, y: 14 })
+  revealTween = gsap.to(targets, {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.38,
+    stagger: 0.055,
+    ease: 'power2.out',
+    onComplete: () => {
+      revealTween = null
+    },
+  })
+  hasRevealedContent = true
+}
+
+function scheduleReveal() {
+  if (props.variant !== 'dropdown' || !props.revealContent) return
+
+  nextTick(() => {
+    if (!props.revealContent) return
+    animateRevealTargets()
+  })
+}
+
+function canRevealNow() {
+  if (loading.value && items.value.length === 0 && !isAddingItem.value) return false
+  return true
+}
+
+function hideRevealTargets() {
+  if (props.variant !== 'dropdown' || !import.meta.client) return
+  resetRevealTargets()
+}
+
+watch(() => props.revealContent, (visible) => {
+  if (props.variant !== 'dropdown' || !import.meta.client) return
+
+  if (!visible) {
+    hasRevealedContent = false
+    killRevealTween()
+    resetRevealTargets()
+    return
+  }
+
+  hideRevealTargets()
+  if (canRevealNow()) scheduleReveal()
+})
+
+watch([loading, () => items.value.length, pendingNewLineSlot, isAddingItem], () => {
+  if (props.variant !== 'dropdown' || !import.meta.client) return
+
+  if (!props.revealContent) {
+    hideRevealTargets()
+    return
+  }
+
+  if (hasRevealedContent) return
+  if (!canRevealNow()) return
+  hideRevealTargets()
+  scheduleReveal()
+})
+
+onMounted(() => {
+  if (props.variant === 'dropdown') {
+    hideRevealTargets()
+  }
+})
+
+onBeforeUnmount(() => {
+  killRevealTween()
+})
 </script>
 
 <template>
   <div
+    ref="panelRef"
     class="cart-panel"
-    :class="`cart-panel--${props.variant}`"
+    :class="[
+      `cart-panel--${props.variant}`,
+      {
+        'cart-panel--content-hidden':
+          props.variant === 'dropdown' && !props.revealContent,
+      },
+    ]"
   >
     <header class="cart-panel__header">
       <h2 class="cart-panel__title">Your Cart</h2>
@@ -68,14 +190,14 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
     </div>
 
     <div
-      v-else-if="items.length === 0 && isAddingItem"
+      v-else-if="items.length === 0 && isAddingItem && !pendingNewLineSlot"
       class="cart-panel__empty"
     >
       Adding to cart…
     </div>
 
     <div
-      v-else-if="items.length === 0"
+      v-else-if="items.length === 0 && !pendingNewLineSlot"
       class="cart-panel__empty"
     >
       <p>Your cart is empty.</p>
@@ -88,76 +210,111 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
       </NuxtLink>
     </div>
 
-    <template v-else>
+    <template v-else-if="items.length > 0 || pendingNewLineSlot">
       <ul class="cart-panel__items">
         <li
           v-for="item in items"
           :key="item.id"
           class="cart-panel__item"
-          :class="{ 'cart-panel__item--entering': item.id === lastAddedLineId }"
+          :class="{
+            'cart-panel__item--content-entering':
+              item.id === lastAddedLineId && lastAddedIsNewLine,
+          }"
           @animationend="onItemEnterEnd(item.id, $event)"
         >
-          <component
-            :is="item.handle ? 'NuxtLink' : 'div'"
-            v-bind="item.handle ? { to: `/shop/${item.handle}` } : {}"
-            class="cart-panel__thumb"
-            @click="onClose"
-          >
-            <img
-              v-if="item.imageUrl"
-              class="cart-panel__thumb-image"
-              :src="item.imageUrl"
-              :alt="item.title"
-              loading="lazy"
-              draggable="false"
-            >
-            <span
-              v-else
-              class="cart-panel__thumb-placeholder"
-              aria-hidden="true"
-            />
-          </component>
-
-          <div class="cart-panel__item-body">
-            <div class="cart-panel__item-main">
-              <p class="cart-panel__item-title">{{ item.title }}</p>
-              <p
-                v-if="item.variantTitle && item.variantTitle !== 'Default Title'"
-                class="cart-panel__item-variant"
+          <div class="cart-panel__item-slot">
+            <div class="cart-panel__item-inner">
+              <NuxtLink
+                v-if="item.handle"
+                :to="`/shop/${item.handle}`"
+                class="cart-panel__thumb"
+                @click="onClose"
               >
-                {{ item.variantTitle }}
-              </p>
-              <p class="cart-panel__item-price">
-                {{ formatPrice(item.price, item.currencyCode) }}
-              </p>
-            </div>
-
-            <div class="cart-panel__item-actions">
-              <select
-                :value="item.quantity"
-                class="cart-panel__qty"
-                @change="updateQty(item.id, Number(($event.target as HTMLSelectElement).value))"
-              >
-                <option
-                  v-for="n in 10"
-                  :key="n"
-                  :value="n"
+                <img
+                  v-if="item.imageUrl"
+                  class="cart-panel__thumb-image"
+                  :src="item.imageUrl"
+                  :alt="item.title"
+                  loading="lazy"
+                  draggable="false"
                 >
-                  {{ n }}
-                </option>
-              </select>
-              <button
-                type="button"
-                class="cart-panel__remove"
-                aria-label="Remove item"
-                @click="removeFromCart(item.id)"
+                <span
+                  v-else
+                  class="cart-panel__thumb-placeholder"
+                  aria-hidden="true"
+                />
+              </NuxtLink>
+              <div
+                v-else
+                class="cart-panel__thumb"
               >
-                <TrashIcon />
-              </button>
-              <p class="cart-panel__line-total">
-                {{ lineTotal(item.price, item.quantity) }}
-              </p>
+                <img
+                  v-if="item.imageUrl"
+                  class="cart-panel__thumb-image"
+                  :src="item.imageUrl"
+                  :alt="item.title"
+                  loading="lazy"
+                  draggable="false"
+                >
+                <span
+                  v-else
+                  class="cart-panel__thumb-placeholder"
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div class="cart-panel__item-body">
+                <div class="cart-panel__item-main">
+                  <p class="cart-panel__item-title">{{ item.title }}</p>
+                  <p
+                    v-if="item.variantTitle && item.variantTitle !== 'Default Title'"
+                    class="cart-panel__item-variant"
+                  >
+                    {{ item.variantTitle }}
+                  </p>
+                  <p class="cart-panel__item-price">
+                    {{ formatPrice(item.price, item.currencyCode) }}
+                  </p>
+                </div>
+
+                <div class="cart-panel__item-actions">
+                  <select
+                    :value="item.quantity"
+                    class="cart-panel__qty"
+                    @change="updateQty(item.id, Number(($event.target as HTMLSelectElement).value))"
+                  >
+                    <option
+                      v-for="n in 10"
+                      :key="n"
+                      :value="n"
+                    >
+                      {{ n }}
+                    </option>
+                  </select>
+                  <button
+                    type="button"
+                    class="cart-panel__remove"
+                    aria-label="Remove item"
+                    @click="removeFromCart(item.id)"
+                  >
+                    <TrashIcon />
+                  </button>
+                  <p class="cart-panel__line-total">
+                    {{ lineTotal(item.price, item.quantity) }}
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
+        </li>
+
+        <li
+          v-if="pendingNewLineSlot && !lastAddedLineId"
+          class="cart-panel__item cart-panel__item--placeholder cart-panel__item--slot-opening"
+          aria-hidden="true"
+        >
+          <div class="cart-panel__item-slot">
+            <div class="cart-panel__item-inner cart-panel__item-inner--placeholder" />
           </div>
         </li>
       </ul>
@@ -215,8 +372,17 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
   color: var(--menu-text-color, var(--obsidian));
 }
 
+.cart-panel--dropdown.cart-panel--content-hidden :is(
+  .cart-panel__item:not(.cart-panel__item--placeholder),
+  .cart-panel__footer,
+  .cart-panel__empty
+) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
 .cart-panel__header {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   padding: 10px 47px 14px;
@@ -269,21 +435,51 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
 }
 
 .cart-panel__item {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px;
-  padding: 14px 4px;
+  padding: 0 4px;
   border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
 }
 
-.cart-panel__item--entering {
-  animation: cart-item-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+.cart-panel__item-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.cart-panel__item-inner {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+  padding: 14px 0;
+  overflow: hidden;
+}
+
+.cart-panel__item--placeholder {
+  pointer-events: none;
+}
+
+.cart-panel__item--slot-opening .cart-panel__item-slot {
+  grid-template-rows: 0fr;
+  animation: cart-slot-open 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.cart-panel__item-inner--placeholder {
+  min-height: 100px;
+}
+
+.cart-panel__item--content-entering .cart-panel__item-inner {
+  animation: cart-item-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cart-slot-open {
+  to {
+    grid-template-rows: 1fr;
+  }
 }
 
 @keyframes cart-item-enter {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
 
   to {
@@ -300,6 +496,12 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
   background: color-mix(in srgb, currentColor 6%, transparent);
   color: inherit;
   text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.cart-panel__thumb:hover,
+.cart-panel__thumb:focus-visible {
+  opacity: 0.82;
 }
 
 .cart-panel__thumb-image {
@@ -336,7 +538,7 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
 .cart-panel__item-price {
   margin: 0.35rem 0 0;
   font-size: 12px;
-  color: color-mix(in srgb, currentColor 58%, transparent);
+  color: inherit;
 }
 
 .cart-panel__item-actions {
@@ -400,7 +602,7 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
 .cart-panel__note {
   margin: 0 0 14px;
   font-size: 11px;
-  color: color-mix(in srgb, currentColor 52%, transparent);
+  color: inherit;
 }
 
 .cart-panel__checkout {

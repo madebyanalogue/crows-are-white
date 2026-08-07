@@ -1,8 +1,10 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    videoId: string
+    videoId?: string
+    cloudflareStreamId?: string
     videoSrc?: string
+    posterUrl?: string
     title?: string
     aspectClass?: string
     mediaTransform?: string
@@ -27,8 +29,10 @@ onMounted(() => {
   mounted.value = true
 })
 
-const loopSrc = computed(() => {
-  if (!mounted.value || props.videoSrc) return undefined
+const youtubeSrc = computed(() => {
+  if (!mounted.value || props.videoSrc || props.cloudflareStreamId || !props.videoId) {
+    return undefined
+  }
 
   const params = new URLSearchParams({
     autoplay: '1',
@@ -55,15 +59,27 @@ const loopSrc = computed(() => {
   return `https://www.youtube-nocookie.com/embed/${props.videoId}?${params.toString()}`
 })
 
+const cloudflareSrc = computed(() => {
+  if (!mounted.value || !props.cloudflareStreamId) return undefined
+
+  const params = new URLSearchParams({
+    autoplay: 'true',
+    muted: 'true',
+    loop: 'true',
+    controls: 'false',
+    preload: 'true',
+  })
+
+  return `https://iframe.videodelivery.net/${props.cloudflareStreamId}?${params.toString()}`
+})
+
 function onIframeLoad() {
-  // Fade in after autoplay has started so the YouTube play overlay is hidden
   setTimeout(() => {
     videoReady.value = true
-  }, 600)
-  // Fallback — reveal even if autoplay is delayed
+  }, 400)
   setTimeout(() => {
     videoReady.value = true
-  }, 2000)
+  }, 1800)
 }
 
 function onVideoPlaying() {
@@ -76,34 +92,56 @@ function onVideoPlaying() {
     class="video-loop relative w-full overflow-hidden bg-black pointer-events-none"
     :class="aspectClass"
   >
+    <img
+      v-if="posterUrl && !videoReady"
+      class="video-loop__poster absolute inset-0 h-full w-full object-cover"
+      :src="posterUrl"
+      alt=""
+      aria-hidden="true"
+    >
+
     <video
       v-if="videoSrc"
       class="video-loop__native absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
       :class="videoReady ? 'opacity-100' : 'opacity-0'"
       :style="mediaStyle"
       :src="videoSrc"
+      :poster="posterUrl || undefined"
       autoplay
       muted
       loop
       playsinline
+      preload="auto"
       disablepictureinpicture
       disableremoteplayback
       @playing="onVideoPlaying"
     />
 
     <iframe
-      v-else-if="loopSrc"
+      v-else-if="cloudflareSrc"
       class="video-loop__iframe absolute inset-0 h-full w-full border-0 transition-opacity duration-500"
       :class="videoReady ? 'opacity-100' : 'opacity-0'"
       :style="mediaStyle"
-      :src="loopSrc"
+      :src="cloudflareSrc"
       :title="title"
       tabindex="-1"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       @load="onIframeLoad"
     />
 
-    <template v-if="!videoSrc">
+    <iframe
+      v-else-if="youtubeSrc"
+      class="video-loop__iframe absolute inset-0 h-full w-full border-0 transition-opacity duration-500"
+      :class="videoReady ? 'opacity-100' : 'opacity-0'"
+      :style="mediaStyle"
+      :src="youtubeSrc"
+      :title="title"
+      tabindex="-1"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      @load="onIframeLoad"
+    />
+
+    <template v-if="youtubeSrc && !videoSrc">
       <div class="video-loop__ui-mask-corner video-loop__ui-mask-corner--br" aria-hidden="true" />
       <div class="video-loop__ui-mask-corner video-loop__ui-mask-corner--bl" aria-hidden="true" />
     </template>
@@ -111,6 +149,7 @@ function onVideoPlaying() {
 </template>
 
 <style scoped>
+.video-loop__poster,
 .video-loop__native,
 .video-loop__iframe {
   pointer-events: none;

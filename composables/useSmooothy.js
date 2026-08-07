@@ -12,6 +12,7 @@ export function useSmooothy(elementRef, config = {}) {
   let tickerFn = null
   let initPromise = null
   let updatesPaused = false
+  let visualFrozen = false
 
   async function init() {
     if (!import.meta.client || slider.value || !elementRef.value) return slider.value
@@ -39,15 +40,46 @@ export function useSmooothy(elementRef, config = {}) {
     return initPromise
   }
 
-  function destroy() {
-    if (tickerFn) {
-      gsap.ticker.remove(tickerFn)
-      tickerFn = null
+  function blockResize() {
+    const instance = slider.value
+    if (!instance || instance.__crowsResizeBlocked) return
+    instance.__crowsOriginalResize = instance.resize.bind(instance)
+    instance.resize = () => {}
+    instance.__crowsResizeBlocked = true
+  }
+
+  function unblockResize() {
+    const instance = slider.value
+    if (!instance?.__crowsResizeBlocked) return
+    instance.resize = instance.__crowsOriginalResize
+    delete instance.__crowsOriginalResize
+    delete instance.__crowsResizeBlocked
+  }
+
+  function destroy(options = {}) {
+    const { preserveVisual = false } = options
+
+    pauseUpdates()
+
+    if (!slider.value) {
+      ready.value = false
+      updatesPaused = false
+      return
     }
-    if (slider.value) {
-      slider.value.destroy()
-      slider.value = null
+
+    if (preserveVisual) {
+      slider.value.paused = true
+      slider.value.target = slider.value.current
+      blockResize()
+      visualFrozen = true
+      return
     }
+
+    visualFrozen = false
+
+    unblockResize()
+    slider.value.destroy()
+    slider.value = null
     ready.value = false
     updatesPaused = false
   }
@@ -64,20 +96,26 @@ export function useSmooothy(elementRef, config = {}) {
     updatesPaused = false
   }
 
+  function freeze() {
+    pauseUpdates()
+    if (!slider.value) return
+    slider.value.paused = true
+    slider.value.target = slider.value.current
+    blockResize()
+  }
+
   watch(
     elementRef,
     (el) => {
       if (el) {
         nextTick(() => init())
-        return
       }
-      destroy()
     },
     { flush: 'post', immediate: true },
   )
 
   onUnmounted(() => {
-    destroy()
+    if (!visualFrozen) destroy()
   })
 
   return {
@@ -87,5 +125,6 @@ export function useSmooothy(elementRef, config = {}) {
     destroy,
     pauseUpdates,
     resumeUpdates,
+    freeze,
   }
 }

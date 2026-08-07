@@ -16,9 +16,24 @@ function resolveExposedRef(exposed) {
   return null
 }
 
+const fullscreenSubscribers = new Set()
+let fullscreenListenersBound = false
+
+function notifyFullscreenSubscribers() {
+  fullscreenSubscribers.forEach((handler) => handler())
+}
+
+function ensureFullscreenListeners() {
+  if (!import.meta.client || fullscreenListenersBound) return
+  document.addEventListener('fullscreenchange', notifyFullscreenSubscribers)
+  document.addEventListener('webkitfullscreenchange', notifyFullscreenSubscribers)
+  fullscreenListenersBound = true
+}
+
 export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOptions = {}) {
   const isPlaying = ref(false)
   const isMuted = ref(false)
+  const isFullscreen = ref(false)
   const currentLabel = ref('0:00')
   const totalLabel = ref('0:00')
   const progressPct = ref(0)
@@ -27,6 +42,24 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
   let scrubbing = false
   let playerSession = 0
   let pendingPlayHandler = null
+  let fullscreenTarget = null
+
+  function syncFullscreenState() {
+    const activeElement = document.fullscreenElement
+      || document.webkitFullscreenElement
+      || null
+
+    isFullscreen.value = Boolean(
+      player?.fullscreen?.active
+      || (activeElement && (
+        activeElement === fullscreenTarget
+        || fullscreenTarget?.contains(activeElement)
+      )),
+    )
+  }
+
+  ensureFullscreenListeners()
+  fullscreenSubscribers.add(syncFullscreenState)
 
   function clearPendingPlay() {
     if (!pendingPlayHandler) return
@@ -138,6 +171,8 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
 
   function destroyPlayer() {
     bumpPlayerSession()
+    exitFullscreen()
+    fullscreenSubscribers.delete(syncFullscreenState)
     stopMediaElements()
   }
 
@@ -273,6 +308,12 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
       isMuted.value = Boolean(player.muted)
     })
     player.on('ended', handleEnded)
+    player.on('enterfullscreen', () => {
+      isFullscreen.value = true
+    })
+    player.on('exitfullscreen', () => {
+      isFullscreen.value = false
+    })
   }
 
   async function initPlayer() {
@@ -390,11 +431,78 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     progressPct.value = 0
     currentLabel.value = '0:00'
     isPlaying.value = false
+    isFullscreen.value = false
+  }
+
+  async function exitFullscreen() {
+    if (player?.fullscreen?.active) {
+      player.fullscreen.exit()
+      isFullscreen.value = false
+      return
+    }
+
+    const activeElement = document.fullscreenElement || document.webkitFullscreenElement
+    if (!activeElement) {
+      isFullscreen.value = false
+      return
+    }
+
+    try {
+      if (document.exitFullscreen) await document.exitFullscreen()
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
+    } catch {
+      // ignore
+    }
+
+    isFullscreen.value = false
+  }
+
+  async function toggleFullscreen(event, containerEl = null) {
+    event?.stopPropagation?.()
+
+    fullscreenTarget = containerEl
+
+    if (player?.fullscreen) {
+      if (player.fullscreen.active) {
+        player.fullscreen.exit()
+      } else {
+        player.fullscreen.enter()
+      }
+      syncFullscreenState()
+      return
+    }
+
+    const { videoEl } = getMediaElements()
+    const video = videoEl
+
+    if (video?.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen()
+      isFullscreen.value = true
+      return
+    }
+
+    const target = containerEl || video
+    if (!target) return
+
+    const activeElement = document.fullscreenElement || document.webkitFullscreenElement
+    if (activeElement) {
+      await exitFullscreen()
+      return
+    }
+
+    try {
+      if (target.requestFullscreen) await target.requestFullscreen()
+      else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen()
+      syncFullscreenState()
+    } catch {
+      // ignore
+    }
   }
 
   return {
     isPlaying,
     isMuted,
+    isFullscreen,
     currentLabel,
     totalLabel,
     progressPct,
@@ -406,6 +514,8 @@ export function useCinematicVideoPlayer(getConfig, mediaComponentRef, playerOpti
     destroyPlayer,
     togglePlay,
     toggleSound,
+    toggleFullscreen,
+    exitFullscreen,
     seekFromEvent,
     onScrubDown,
     play,

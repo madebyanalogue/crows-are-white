@@ -244,7 +244,7 @@ function setReelToIndex(index, { animate = true, direction = 1 } = {}) {
   })
 }
 
-const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderElement, () => ({
+const { slider, destroy: destroySlider, freeze: freezeSlider } = useSmooothy(sliderElement, () => ({
   vertical: true,
   infinite: true,
   variableWidth: true,
@@ -262,6 +262,8 @@ const { slider, destroy: destroySlider, pauseUpdates } = useSmooothy(sliderEleme
     passive: true,
   },
   onSlideChange: (current) => {
+    if (isNavigationSuspended.value) return
+
     const prev = currentIndex.value
     const total = videos.value.length
     let direction = 1
@@ -488,13 +490,16 @@ function bootSlider() {
   })
 }
 
-function teardownSlider({ unlockScroll = true } = {}) {
+function teardownSlider({ unlockScroll = true, preserveVisual = false } = {}) {
   window.removeEventListener('keydown', handleKeydown)
   if (reelTween) reelTween.kill()
   stopAllExcept(-1)
-  destroySlider()
+  destroySlider({ preserveVisual })
   isPlayerOpen.value = false
-  isNavigationSuspended.value = false
+
+  if (!preserveVisual) {
+    isNavigationSuspended.value = false
+  }
 
   if (unlockScroll) {
     releaseDeferredScrollUnlock()
@@ -525,13 +530,7 @@ function suspendForNavigation() {
   if (isNavigationSuspended.value || isStackLayout.value) return
 
   isNavigationSuspended.value = true
-  pauseUpdates()
-
-  const instance = slider.value
-  if (instance) {
-    instance.paused = true
-    instance.target = instance.current
-  }
+  freezeSlider()
 
   if (reelTween) {
     reelTween.kill()
@@ -611,7 +610,10 @@ onBeforeUnmount(() => {
   document.removeEventListener('crows:scroll-system-ready', holdNativeScrollOff)
 
   const isTransitioning = useState('pageTransitioning', () => false)
-  teardownSlider({ unlockScroll: !isTransitioning.value })
+  teardownSlider({
+    unlockScroll: !isTransitioning.value,
+    preserveVisual: isTransitioning.value,
+  })
 })
 </script>
 
@@ -680,6 +682,10 @@ onBeforeUnmount(() => {
 
 .page-section-videos__slider.is-settled {
   visibility: visible;
+}
+
+.page-section-videos.is-navigation-suspended .page-section-videos__slider {
+  pointer-events: none;
 }
 
 .page-section-videos__slide {

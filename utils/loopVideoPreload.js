@@ -15,28 +15,39 @@ export function getLoopVideoPreconnectOrigin(loop) {
 }
 
 export function getLoopVideoHeadLinks(loop) {
-  const href = getLoopVideoPreloadUrl(loop)
-  if (!href) return []
+  if (!loop || loop.kind === 'youtube') return []
 
   const links = []
   const origin = getLoopVideoPreconnectOrigin(loop)
 
   if (origin) {
     links.push({
-      key: 'hero-video-preconnect',
+      key: `loop-video-preconnect-${loop.kind || 'mp4'}`,
       rel: 'preconnect',
       href: origin,
       crossorigin: 'anonymous',
     })
   }
 
+  const href = getLoopVideoPreloadUrl(loop)
+  if (!href) return links
+
   links.push({
-    key: 'hero-video-preload',
+    key: 'loop-video-preload',
     rel: 'preload',
     as: 'video',
     href,
     type: 'video/mp4',
   })
+
+  if (loop.posterUrl) {
+    links.push({
+      key: 'loop-video-poster-preload',
+      rel: 'preload',
+      as: 'image',
+      href: loop.posterUrl,
+    })
+  }
 
   return links
 }

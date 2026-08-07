@@ -30,6 +30,21 @@ export function cloudflareStreamPosterUrl(videoIdOrUrl, { height = 720 } = {}) {
   return `https://videodelivery.net/${id}/thumbnails/thumbnail.jpg?time=0s&height=${height}`
 }
 
+export function cloudflareStreamIframeUrl(videoIdOrUrl) {
+  const id = cloudflareStreamId(videoIdOrUrl)
+  if (!id || id.includes('.')) return ''
+
+  const params = new URLSearchParams({
+    autoplay: 'true',
+    muted: 'true',
+    loop: 'true',
+    controls: 'false',
+    preload: 'true',
+  })
+
+  return `https://iframe.videodelivery.net/${id}?${params.toString()}`
+}
+
 /**
  * Pick the best looping thumbnail URL from Sanity video data.
  * Prefers Cloudflare (1080p on large screens, 720p otherwise) then MP4 upload.

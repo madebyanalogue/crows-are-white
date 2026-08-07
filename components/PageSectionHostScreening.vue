@@ -1,7 +1,6 @@
 <script setup>
 import { resolveSanityAssetUrl } from '~/utils/sanity'
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
-import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
 import { toCssColor } from '~/utils/pageColors'
 
 const props = defineProps({
@@ -80,10 +79,6 @@ const form = reactive({
 function onSubmit() {
   // Wire to bookings@crowsarewhite.com / API later
 }
-
-useHead(() => ({
-  link: getLoopVideoHeadLinks(loop.value),
-}))
 </script>
 
 <template>

@@ -20,18 +20,28 @@ defineProps({
     type: Number,
     default: 0,
   },
+  showFullscreen: {
+    type: Boolean,
+    default: false,
+  },
+  isFullscreen: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-defineEmits(['toggle-play', 'toggle-sound', 'scrub-down', 'seek'])
+defineEmits(['toggle-play', 'toggle-sound', 'toggle-fullscreen', 'scrub-down', 'seek'])
 
 const uiPlayRef = ref(null)
 const uiProgressRef = ref(null)
 const uiSoundRef = ref(null)
+const uiFullscreenRef = ref(null)
 
 defineExpose({
   uiPlayRef,
   uiProgressRef,
   uiSoundRef,
+  uiFullscreenRef,
 })
 </script>
 
@@ -85,6 +95,45 @@ defineExpose({
       </div>
       <span class="cinematic-video-controls__time">{{ totalLabel }}</span>
     </div>
+
+    <button
+      v-if="showFullscreen"
+      ref="uiFullscreenRef"
+      type="button"
+      class="cinematic-video-controls__fullscreen"
+      :class="{ 'is-active': isFullscreen }"
+      :aria-label="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+      @click="$emit('toggle-fullscreen', $event)"
+    >
+      <svg
+        v-if="!isFullscreen"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <svg
+        v-else
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5"
+          stroke="currentColor"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
 
     <button
       ref="uiSoundRef"
@@ -223,8 +272,30 @@ defineExpose({
   white-space: nowrap;
 }
 
+.cinematic-video-controls__fullscreen {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cinematic-video-controls__fullscreen svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 .cinematic-video-controls__sound:hover,
-.cinematic-video-controls__sound:focus-visible {
+.cinematic-video-controls__sound:focus-visible,
+.cinematic-video-controls__fullscreen:hover,
+.cinematic-video-controls__fullscreen:focus-visible {
   opacity: 0.75;
 }
 

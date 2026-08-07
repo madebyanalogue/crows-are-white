@@ -118,6 +118,7 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
       resolveExposedRef(controls.uiPlayRef),
       resolveExposedRef(controls.uiProgressRef),
       resolveExposedRef(controls.uiSoundRef),
+      resolveExposedRef(controls.uiFullscreenRef),
     ].filter(Boolean)
   }
 
@@ -203,6 +204,7 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     }
 
     player.pause()
+    player.exitFullscreen?.()
     onClose?.()
 
     const overlay = refs.overlayRef?.value
@@ -273,6 +275,9 @@ export function useCinematicVideoExperience(getConfig, refs, options = {}) {
     setupInitialState,
     onDialogEnter,
     onDialogLeave,
+    toggleFullscreen(event) {
+      player.toggleFullscreen(event, resolveExposedRef(refs.stageRef))
+    },
     ...player,
   }
 }

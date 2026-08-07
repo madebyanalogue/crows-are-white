@@ -4,15 +4,15 @@
         <div
           class="page-content__intro"
           :class="richTextTwoColumns
-            ? 'page-content__intro--two-columns grid-1 gap-section gap-md-0'
-            : 'page-content__intro--single grid-1 gap-section'"
+            ? 'page-content__intro--two-columns grid-1 gap-md-0'
+            : 'page-content__intro--single grid-1'"
           :style="introPaddingStyle"
         >
           <div
             class="page-content__intro-title text-center "
-            :class="richTextTwoColumns ? 'text-left-md' : 'text-center section-padding-small pad-top-bottom'"
+            :class="richTextTwoColumns ? 'text-left-md' : 'text-center '"
           >
-            <h1 class="h2 serif">{{ page.title }}</h1>
+            <h1 class="h1 serif light">{{ page.title }}</h1>
           </div>
           <SanityContent
             v-if="hasRichText"
@@ -218,12 +218,3 @@ const introPaddingStyle = computed(() => ({
   paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(props.page?.richTextPaddingBottom)],
 }))
 </script>
-
-<style scoped>
-@media (min-width: 1000px) {
-  .page-content__intro--two-columns .page-content__intro-title h1 {
-    position: sticky;
-    top: calc(calc(var(--header-height) * 1px) + var(--section-padding));
-  }
-}
-</style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { buildDefaultRelatedProductsSection } from '~/utils/shopProductsSection'
 import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
+import { isVariantPurchasable } from '~/utils/shopVariants'
 
 useShopPageColor()
 
@@ -32,9 +33,16 @@ const quantity = ref(1)
 const adding = ref(false)
 
 watch(product, (value) => {
-  if (value?.variants[0]) {
-    selectedVariantId.value = value.variants[0].id
+  if (!value?.variants.length) {
+    selectedVariantId.value = ''
+    return
   }
+
+  const currentVariant = value.variants.find((variant) => variant.id === selectedVariantId.value)
+  if (currentVariant) return
+
+  const firstVariant = value.variants.find((variant) => isVariantPurchasable(variant)) || value.variants[0]
+  selectedVariantId.value = firstVariant.id
 }, { immediate: true })
 
 async function onAddToCart() {

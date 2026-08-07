@@ -2,6 +2,7 @@ import type {H3Event} from 'h3'
 import {createStorefrontApiClient} from '@shopify/storefront-api-client'
 import type {ShopifyCart, ShopifyProduct, ShopifyProductDetail} from '~/types/shopify'
 import {isOnSale} from '~/utils/shopifySale'
+import {resolveVariantOptionName} from '~/utils/shopVariants'
 
 const API_VERSION = '2025-01'
 
@@ -214,6 +215,7 @@ const PRODUCT_DETAIL_FIELDS = `
       id
       title
       availableForSale
+      currentlyNotInStock
       price {
         amount
         currencyCode
@@ -226,6 +228,12 @@ const PRODUCT_DETAIL_FIELDS = `
         url
         altText
       }
+    }
+  }
+  options {
+    name
+    optionValues {
+      name
     }
   }
 `
@@ -245,10 +253,15 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
         id: string
         title: string
         availableForSale: boolean
+        currentlyNotInStock: boolean
         price: {amount: string; currencyCode: string}
         compareAtPrice?: {amount: string; currencyCode: string} | null
         image?: {url: string; altText?: string}
       }>}
+      options: Array<{
+        name: string
+        optionValues: Array<{name: string}>
+      }>
     } | null
   }>(`
     query Product($handle: String!) {
@@ -274,6 +287,7 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
       compareAtPrice,
       onSale: isOnSale(variant.price.amount, compareAtPrice),
       availableForSale: variant.availableForSale,
+      currentlyNotInStock: variant.currentlyNotInStock,
       imageUrl: variant.image?.url,
       imageAlt: variant.image?.altText,
     }
@@ -294,6 +308,12 @@ export async function fetchProductByHandle(handle: string): Promise<ShopifyProdu
     description: product.description,
     images: product.images.nodes,
     variants,
+    variantOptionName: resolveVariantOptionName(
+      product.options.map((option) => ({
+        name: option.name,
+        values: option.optionValues.map((value) => value.name),
+      })),
+    ),
   }
 }
 

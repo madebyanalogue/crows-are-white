@@ -61,17 +61,34 @@ const mockDescriptions: Record<string, string> = {
   'ice-cream-club-cap': 'Embroidered cap — ice cream club membership not required.',
 }
 
-export function getMockProductByHandle(handle: string): ShopifyProductDetail | null {
-  const product = mockProducts.find((item) => item.handle === handle)
-  if (!product) return null
+type MockVariantSeed = {
+  id: string
+  title: string
+  price?: string
+  compareAtPrice?: string
+  availableForSale?: boolean
+}
 
-  return {
-    ...product,
-    description: mockDescriptions[handle] || '',
-    images: product.imageUrl
-      ? [{url: product.imageUrl, altText: product.imageAlt || product.title}]
-      : [],
-    variants: [{
+const mockVariantSeeds: Record<string, MockVariantSeed[]> = {
+  'directors-cut-tee': [
+    { id: 'gid://shopify/ProductVariant/mock-tee-s', title: 'S' },
+    { id: 'gid://shopify/ProductVariant/mock-tee-m', title: 'M' },
+    { id: 'gid://shopify/ProductVariant/mock-tee-l', title: 'L' },
+    { id: 'gid://shopify/ProductVariant/mock-tee-xl', title: 'XL' },
+  ],
+  'monk-metal-hoodie': [
+    { id: 'gid://shopify/ProductVariant/mock-hoodie-s', title: 'S' },
+    { id: 'gid://shopify/ProductVariant/mock-hoodie-m', title: 'M' },
+    { id: 'gid://shopify/ProductVariant/mock-hoodie-l', title: 'L' },
+    { id: 'gid://shopify/ProductVariant/mock-hoodie-xl', title: 'XL' },
+  ],
+}
+
+function buildMockVariants(product: ShopifyProduct) {
+  const seeds = mockVariantSeeds[product.handle]
+
+  if (!seeds?.length) {
+    return [{
       id: product.variantId,
       title: 'Default',
       price: product.price,
@@ -79,9 +96,59 @@ export function getMockProductByHandle(handle: string): ShopifyProductDetail | n
       onSale: isOnSale(product.price, product.compareAtPrice),
       currencyCode: product.currencyCode,
       availableForSale: true,
+      currentlyNotInStock: false,
       imageUrl: product.imageUrl,
       imageAlt: product.imageAlt,
-    }],
+    }]
+  }
+
+  return seeds.map((seed) => ({
+    id: seed.id,
+    title: seed.title,
+    price: seed.price || product.price,
+    compareAtPrice: seed.compareAtPrice || product.compareAtPrice,
+    onSale: isOnSale(seed.price || product.price, seed.compareAtPrice || product.compareAtPrice),
+    currencyCode: product.currencyCode,
+    availableForSale: seed.availableForSale ?? true,
+    currentlyNotInStock: seed.availableForSale === false,
+    imageUrl: product.imageUrl,
+    imageAlt: product.imageAlt,
+  }))
+}
+
+function findMockVariant(variantId: string) {
+  for (const product of mockProducts) {
+    const variants = buildMockVariants(product)
+    const variant = variants.find((item) => item.id === variantId)
+    if (variant) {
+      return { product, variant }
+    }
+  }
+
+  return null
+}
+
+const mockVariantOptionNames: Record<string, string> = {
+  'directors-cut-tee': 'Size',
+  'monk-metal-hoodie': 'Size',
+}
+
+export function getMockProductByHandle(handle: string): ShopifyProductDetail | null {
+  const product = mockProducts.find((item) => item.handle === handle)
+  if (!product) return null
+
+  const variants = buildMockVariants(product)
+  const firstVariant = variants[0]
+
+  return {
+    ...product,
+    variantId: firstVariant.id,
+    description: mockDescriptions[handle] || '',
+    images: product.imageUrl
+      ? [{url: product.imageUrl, altText: product.imageAlt || product.title}]
+      : [],
+    variants,
+    variantOptionName: mockVariantOptionNames[handle],
   }
 }
 
@@ -108,21 +175,23 @@ function buildMockCart(lines: MockLine[]): ShopifyCart {
   }
 
   const cartLines = lines.map((line) => {
-    const product = mockProducts.find((item) => item.variantId === line.variantId)
-    if (!product) {
+    const match = findMockVariant(line.variantId)
+    if (!match) {
       throw createError({statusCode: 400, statusMessage: 'Unknown product variant'})
     }
+
+    const { product, variant } = match
 
     return {
       id: line.id,
       quantity: line.quantity,
-      variantId: product.variantId,
+      variantId: variant.id,
       title: product.title,
-      variantTitle: 'Default',
+      variantTitle: variant.title,
       handle: product.handle,
-      price: product.price,
-      currencyCode: product.currencyCode,
-      imageUrl: product.imageUrl,
+      price: variant.price,
+      currencyCode: variant.currencyCode,
+      imageUrl: variant.imageUrl || product.imageUrl,
     }
   })
 

@@ -1,25 +1,42 @@
 <template>
   <article class="default-page">
-    <PageHeader :title="title" :subtitle="subtitle">
-      <template v-if="$slots.title" #title>
-        <slot name="title" />
-      </template>
-      <template v-if="$slots.subtitle" #subtitle>
-        <slot name="subtitle" />
-      </template>
-    </PageHeader>
-
     <div
-      class="default-page__content rich-text underline-links"
-      :class="{ 'default-page__content--wide': wide }"
+      v-if="title || subtitle || $slots.title || $slots.subtitle"
+      class="wrapper"
     >
-      <slot />
+      <header class="page-content__intro page-content__intro--single grid-1">
+        <div class="page-content__intro-title text-center">
+          <h1 class="h1 serif light">
+            <slot name="title">{{ title }}</slot>
+          </h1>
+        </div>
+        <SanityContent
+          v-if="subtitleBlocks.length"
+          :blocks="subtitleBlocks"
+          class="rich-text underline-links page-content__intro-copy max-central-content"
+        />
+        <div
+          v-else-if="$slots.subtitle"
+          class="sanity-content rich-text underline-links page-content__intro-copy max-central-content"
+        >
+          <p><slot name="subtitle" /></p>
+        </div>
+      </header>
+    </div>
+
+    <div class="wrapper default-page__body">
+      <div
+        class="default-page__content rich-text underline-links"
+        :class="{ 'default-page__content--wide': wide }"
+      >
+        <slot />
+      </div>
     </div>
   </article>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     default: '',
@@ -33,17 +50,31 @@ defineProps({
     default: false,
   },
 })
+
+const subtitleBlocks = computed(() => {
+  const text = props.subtitle?.trim()
+  if (!text) return []
+
+  return [{
+    _type: 'block',
+    _key: 'default-page-subtitle',
+    style: 'normal',
+    children: [{ _type: 'span', text, marks: [] }],
+    markDefs: [],
+  }]
+})
 </script>
 
 <style scoped>
 .default-page {
   min-height: 100dvh;
-  padding:
-    calc(var(--header-height, 112) * 1px + clamp(1.5rem, 4vw, 2.5rem))
-    var(--wrapper-padding, 1.25rem)
-    clamp(2.5rem, 6vw, 4rem);
   background: var(--background-color, #fff);
   color: var(--text-color, #111010);
+}
+
+.default-page__body {
+  padding-top: var(--section-padding);
+  padding-bottom: var(--section-padding);
 }
 
 .default-page__content {

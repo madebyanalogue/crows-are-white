@@ -83,6 +83,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  showFullscreen: {
+    type: Boolean,
+    default: false,
+  },
   onDuration: {
     type: Function,
     default: null,
@@ -149,6 +153,7 @@ const experience = useCinematicVideoExperience(
     dialogRef,
     darkenRef,
     closeRef,
+    stageRef,
   },
   {
     canOpen: () => props.interactable && canPlay.value,
@@ -177,6 +182,7 @@ const {
   playerReady,
   isPlaying,
   isMuted,
+  isFullscreen,
   currentLabel,
   totalLabel,
   progressPct,
@@ -185,6 +191,7 @@ const {
   stop,
   togglePlay,
   toggleSound,
+  toggleFullscreen,
   seekFromEvent,
   onScrubDown,
   setupInitialState,
@@ -367,11 +374,14 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
             ref="controlsRef"
             :is-playing="isPlaying"
             :is-muted="isMuted"
+            :is-fullscreen="isFullscreen"
+            :show-fullscreen="showFullscreen"
             :current-label="currentLabel"
             :total-label="totalLabel"
             :progress-pct="progressPct"
             @toggle-play="togglePlay"
             @toggle-sound="toggleSound"
+            @toggle-fullscreen="toggleFullscreen"
             @scrub-down="onScrubDown"
             @seek="seekFromEvent"
           />
@@ -411,6 +421,14 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 
 .cinematic-video-frame__stage.is-open {
   z-index: 55;
+}
+
+.cinematic-video-frame__stage:fullscreen,
+.cinematic-video-frame__stage:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  aspect-ratio: auto;
 }
 
 .cinematic-video-frame__hit {
@@ -503,7 +521,8 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 
 .cinematic-video-frame__bar--bottom :deep(.cinematic-video-controls__playpause),
 .cinematic-video-frame__bar--bottom :deep(.cinematic-video-controls__scrub),
-.cinematic-video-frame__bar--bottom :deep(.cinematic-video-controls__sound) {
+.cinematic-video-frame__bar--bottom :deep(.cinematic-video-controls__sound),
+.cinematic-video-frame__bar--bottom :deep(.cinematic-video-controls__fullscreen) {
   pointer-events: auto;
 }
 

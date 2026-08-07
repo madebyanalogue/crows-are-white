@@ -1,7 +1,6 @@
 <script setup>
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
 import { getHeroFeatureColorVar } from '~/utils/heroChrome'
-import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
 import { isLightColor } from '~/utils/pageColors'
 
 const props = defineProps({
@@ -66,10 +65,6 @@ const heroStyle = computed(() => ({
 }))
 
 const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
-
-useHead(() => ({
-  link: getLoopVideoHeadLinks(loop.value),
-}))
 </script>
 
 <template>

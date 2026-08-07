@@ -307,46 +307,6 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   }
 }
 
-@media (min-width: 700px) {
-  .shop-grid--grid .shop-cell {
-    border-right: none;
-  }
-
-  .shop-grid--grid .shop-cell:not(:nth-child(2n + 1)) {
-    border-left: none;
-  }
-
-  .shop-grid--grid .shop-cell:not(:nth-child(3n + 1)) {
-    border-left: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--grid .shop-cell:nth-child(3n + 1):last-child,
-  .shop-grid--grid .shop-cell:nth-child(3n + 2):last-child {
-    border-right: 1px solid var(--shop-line);
-  }
-}
-
-@media (min-width: 900px) {
-  .shop-grid--grid .shop-cell {
-    border-right: none;
-  }
-
-  .shop-grid--grid .shop-cell:not(:nth-child(3n + 1)) {
-    border-left: none;
-  }
-
-  .shop-grid--grid .shop-cell:not(:nth-child(4n + 1)) {
-    border-left: 1px solid var(--shop-line);
-  }
-
-  /* Close incomplete last rows without touching the viewport edge on full rows. */
-  .shop-grid--grid .shop-cell:nth-child(4n + 1):last-child,
-  .shop-grid--grid .shop-cell:nth-child(4n + 2):last-child,
-  .shop-grid--grid .shop-cell:nth-child(4n + 3):last-child {
-    border-right: 1px solid var(--shop-line);
-  }
-}
-
 .shop-grid--feature .shop-cell:not(:nth-child(2n + 1)) {
   border-left: 1px solid var(--shop-line);
 }
@@ -379,18 +339,6 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 
 .shop-grid--grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (min-width: 700px) {
-  .shop-grid--grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 900px) {
-  .shop-grid--grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 }
 
 .shop-grid--feature {
@@ -432,26 +380,6 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 
 .shop-grid--grid .shop-cell:nth-child(-n + 2) {
   border-top: none;
-}
-
-@media (min-width: 700px) {
-  .shop-grid--grid .shop-cell:nth-child(-n + 2) {
-    border-top: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--grid .shop-cell:nth-child(-n + 3) {
-    border-top: none;
-  }
-}
-
-@media (min-width: 900px) {
-  .shop-grid--grid .shop-cell:nth-child(-n + 3) {
-    border-top: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--grid .shop-cell:nth-child(-n + 4) {
-    border-top: none;
-  }
 }
 
 .shop-grid--feature .shop-cell:nth-child(-n + 2) {

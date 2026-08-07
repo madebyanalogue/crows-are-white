@@ -45,6 +45,7 @@
         <div
           ref="pageNameWrapRef"
           class="site-header__page-name-wrap"
+          @click.stop="onPageNameClick"
         >
           <NuxtLink
             v-if="pageNameLink"
@@ -179,6 +180,7 @@ let pageNameTween = null
 let titleSettleTimer = null
 let pageNameHidden = false
 let suppressPageNameIn = false
+let openingCartFromMenu = false
 const MENU_OPEN_MS = 320
 const TITLE_SETTLE_MS = 60
 
@@ -250,6 +252,7 @@ const currentPageName = computed(() => {
 })
 
 const pageNameLink = computed(() => {
+  if (displayedPageName.value === 'Cart') return null
   if (cartOpen.value) return null
   if (isShopProductPath(route.path)) {
     return shopIndexHref(shopFilterFromQuery(route.query.filter))
@@ -266,9 +269,18 @@ watch(() => route.path, () => {
   pageTitle.value = ''
 }, { flush: 'pre' })
 
-async function swapPageName(name) {
-  await dropPageName()
-  await revealPageName(name)
+function setDisplayedPageName(name) {
+  killPageNameTween()
+  displayedPageName.value = name || ''
+
+  if (!import.meta.client) return
+
+  nextTick(() => {
+    const chars = pageNameCharEls()
+    if (chars.length) gsap.set(chars, { yPercent: 0 })
+    pageNameHidden = false
+    if (pageNameWrapRef.value) gsap.set(pageNameWrapRef.value, { autoAlpha: 1 })
+  })
 }
 
 function toggleMenu() {
@@ -287,7 +299,36 @@ function openMenu() {
 function onBarClick(event) {
   if (menuOpen.value) return
   if (event.target.closest('a, button')) return
+  if (cartOpen.value) return
   openMenu()
+}
+
+function onPageNameClick() {
+  if (cartOpen.value) {
+    closeCart()
+    return
+  }
+
+  if (menuOpen.value || pageNameLink.value) return
+  openMenu()
+}
+
+function onCartClick() {
+  if (menuOpen.value && !cartOpen.value) {
+    openingCartFromMenu = true
+    suppressPageNameIn = true
+  }
+
+  closeMenu()
+
+  if (cartOpen.value) {
+    openingCartFromMenu = false
+    suppressPageNameIn = false
+    closeCart()
+    return
+  }
+
+  toggleCart()
 }
 
 function closeMenu() {
@@ -318,11 +359,6 @@ function onMenuNavigate() {
     suppressPageNameIn = false
     animatePageNameIn()
   }, 120)
-}
-
-function onCartClick() {
-  closeMenu()
-  toggleCart()
 }
 
 function menuItemEls() {
@@ -448,12 +484,18 @@ function waitForTitleSettle() {
   })
 }
 
-async function onRouteChange(path, oldPath) {
-  if (!import.meta.client) return
-  if (!oldPath || path === oldPath) return
+function normalizeRoutePath(fullPath = '') {
+  const path = fullPath.split(/[?#]/)[0] || '/'
+  return normalizePath(path)
+}
 
-  if (cartOpen.value) closeCart()
+async function onRouteChange(fullPath, oldFullPath) {
+  if (!import.meta.client) return
+  if (!oldFullPath || fullPath === oldFullPath) return
+  if (normalizeRoutePath(fullPath) === normalizeRoutePath(oldFullPath)) return
+
   suppressPageNameIn = true
+  if (cartOpen.value) closeCart()
   const dropPromise = dropPageName()
   if (menuOpen.value) closeMenu()
   await dropPromise
@@ -509,16 +551,34 @@ watch(menuOpen, (open) => {
   if (!suppressPageNameIn && !cartOpen.value) animatePageNameIn()
 })
 
-watch(cartOpen, async (open) => {
+watch(cartOpen, (open) => {
   if (!import.meta.client) return
 
   if (open) {
-    await swapPageName('Cart')
+    if (openingCartFromMenu) {
+      openingCartFromMenu = false
+      suppressPageNameIn = false
+      revealPageName('Cart')
+      return
+    }
+
+    setDisplayedPageName('Cart')
     return
   }
 
-  if (menuOpen.value || suppressPageNameIn) return
-  await swapPageName(currentPageName.value)
+  if (menuOpen.value || suppressPageNameIn) {
+    if (displayedPageName.value === 'Cart') {
+      displayedPageName.value = currentPageName.value
+      nextTick(() => {
+        const chars = pageNameCharEls()
+        if (chars.length) gsap.set(chars, { yPercent: 135 })
+        pageNameHidden = true
+      })
+    }
+    return
+  }
+
+  setDisplayedPageName(currentPageName.value)
 })
 
 let keyHandler = null
@@ -526,6 +586,7 @@ let keyHandler = null
 onMounted(() => {
   if (!import.meta.client) return
   displayedPageName.value = currentPageName.value
+  if (pageNameWrapRef.value) gsap.set(pageNameWrapRef.value, { autoAlpha: 1 })
   keyHandler = (event) => {
     if (event.key === 'Escape') closeMenu()
   }
@@ -698,6 +759,11 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+.site-header.is-cart-open .site-header__page-name-wrap {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .site-header__page-name-char {
   display: inline-block;
   will-change: transform;
@@ -845,6 +911,11 @@ onBeforeUnmount(() => {
 }
 
 .site-header.is-over-hero-frosted .site-header__cart-count {
+  color: #111010;
+}
+
+.site-header.is-over-hero-frosted :deep(.cart-panel__checkout) {
+ 
   color: #111010;
 }
 

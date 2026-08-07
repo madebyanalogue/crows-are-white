@@ -1,6 +1,32 @@
 <script setup>
 const { isOpen, closeCart } = useCart()
 
+const contentVisible = ref(false)
+let revealTimer = null
+const PANEL_TRANSITION_MS = 320
+
+function clearRevealTimer() {
+  if (revealTimer != null) {
+    clearTimeout(revealTimer)
+    revealTimer = null
+  }
+}
+
+watch(isOpen, (open) => {
+  clearRevealTimer()
+
+  if (!open) {
+    contentVisible.value = false
+    return
+  }
+
+  contentVisible.value = false
+  revealTimer = window.setTimeout(() => {
+    revealTimer = null
+    if (isOpen.value) contentVisible.value = true
+  }, PANEL_TRANSITION_MS)
+})
+
 function onKeydown(event) {
   if (event.key === 'Escape' && isOpen.value) {
     closeCart()
@@ -12,6 +38,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearRevealTimer()
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
@@ -26,6 +53,7 @@ onUnmounted(() => {
     <div class="site-header__cart-inner">
       <CartPanelContent
         variant="dropdown"
+        :reveal-content="contentVisible"
         @close="closeCart"
       />
     </div>

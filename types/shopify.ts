@@ -24,6 +24,7 @@ export type ShopifyProductVariant = {
   compareAtPrice?: string
   onSale: boolean
   availableForSale: boolean
+  currentlyNotInStock?: boolean
   imageUrl?: string
   imageAlt?: string
 }
@@ -32,6 +33,7 @@ export type ShopifyProductDetail = ShopifyProduct & {
   description?: string
   images: Array<{url: string; altText?: string}>
   variants: ShopifyProductVariant[]
+  variantOptionName?: string
 }
 
 export type ShopifyCartLine = {
