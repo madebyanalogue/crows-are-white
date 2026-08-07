@@ -55,7 +55,18 @@ const productTo = computed(() => {
     <div class="shop-product-card__meta">
       <span class="shop-product-card__title">{{ product.title }}</span>
       <span class="shop-product-card__price">
-        {{ formatShopPrice(product.price, product.currencyCode) }}
+        <span
+          v-if="product.onSale && product.compareAtPrice"
+          class="shop-product-card__price-compare"
+        >
+          {{ formatShopPrice(product.compareAtPrice, product.currencyCode) }}
+        </span>
+        <span
+          class="shop-product-card__price-current"
+          :class="{ 'shop-product-card__price-current--sale': product.onSale && product.compareAtPrice }"
+        >
+          {{ formatShopPrice(product.price, product.currencyCode) }}
+        </span>
       </span>
     </div>
   </NuxtLink>
@@ -144,27 +155,45 @@ const productTo = computed(() => {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: clamp(0.85rem, 2vw, 1.35rem);
+  bottom: clamp(0.85rem, 2vw, 1.5rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0 0.75rem;
+  gap: 0.4rem;
+  padding: 0 1rem;
   text-align: center;
   pointer-events: none;
 }
 
 .shop-product-card__title,
 .shop-product-card__price {
-  font-size: clamp(10px, 1vw, 12px);
-  font-weight: 500;
+  font-size: clamp(12px, 1.5vw, 14px);
+  font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1.2;
 }
 
 .shop-product-card__price {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.shop-product-card__price-current {
   opacity: 0.72;
+}
+
+.shop-product-card__price-compare {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.shop-product-card__price-current--sale {
+  color: #d40000;
+  opacity: 1;
 }
 
 .shop-product-card:hover .shop-product-card__title,

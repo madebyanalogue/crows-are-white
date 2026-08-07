@@ -294,76 +294,6 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   display: grid;
   gap: 0;
   background: var(--shop-bg);
-  border-bottom: 1px solid var(--shop-line);
-}
-
-.shop-grid--grid .shop-cell:not(:nth-child(2n + 1)) {
-  border-left: 1px solid var(--shop-line);
-}
-
-@media (max-width: 699px) {
-  .shop-grid--grid .shop-cell:nth-child(2n + 1):last-child {
-    border-right: 1px solid var(--shop-line);
-  }
-}
-
-.shop-grid--feature .shop-cell:not(:nth-child(2n + 1)) {
-  border-left: 1px solid var(--shop-line);
-}
-
-@media (min-width: 900px) {
-  .shop-grid--feature .shop-cell:not(:nth-child(2n + 1)) {
-    border-left: none;
-  }
-
-  /* Column 1 stack beside the 2x2 feature cell. */
-  .shop-grid--feature .shop-cell:nth-child(6n + 1),
-  .shop-grid--feature .shop-cell:nth-child(6n + 2),
-  .shop-grid--feature .shop-cell:nth-child(6n + 4) {
-    border-right: 1px solid var(--shop-line);
-  }
-
-  /* 2x2 feature cell: divider from column 1 and a baseline when row 3 is empty. */
-  .shop-grid--feature .shop-cell:nth-child(6n + 3) {
-    /* border-left: 1px solid var(--shop-line); */
-    border-bottom: 1px solid var(--shop-line);
-  }
-
-  /* Row below the 2x2 — avoid doubling the line from the feature cell bottom border. */
-  .shop-grid--feature .shop-cell:nth-child(6n + 5),
-  .shop-grid--feature .shop-cell:nth-child(6n + 6) {
-    border-left: 1px solid var(--shop-line);
-    border-top: none;
-  }
-}
-
-.shop-grid--grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.shop-grid--feature {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-flow: dense;
-}
-
-@media (max-width: 899px) {
-  .shop-grid--feature {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 900px) {
-  .shop-grid--feature .shop-cell:nth-child(6n + 1),
-  .shop-grid--feature .shop-cell:nth-child(6n + 2) {
-    grid-column: 1;
-  }
-
-  /* Spans two columns and two square rows, so it renders as a 2x2 square. */
-  .shop-grid--feature .shop-cell:nth-child(6n + 3) {
-    grid-column: 2 / span 2;
-    grid-row: span 2;
-    aspect-ratio: auto;
-  }
 }
 
 .shop-cell {
@@ -374,27 +304,74 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   color: inherit;
   text-decoration: none;
   background: var(--shop-bg);
-  border-top: 1px solid var(--shop-line);
+  border-right: 1px solid var(--shop-line);
+  border-bottom: 1px solid var(--shop-line);
   overflow: hidden;
 }
 
-.shop-grid--grid .shop-cell:nth-child(-n + 2) {
-  border-top: none;
+/* Grid view: 2 / 3 / 4 columns — drop right edge on the last column only. */
+.shop-grid--grid .shop-cell:nth-child(2n) {
+  border-right: none;
 }
 
-.shop-grid--feature .shop-cell:nth-child(-n + 2) {
-  border-top: none;
+@media (min-width: 700px) {
+  .shop-grid--grid .shop-cell:nth-child(2n) {
+    border-right: 1px solid var(--shop-line);
+  }
+
+  .shop-grid--grid .shop-cell:nth-child(3n) {
+    border-right: none;
+  }
 }
 
 @media (min-width: 900px) {
-  .shop-grid--feature .shop-cell:nth-child(-n + 2) {
-    border-top: 1px solid var(--shop-line);
+  .shop-grid--grid .shop-cell:nth-child(3n) {
+    border-right: 1px solid var(--shop-line);
   }
 
-  /* Only the first-row cells in the opening feature block sit flush under the toolbar. */
-  .shop-grid--feature .shop-cell:nth-child(1),
-  .shop-grid--feature .shop-cell:nth-child(3) {
-    border-top: none;
+  .shop-grid--grid .shop-cell:nth-child(4n) {
+    border-right: none;
+  }
+}
+
+/* Feature view: 2 columns, then 3 — same bottom/right pattern. */
+.shop-grid--feature .shop-cell:nth-child(2n) {
+  border-right: none;
+}
+
+@media (min-width: 900px) {
+  .shop-grid--feature .shop-cell:nth-child(2n) {
+    border-right: 1px solid var(--shop-line);
+  }
+
+  .shop-grid--feature .shop-cell:nth-child(3n) {
+    border-right: none;
+  }
+}
+
+.shop-grid--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 700px) {
+  .shop-grid--grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .shop-grid--grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.shop-grid--feature {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 900px) {
+  .shop-grid--feature {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
