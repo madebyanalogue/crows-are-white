@@ -9,9 +9,78 @@ const props = defineProps({
   },
 })
 
+const DEFAULT_MEDIA_KEY = '__default__'
+
+const PRESS_ASPECT_RATIO_PRESETS = {
+  '9/16': [9, 16],
+  '2/3': [2, 3],
+  '3/4': [3, 4],
+  '4/5': [4, 5],
+  '1/1': [1, 1],
+  '16/9': [16, 9],
+  '3/2': [3, 2],
+}
+
+function parsePressAspectRatio(value) {
+  const preset = PRESS_ASPECT_RATIO_PRESETS[value]
+  if (preset) return preset
+
+  const match = String(value || '').match(/^(\d+(?:\.\d+)?)\s*[/:]\s*(\d+(?:\.\d+)?)$/)
+  if (match) return [Number(match[1]), Number(match[2])]
+
+  return [9, 16]
+}
+
+function aspectRatioFromValue(value) {
+  const [width, height] = parsePressAspectRatio(value)
+  return { width, height }
+}
+
 const { getMenuItemUrl, getMenuItemTarget, getMenuItemRel } = useMenuLinks()
 
-const mediaItems = computed(() => props.section?.pressMediaItems || [])
+function resolveMediaLoop(item) {
+  if (!item || item.mediaType !== 'video') return null
+  return resolveSectionLoopVideo({
+    mediaVideoSource: item.videoSource,
+    mediaLoopCloudflare720: item.loopCloudflare720,
+    mediaLoopCloudflare1080: item.loopCloudflare1080,
+    mediaVideoFile: item.videoFile,
+    mediaVideoId: item.videoId,
+  }, 'media')
+}
+
+function resolveMediaItem(item) {
+  if (!item) return null
+
+  if (item.mediaType === 'video') {
+    const loop = resolveMediaLoop(item)
+    if (!loop) return null
+    return {
+      kind: 'video',
+      loop,
+      alt: item.alt || 'Press media',
+    }
+  }
+
+  const imageUrl = resolveSanityAssetUrl(item?.image?.asset) || ''
+  if (!imageUrl) return null
+
+  return {
+    kind: 'image',
+    imageUrl,
+    alt: item.alt || '',
+  }
+}
+
+const defaultMediaSource = computed(() =>
+  props.section?.pressDefaultMedia || props.section?.pressMediaItems?.[0] || null,
+)
+
+const defaultMedia = computed(() => resolveMediaItem(defaultMediaSource.value))
+
+const defaultMediaAspectRatio = computed(() =>
+  aspectRatioFromValue(defaultMediaSource.value?.aspectRatio),
+)
 
 const links = computed(() => {
   const items = props.section?.pressLinks || []
@@ -34,50 +103,64 @@ const links = computed(() => {
         target: item.openInNewTab ? '_blank' : getMenuItemTarget(menuItem),
         rel: item.openInNewTab ? 'noopener noreferrer' : getMenuItemRel(menuItem),
         showChevron: /download/i.test(item.linkTitle || ''),
+        imageUrl: resolveSanityAssetUrl(item?.image?.asset) || '',
+        imageAlt: item.imageAlt?.trim() || item.linkTitle?.trim() || '',
+        imageCaption: item.imageCaption?.trim() || '',
+        imageAspectRatio: aspectRatioFromValue(item.imageAspectRatio),
       }
     })
     .filter((item) => item.label && item.href && item.href !== '#')
 })
 
-function resolveMediaLoop(item) {
-  if (item?.mediaType !== 'video') return null
-  return resolveSectionLoopVideo({
-    mediaVideoSource: item.videoSource,
-    mediaLoopCloudflare720: item.loopCloudflare720,
-    mediaLoopCloudflare1080: item.loopCloudflare1080,
-    mediaVideoFile: item.videoFile,
-    mediaVideoId: item.videoId,
-  }, 'media')
-}
+const hasDefaultMedia = computed(() => Boolean(defaultMedia.value))
+const hasLinkMedia = computed(() => links.value.some((link) => link.imageUrl))
+const showMediaPanel = computed(() => hasDefaultMedia.value || hasLinkMedia.value)
 
-function mediaImageUrl(item) {
-  return resolveSanityAssetUrl(item?.image?.asset) || ''
-}
+const activeMediaKey = ref(DEFAULT_MEDIA_KEY)
 
-function fanTransform(index, total, hovered) {
-  const spread = hovered ? 1.4 : 1
-  const center = (total - 1) / 2
-  const offset = index - center
-  const rotate = offset * 11 * spread
-  const translateX = offset * 16 * spread
-  const translateY = (Math.abs(offset) * 5 + (index === total - 1 ? 10 : 0)) * spread
+const activeAspectRatio = computed(() => {
+  if (activeMediaKey.value === DEFAULT_MEDIA_KEY) {
+    return defaultMediaAspectRatio.value
+  }
 
-  return {
-    '--press-rotate': `${rotate}deg`,
-    '--press-x': `${translateX}%`,
-    '--press-y': `${translateY}%`,
-    zIndex: index + 1,
+  const link = links.value.find((item) => item._key === activeMediaKey.value)
+  return link?.imageAspectRatio || defaultMediaAspectRatio.value
+})
+
+const pressMediaStyle = computed(() => ({
+  '--press-aspect-w': activeAspectRatio.value.width,
+  '--press-aspect-h': activeAspectRatio.value.height,
+}))
+
+watch(
+  [hasDefaultMedia, links],
+  () => {
+    activeMediaKey.value = hasDefaultMedia.value
+      ? DEFAULT_MEDIA_KEY
+      : links.value.find((link) => link.imageUrl)?._key || DEFAULT_MEDIA_KEY
+  },
+  { immediate: true },
+)
+
+function onLinkHover(index) {
+  const link = links.value[index]
+  if (link?.imageUrl) {
+    activeMediaKey.value = link._key
   }
 }
 
-const isHovered = ref(false)
-const isLoaded = ref(false)
+function resetToDefaultMedia() {
+  if (!hasDefaultMedia.value) return
+  activeMediaKey.value = DEFAULT_MEDIA_KEY
+}
 
-onMounted(() => {
-  requestAnimationFrame(() => {
-    isLoaded.value = true
-  })
-})
+function isDefaultActive() {
+  return activeMediaKey.value === DEFAULT_MEDIA_KEY && hasDefaultMedia.value
+}
+
+function isLinkActive(link) {
+  return activeMediaKey.value === link._key && Boolean(link.imageUrl)
+}
 </script>
 
 <template>
@@ -88,41 +171,65 @@ onMounted(() => {
     <div class="page-section-press__layout">
       <div
         class="page-section-press__media"
-        @mouseenter="isHovered = true"
-        @mouseleave="isHovered = false"
+        :class="{ 'page-section-press__media--empty': !showMediaPanel }"
+        @pointerenter="resetToDefaultMedia"
       >
         <div
-          class="page-section-press__fan"
-          :class="{
-            'is-hovered': isHovered,
-            'is-loaded': isLoaded,
-          }"
+          v-if="showMediaPanel"
+          class="page-section-press__stack"
+          :style="pressMediaStyle"
+          aria-live="polite"
         >
           <div
-            v-for="(item, index) in mediaItems"
-            :key="item._key || `press-media-${index}`"
+            v-if="hasDefaultMedia"
             class="page-section-press__card"
-            :style="fanTransform(index, mediaItems.length, isHovered)"
+            :class="{ 'is-active': isDefaultActive() }"
+            :aria-hidden="!isDefaultActive()"
           >
-            <SectionLoopVideo
-              v-if="item.mediaType === 'video' && resolveMediaLoop(item)"
-              :loop="resolveMediaLoop(item)"
-              :title="item.alt || 'Press media'"
-              aspect-class="page-section-press__card-media"
-            />
-            <img
-              v-else-if="mediaImageUrl(item)"
-              class="page-section-press__card-media page-section-press__card-image"
-              :src="mediaImageUrl(item)"
-              :alt="item.alt || ''"
-              draggable="false"
-              loading="lazy"
-            >
+            <div class="page-section-press__frame">
+              <SectionLoopVideo
+                v-if="defaultMedia?.kind === 'video' && defaultMedia.loop"
+                :loop="defaultMedia.loop"
+                :title="defaultMedia.alt"
+                aspect-class="page-section-press__card-media"
+                object-fit="cover"
+              />
+              <img
+                v-else-if="defaultMedia?.kind === 'image'"
+                class="page-section-press__card-media page-section-press__card-image"
+                :src="defaultMedia.imageUrl"
+                :alt="defaultMedia.alt"
+                draggable="false"
+                loading="lazy"
+              >
+            </div>
+          </div>
+
+          <div
+            v-for="link in links"
+            :key="link._key"
+            class="page-section-press__card"
+            :class="{ 'is-active': isLinkActive(link) }"
+            :aria-hidden="!isLinkActive(link)"
+          >
             <div
-              v-else
-              class="page-section-press__card-media page-section-press__card-placeholder"
-              aria-hidden="true"
-            />
+              v-if="link.imageUrl"
+              class="page-section-press__frame"
+            >
+              <img
+                class="page-section-press__card-media page-section-press__card-image"
+                :src="link.imageUrl"
+                :alt="link.imageAlt"
+                draggable="false"
+                loading="lazy"
+              >
+              <p
+                v-if="link.imageCaption"
+                class="page-section-press__caption handwritten"
+              >
+                {{ link.imageCaption }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -133,7 +240,7 @@ onMounted(() => {
         aria-label="Press links"
       >
         <div
-          v-for="link in links"
+          v-for="(link, index) in links"
           :key="link._key"
           class="page-section-press__link-row"
         >
@@ -142,6 +249,8 @@ onMounted(() => {
             class="page-section-press__link large-title"
             :target="link.target"
             :rel="link.rel"
+            @pointerenter="onLinkHover(index)"
+            @focus="onLinkHover(index)"
           >
             <span class="page-section-press__link-text">{{ link.label }}</span>
             <span
@@ -165,6 +274,8 @@ onMounted(() => {
 .page-section-press {
   --press-border: color-mix(in srgb, var(--text-color) 15%, transparent);
   --press-nav-clearance: calc(2rem + 50px + 1.25rem);
+  --press-aspect-w: 9;
+  --press-aspect-h: 16;
   position: relative;
   min-height: 100dvh;
   color: var(--text-color);
@@ -180,15 +291,16 @@ onMounted(() => {
 .page-section-press__layout {
   display: grid;
   grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: calc(100dvh - var(--press-nav-clearance));
-  margin-top: var(--press-nav-clearance);
+  padding-top: var(--press-nav-clearance);
 }
 
 @media (min-width: 900px) {
   .page-section-press__layout {
-    grid-template-columns: 1fr 1fr;
-    min-height: 100dvh;
-    margin-top: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    min-height: calc(100dvh - var(--press-nav-clearance));
     padding-top: var(--press-nav-clearance);
   }
 }
@@ -215,52 +327,90 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(2rem, 6vw, 4rem) clamp(1.25rem, 4vw, 2.5rem);
-  min-height: min(52vh, 520px);
+  min-height: min(420px, 45dvh);
+  padding: clamp(1rem, 4vw, 2rem) ;
 }
 
 @media (min-width: 900px) {
   .page-section-press__media {
     min-height: 0;
-    padding: clamp(2rem, 5vw, 3.5rem);
+    height: 100%;
+    overflow: visible;
+    container-type: size;
+    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 6vw, 4rem);
   }
 }
 
-.page-section-press__fan {
+.page-section-press__stack {
   position: relative;
-  width: min(100%, 420px);
-  aspect-ratio: 4 / 5;
+  flex: 0 0 auto;
+  aspect-ratio: var(--press-aspect-w) / var(--press-aspect-h);
+  width: min(
+    100%,
+    calc((100dvh - var(--press-nav-clearance) - 14rem) * var(--press-aspect-w) / var(--press-aspect-h)),
+    calc(480px * var(--press-aspect-w) / var(--press-aspect-h))
+  );
+}
+
+@media (min-width: 900px) {
+  .page-section-press__stack {
+    width: min(100cqw, calc(100cqh * var(--press-aspect-w) / var(--press-aspect-h)));
+    max-height: 100cqh;
+  }
+}
+
+.page-section-press__links {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--press-border);
+}
+
+@media (min-width: 900px) {
+  .page-section-press__links {
+    border-top: 0;
+    height: 100%;
+  }
 }
 
 .page-section-press__card {
   position: absolute;
-  inset: 8% 10%;
-  overflow: hidden;
-  transform: rotate(0deg) translate(0, 0) scale(0.94);
+  inset: 0;
   opacity: 0;
-  transition:
-    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.6s ease;
-  will-change: transform;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.page-section-press__fan.is-loaded .page-section-press__card {
+.page-section-press__card.is-active {
   opacity: 1;
-  transform:
-    rotate(var(--press-rotate, 0deg))
-    translate(var(--press-x, 0), var(--press-y, 0));
+  visibility: visible;
+  z-index: 1;
 }
 
-.page-section-press__fan.is-hovered.is-loaded .page-section-press__card {
-  transition-duration: 0.55s;
+.page-section-press__frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.page-section-press__card:nth-child(1) { transition-delay: 0.05s; }
-.page-section-press__card:nth-child(2) { transition-delay: 0.12s; }
-.page-section-press__card:nth-child(3) { transition-delay: 0.19s; }
-.page-section-press__card:nth-child(4) { transition-delay: 0.26s; }
-.page-section-press__card:nth-child(5) { transition-delay: 0.33s; }
-.page-section-press__card:nth-child(6) { transition-delay: 0.4s; }
+.page-section-press__caption {
+  position: absolute;
+  right: -20px;
+  top: calc(100% + .5em);
+  z-index: 2;
+  margin: 0;
+  max-width: min(72%, 35rem);
+  font-size: clamp(18px, 2.1vw, 40px);
+  line-height: 1.05;
+  text-align: right;
+  color: var(--text-color);
+  transform: rotate(-3deg);
+  transform-origin: bottom right;
+  pointer-events: none;
+}
 
 .page-section-press__card-media {
   position: absolute;
@@ -268,7 +418,7 @@ onMounted(() => {
   display: block;
   width: 100%;
   height: 100%;
-  background: color-mix(in srgb, var(--text-color) 8%, var(--background-color));
+  background: transparent;
 }
 
 .page-section-press__card-image,
@@ -280,6 +430,7 @@ onMounted(() => {
 .page-section-press :deep(.video-loop) {
   width: 100%;
   height: 100%;
+  background: transparent;
 }
 
 .page-section-press :deep(.section-loop-video__el),
@@ -290,20 +441,6 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.page-section-press__links {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  border-top: 1px solid var(--press-border);
-}
-
-@media (min-width: 900px) {
-  .page-section-press__links {
-    border-top: 0;
-    min-height: calc(100dvh - var(--press-nav-clearance));
-  }
-}
-
 .page-section-press__link-row {
   flex: 1;
   display: flex;
@@ -312,6 +449,7 @@ onMounted(() => {
   min-height: clamp(5rem, 32vh, 32rem);
   padding: 1.5rem clamp(1.25rem, 6vw, 30px);
   border-bottom: 1px solid var(--press-border);
+  cursor: default;
 }
 
 .page-section-press__link-row:last-child {
@@ -326,7 +464,13 @@ onMounted(() => {
   text-decoration: none;
   text-align: center;
   color: inherit;
+  cursor: pointer;
   transition: color 0.2s ease;
+}
+
+.page-section-press__link-text,
+.page-section-press__link-chevron {
+  pointer-events: none;
 }
 
 .page-section-press__link:hover {
@@ -342,15 +486,5 @@ onMounted(() => {
   font-size: 0.85em;
   line-height: 1;
   transform: translateY(0.08em);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-section-press__card {
-    opacity: 1;
-    transform:
-      rotate(var(--press-rotate, 0deg))
-      translate(var(--press-x, 0), var(--press-y, 0));
-    transition: none;
-  }
 }
 </style>

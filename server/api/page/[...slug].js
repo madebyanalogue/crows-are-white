@@ -430,6 +430,23 @@ function pageSectionProjection() {
     featuredProductsTitle,
     featuredProductsCollection,
     featuredProductsLimit,
+    pressDefaultMedia {
+      mediaType,
+      alt,
+      aspectRatio,
+      image ${imageProjection},
+      videoSource,
+      loopCloudflare720,
+      loopCloudflare1080,
+      videoId,
+      videoFile {
+        asset-> {
+          _id,
+          url,
+          mimeType
+        }
+      }
+    },
     pressMediaItems[] {
       _key,
       mediaType,
@@ -453,6 +470,10 @@ function pageSectionProjection() {
       type,
       url,
       openInNewTab,
+      imageAlt,
+      imageCaption,
+      imageAspectRatio,
+      image ${imageProjection},
       page-> {
         slug { current }
       }
