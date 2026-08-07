@@ -44,112 +44,35 @@ type PressQuote = {
 type PressPhoto = {id: number; alt: string}
 type FaqItem = {q: string; a: string}
 
-const menuProjection = `{
-  title,
-  items[] {
-    _key,
-    itemType,
-    text,
-    link {
-      type,
-      page->{ "slug": slug.current },
-      url
+type SiteContentData = {
+  settings?: {
+    theatricalReleaseActive?: boolean
+    mailchimpAction?: string
+    assemble?: {
+      enabled?: boolean
+      filmId?: string
+      mxId?: string
+      countries?: string[]
     }
+    navItems?: Array<{label: string; to: string}>
+    footerNavItems?: Array<{label: string; to: string}>
+    streamingLinks?: StreamingLink[]
+    mainMenu?: Menu
+    footerMenus?: FooterMenuGroup[]
+    socialLinks?: SocialLink[]
+    footerLegal?: LegalLink[]
   }
-}`
-
-const siteQuery = groq`{
-  "settings": *[_type == "siteSettings"][0]{
-    theatricalReleaseActive,
-    mailchimpAction,
-    navItems,
-    footerNavItems,
-    streamingLinks,
-    "assemble": assemble {
-      enabled,
-      filmId,
-      mxId,
-      countries
-    },
-    "mainMenu": mainMenu->${menuProjection},
-    footerMenus[] {
-      _key,
-      title,
-      "menu": menu->${menuProjection}
-    },
-    "privacyMenu": privacyMenu->${menuProjection},
-    socialLinks,
-    footerLegal
-  },
-  "film": *[_type == "film"][0]{
-    title,
-    year,
-    runtime,
-    director,
-    imdb,
-    trailer,
-    trailerId,
-    trailerSrc,
-    trailerPoster,
-    heroVideoId,
-    heroVideoSrc,
-    logline,
-    writers,
-    cinematography,
-    rottenTomatoes,
-    festivals,
-    awards,
-    laurels
-  },
-  "screenings": *[_type == "screening"] | order(sortOrder asc, date asc){
-    date,
-    city,
-    state,
-    venue,
-    status,
-    ticketUrl
-  },
-  "pressQuotes": *[_type == "pressQuote"] | order(sortOrder asc){
-    _id,
-    quote,
-    "pub": publication,
-    reviewer,
-    layer1 {
-      asset-> {
-        _id,
-        url,
-        metadata { dimensions }
-      }
-    },
-    layer2 {
-      asset-> {
-        _id,
-        url,
-        metadata { dimensions }
-      }
-    },
-    layer3 {
-      asset-> {
-        _id,
-        url,
-        metadata { dimensions }
-      }
-    }
-  },
-  "pressPhotos": *[_type == "pressPhoto"] | order(sortOrder asc){
-    "id": sortOrder,
-    alt
-  },
-  "faqItems": *[_type == "faqItem"] | order(sortOrder asc){
-    "q": question,
-    "a": answer
-  },
-  "pressKit": *[_type == "pressKit"][0]{
-    synopsis,
-    contactName,
-    contactEmail
+  film?: typeof defaultFilm
+  screenings?: Screening[]
+  pressQuotes?: PressQuote[]
+  pressPhotos?: PressPhoto[]
+  faqItems?: FaqItem[]
+  pressKit?: {
+    synopsis?: string
+    contactName?: string
+    contactEmail?: string
   }
-}`
+}
 
 function legacyNavToMenuItems(items: Array<{label: string; to: string}>): MenuItem[] {
   return items.map((item, index) => ({
@@ -161,35 +84,9 @@ function legacyNavToMenuItems(items: Array<{label: string; to: string}>): MenuIt
 }
 
 export function useSiteContent() {
-  const {data} = useSanityQuery<{
-    settings?: {
-      theatricalReleaseActive?: boolean
-      mailchimpAction?: string
-      assemble?: {
-        enabled?: boolean
-        filmId?: string
-        mxId?: string
-        countries?: string[]
-      }
-      navItems?: Array<{label: string; to: string}>
-      footerNavItems?: Array<{label: string; to: string}>
-      streamingLinks?: StreamingLink[]
-      mainMenu?: Menu
-      footerMenus?: FooterMenuGroup[]
-      socialLinks?: SocialLink[]
-      footerLegal?: LegalLink[]
-    }
-    film?: typeof defaultFilm
-    screenings?: Screening[]
-    pressQuotes?: PressQuote[]
-    pressPhotos?: PressPhoto[]
-    faqItems?: FaqItem[]
-    pressKit?: {
-      synopsis?: string
-      contactName?: string
-      contactEmail?: string
-    }
-  }>(siteQuery)
+  const { data } = useAsyncData<SiteContentData | null>('site-content', () => $fetch('/api/site-content'), {
+    default: () => null,
+  })
 
   const siteConfig = computed(() => ({
     theatricalReleaseActive:

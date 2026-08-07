@@ -33,6 +33,20 @@ const buttons = computed(() => {
 })
 
 const byline = computed(() => props.section?.heroByline?.trim() || '')
+
+const bylineParts = computed(() => {
+  const text = byline.value
+  if (!text) return null
+
+  const match = text.match(/^(A Film By)\s+(.*)$/i)
+  if (!match) return { lead: null, rest: text }
+
+  return {
+    lead: match[1],
+    rest: match[2],
+  }
+})
+
 const showButtons = ref(false)
 const hasButtonToggle = computed(() => buttons.value.length > 0)
 const showButtonStack = computed(() => showButtons.value && buttons.value.length > 0)
@@ -135,9 +149,15 @@ useHead(() => ({
       <p
         v-if="byline"
         class="page-section-hero__byline handwritten"
-        :class="{ 'is-in-buttons-cell': !showButtons }"
+        :class="{ 'is-centered-wide': !showButtons }"
       >
-        {{ byline }}
+        <template v-if="bylineParts?.lead">
+          <span>{{ bylineParts.lead }}</span>
+          {{ ' ' }}{{ bylineParts.rest }}
+        </template>
+        <template v-else>
+          {{ byline }}
+        </template>
       </p>
     </div>
   </section>
@@ -307,10 +327,16 @@ useHead(() => ({
   grid-area: byline;
 }
 
-.page-section-hero__byline.is-in-buttons-cell {
+.page-section-hero__bottom.is-buttons-hidden {
+  grid-template-columns: 1fr min(680px, 90vw) 1fr;
+  grid-template-areas: ". byline .";
+}
+
+.page-section-hero__byline.is-centered-wide {
   grid-column: 2;
-  grid-area: buttons;
+  grid-area: byline;
   align-self: end;
+  max-width: none;
 }
 
 .page-section-hero__buttons :deep(.menu-link) {
@@ -390,8 +416,10 @@ useHead(() => ({
   }
 
   .page-section-hero__bottom.is-buttons-hidden {
+    grid-template-columns: 1fr;
     grid-template-rows: auto;
-    grid-template-areas: "buttons";
+    grid-template-areas: "byline";
+    justify-items: center;
   }
 
   .page-section-hero__buttons {
@@ -405,13 +433,32 @@ useHead(() => ({
     margin-bottom: 1rem;
   }
 
-  .page-section-hero__bottom.is-buttons-hidden .page-section-hero__byline,
-  .page-section-hero__byline.is-in-buttons-cell {
+  .page-section-hero__byline.is-centered-wide {
+    width: min(100%, 680px);
+    margin-bottom: 0;
+  }
+
+  .page-section-hero__bottom.is-buttons-hidden .page-section-hero__byline {
     margin-bottom: 0;
   }
 
   .page-section-hero__bottom-spacer {
     display: none;
   }
+}
+
+
+
+.page-section-hero__byline {
+text-transform: uppercase;
+    font-weight: 300;
+    font-family: 'Moulin';
+    font-size: clamp(20px, 1vw, 28px);
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+}
+
+.page-section-hero__byline span {
+      font-size: 65%;
 }
 </style>

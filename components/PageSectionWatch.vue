@@ -136,6 +136,14 @@ const platforms = computed(() => {
   if (mapped.length) return mapped
   return defaultStreamingLinks.filter((link) => !link.featured)
 })
+
+const heroOverlayOpacity = computed(() => {
+  const value = props.section?.watchHeroOverlayOpacity
+  if (value == null) return 1
+  return Math.min(100, Math.max(0, value)) / 100
+})
+
+const showHeroOverlay = computed(() => heroOverlayOpacity.value > 0)
 </script>
 
 <template>
@@ -162,6 +170,12 @@ const platforms = computed(() => {
           @loadeddata="onVideoLoaded"
           @canplay="revealVideo"
           @playing="revealVideo"
+        />
+        <div
+          v-if="showHeroOverlay"
+          class="page-section-watch__hero-overlay"
+          :style="{ '--watch-overlay-opacity': heroOverlayOpacity }"
+          aria-hidden="true"
         />
       </div>
 
@@ -306,6 +320,21 @@ const platforms = computed(() => {
   inset: 0;
 }
 
+.page-section-watch__hero-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 50%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, var(--watch-overlay-opacity, 1)) 0%,
+    transparent 100%
+  );
+}
+
 .page-section-watch__video {
   position: absolute;
   inset: 0;
@@ -392,7 +421,7 @@ const platforms = computed(() => {
 .page-section-watch__title {
   margin: 0;
   font-size: clamp(30px, 2.5vw, 3rem);
-  font-weight: 400;
+  font-weight: 300;
   letter-spacing: 0.04em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -404,7 +433,7 @@ const platforms = computed(() => {
     appearance: none;
     border: 0;
     margin: 0;
-    padding: clamp(14px, 1vw, 1rem) clamp(20px, 2vw, 2rem);
+    padding: clamp(14px, 1vw, 1.2rem) clamp(20px, 2vw, 2rem) clamp(14px, 1vw, 1rem);
     background: var(--watch-accent);
     color: var(--watch-accent-text);
     font-family: var(--serif);
@@ -416,7 +445,10 @@ const platforms = computed(() => {
     cursor: pointer;
     text-decoration: none;
     white-space: nowrap;
-    min-width: clamp(200px, 50vw, 320px);
+    min-width: clamp(200px, 50vw, 280px);
+    border-radius: 8px;
+    corner-shape: notch;
+    font-family: math;
 }
 
 .page-section-watch__cta:hover {

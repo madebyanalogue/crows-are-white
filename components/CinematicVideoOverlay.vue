@@ -77,7 +77,7 @@ defineProps({
 .cinematic-video-overlay__title,
 .cinematic-video-overlay__runtime {
   margin: 0;
-  font-size: clamp(20px, 2.5vw, 100px);
+  font-size: clamp(20px, 2.5vw, 70px);
   letter-spacing: 0.03em;
   font-weight: 300;
   line-height: 1.1;

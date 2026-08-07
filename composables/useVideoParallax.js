@@ -20,7 +20,12 @@ function resolveElement(value) {
 export function useVideoParallax(triggerRef, targetRef, options = {}) {
   const {
     speed = 0.35,
+    disabled = false,
   } = options
+
+  function isDisabled() {
+    return unref(disabled) === true
+  }
 
   let gsap = null
   let lenisScrollHandler = null
@@ -40,7 +45,7 @@ export function useVideoParallax(triggerRef, targetRef, options = {}) {
   function updateParallax() {
     const trigger = triggerRef.value
     const target = getTarget()
-    if (!gsap || !isActive || !trigger || !target) return
+    if (isDisabled() || !gsap || !isActive || !trigger || !target) return
 
     const distance = trigger.offsetHeight || 1
     const progress = Math.min(1, Math.max(0, -trigger.getBoundingClientRect().top / distance))
@@ -60,6 +65,11 @@ export function useVideoParallax(triggerRef, targetRef, options = {}) {
   }
 
   async function init() {
+    if (isDisabled()) {
+      cleanup()
+      return false
+    }
+
     const trigger = triggerRef.value
     const target = getTarget()
     if (!trigger || !target) return false
@@ -148,8 +158,12 @@ export function useVideoParallax(triggerRef, targetRef, options = {}) {
   }
 
   watch(
-    [triggerRef, () => getTarget()],
-    ([trigger, target]) => {
+    [triggerRef, () => getTarget(), () => unref(disabled)],
+    ([trigger, target, isParallaxDisabled]) => {
+      if (isParallaxDisabled) {
+        cleanup()
+        return
+      }
       if (!scrollSystemAttached || !trigger || !target) return
       queueInit()
     },

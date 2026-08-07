@@ -398,6 +398,7 @@ function pageSectionProjection() {
       }
     },
     watchTitle,
+    watchHeroOverlayOpacity,
     watchYear,
     watchRuntimeMinutes,
     watchCtaLabel,
@@ -480,12 +481,18 @@ function pageSectionProjection() {
     textImageStackPaddingBottom,
     textImageStackReverseOrder,
     ${colorField('letterboxBackgroundColor')},
+    letterboxAspectRatio,
+    letterboxVideoFit,
+    letterboxParallax,
     letterboxVideoSource,
     letterboxVideo {
       asset-> {
         _id,
         url,
-        mimeType
+        mimeType,
+        metadata {
+          dimensions
+        }
       }
     },
     letterboxLoopCloudflare720,

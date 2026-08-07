@@ -1,4 +1,6 @@
 <script setup>
+const emit = defineEmits(['mediaDimensions'])
+
 const props = defineProps({
   loop: {
     type: Object,
@@ -19,6 +21,11 @@ const props = defineProps({
   mediaTransform: {
     type: String,
     default: '',
+  },
+  objectFit: {
+    type: String,
+    default: 'cover',
+    validator: (value) => ['cover', 'contain'].includes(value),
   },
 })
 
@@ -44,8 +51,18 @@ function markVideoReady() {
   videoReady.value = true
 }
 
-function onVideoCanPlay() {
+function onVideoLoadedMetadata(event) {
+  const video = event.target
+  if (!video?.videoWidth || !video?.videoHeight) return
+  emit('mediaDimensions', {
+    width: video.videoWidth,
+    height: video.videoHeight,
+  })
+}
+
+function onVideoCanPlay(event) {
   markVideoReady()
+  onVideoLoadedMetadata(event)
 }
 
 function onVideoPlaying() {
@@ -94,6 +111,7 @@ onMounted(() => {
       :poster="posterUrl || undefined"
       :fetchpriority="priority ? 'high' : 'auto'"
       @canplay="onVideoCanPlay"
+      @loadedmetadata="onVideoLoadedMetadata"
       @playing="onVideoPlaying"
     >
       <source
@@ -122,11 +140,11 @@ onMounted(() => {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: v-bind(objectFit);
   opacity: 0;
   transition: opacity 0.35s ease;
-  
-    transform-origin: bottom;
+
+  transform-origin: bottom;
 }
 
 .section-loop-video--priority .section-loop-video__el {

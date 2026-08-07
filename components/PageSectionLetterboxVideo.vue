@@ -31,6 +31,43 @@ const hasVideo = computed(() => Boolean(
   || loop.value?.youtubeId,
 ))
 
+const usesNaturalShape = computed(() => {
+  const ratio = props.section?.letterboxAspectRatio
+  return ratio === 'natural'
+})
+
+const mediaDimensions = ref(null)
+
+const resolvedMediaDimensions = computed(() => {
+  const runtime = mediaDimensions.value
+  if (runtime?.width && runtime?.height) return runtime
+
+  const width = loop.value?.width
+  const height = loop.value?.height
+  if (width && height) return { width, height }
+
+  return null
+})
+
+const hasNaturalShape = computed(() =>
+  usesNaturalShape.value && Boolean(resolvedMediaDimensions.value),
+)
+
+const videoFit = computed(() =>
+  props.section?.letterboxVideoFit === 'contain' ? 'contain' : 'cover',
+)
+
+const parallaxEnabled = computed(() => props.section?.letterboxParallax !== false)
+
+const usesStaticMediaLayer = computed(() =>
+  !parallaxEnabled.value || videoFit.value === 'contain',
+)
+
+function onMediaDimensions(dimensions) {
+  if (!dimensions?.width || !dimensions?.height) return
+  mediaDimensions.value = dimensions
+}
+
 const overlayLink = computed(() => {
   const label = props.section?.letterboxLinkText?.trim()
   const link = props.section?.letterboxLink
@@ -95,10 +132,19 @@ const sectionStyle = computed(() => {
   if (backgroundColor) {
     style.background = toCssColor(backgroundColor, DEFAULT_PAGE_COLOR)
   }
+
+  if (hasNaturalShape.value) {
+    const dims = resolvedMediaDimensions.value
+    style.aspectRatio = `${dims.width} / ${dims.height}`
+  }
+
   return style
 })
 
-useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
+useVideoParallax(sectionRef, parallaxRef, {
+  speed: 0.22,
+  disabled: computed(() => !parallaxEnabled.value),
+})
 </script>
 
 <template>
@@ -106,18 +152,29 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
     v-if="hasVideo"
     ref="sectionRef"
     class="page-section-letterbox-video"
+    :class="{
+      'is-natural-shape': hasNaturalShape,
+      'is-contained': videoFit === 'contain',
+      'is-parallax-disabled': !parallaxEnabled,
+    }"
     :style="sectionStyle"
     aria-label="Video"
   >
-    <div class="page-section-letterbox-video__frame">
+    <div
+      class="page-section-letterbox-video__frame"
+      :class="{ 'is-natural-shape': hasNaturalShape }"
+    >
       <div
         ref="parallaxRef"
         class="page-section-letterbox-video__parallax"
+        :class="{ 'is-static': usesStaticMediaLayer }"
       >
         <SectionLoopVideo
           :loop="loop"
           title="Letterbox video"
           aspect-class="page-section-letterbox-video__video"
+          :object-fit="videoFit"
+          @media-dimensions="onMediaDimensions"
         />
       </div>
 
@@ -160,6 +217,12 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
   background: var(--obsidian, #111010);
 }
 
+.page-section-letterbox-video.is-natural-shape {
+  aspect-ratio: auto;
+  min-height: 0;
+  height: auto;
+}
+
 .page-section-letterbox-video__frame {
   position: relative;
   width: 100%;
@@ -167,6 +230,13 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
   aspect-ratio: 16 / 9;
   height: auto;
   overflow: hidden;
+}
+
+.page-section-letterbox-video__frame.is-natural-shape {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
 }
 
 .page-section-letterbox-video__parallax {
@@ -178,15 +248,26 @@ useVideoParallax(sectionRef, parallaxRef, { speed: 0.22 })
   will-change: transform;
 }
 
-.page-section-letterbox-video__parallax :deep(.page-section-letterbox-video__video) {
-  width: 100%;
+.page-section-letterbox-video__parallax.is-static,
+.page-section-letterbox-video.is-natural-shape .page-section-letterbox-video__parallax {
+  position: absolute;
+  inset: 0;
+  top: 0;
   height: 100%;
+}
+
+.page-section-letterbox-video.is-contained :deep(.section-loop-video) {
+  background: transparent;
 }
 
 .page-section-letterbox-video__parallax :deep(.section-loop-video__el) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.page-section-letterbox-video.is-contained :deep(.section-loop-video__el) {
+  object-fit: contain;
 }
 
 .page-section-letterbox-video__link-wrap {

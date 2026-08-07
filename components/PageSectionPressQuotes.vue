@@ -29,11 +29,16 @@ const isStackMode = computed(() => props.section?.pressQuotesStackMode === true)
 
 const carouselElement = ref(null)
 const prefersReducedMotion = ref(false)
+const currentIndex = ref(0)
+
+const canGoPrev = computed(() => currentIndex.value > 0)
+const canGoNext = computed(() => currentIndex.value < quotes.value.length - 1)
 
 const ARROW_SCROLL_DURATION = 1.75
 
 let parallaxInstance = null
 let parallaxUpdate = null
+let indexUpdate = null
 let arrowTween = null
 
 function layerImageUrl(quote, layerKey) {
@@ -74,22 +79,19 @@ function scrollByArrow(direction) {
   if (!instance?.cells?.length || instance.cells.length < 2) return
 
   const nextIndex = instance.selectedIndex + direction
-  instance.isDragSelect = false
-  instance._wrapSelect(nextIndex)
+  if (nextIndex < 0 || nextIndex >= instance.cells.length) return
 
-  const wrappedIndex = (
-    (nextIndex % instance.slides.length) + instance.slides.length
-  ) % instance.slides.length
-  const targetX = -instance.slides[wrappedIndex].target
+  const targetX = -instance.slides[nextIndex].target
 
   if (arrowTween) arrowTween.kill()
 
   const finish = () => {
-    instance.selectedIndex = wrappedIndex
+    instance.selectedIndex = nextIndex
     instance.updateSelectedSlide()
     instance.velocity = 0
     instance.positionSlider()
     applyCarouselParallax(instance)
+    instance.dispatchEvent('select')
     instance.dispatchEvent('settle')
   }
 
@@ -139,24 +141,33 @@ function bindParallax(instance) {
   parallaxUpdate = () => {
     applyCarouselParallax(instance)
   }
+  indexUpdate = () => {
+    currentIndex.value = instance.selectedIndex
+  }
   instance.on('scroll', parallaxUpdate)
   instance.on('resize', parallaxUpdate)
   instance.on('settle', parallaxUpdate)
+  instance.on('select', indexUpdate)
+  indexUpdate()
   parallaxUpdate()
 }
 
 function unbindParallax() {
-  if (!parallaxInstance || !parallaxUpdate) return
-  parallaxInstance.off('scroll', parallaxUpdate)
-  parallaxInstance.off('resize', parallaxUpdate)
-  parallaxInstance.off('settle', parallaxUpdate)
+  if (!parallaxInstance) return
+  if (parallaxUpdate) {
+    parallaxInstance.off('scroll', parallaxUpdate)
+    parallaxInstance.off('resize', parallaxUpdate)
+    parallaxInstance.off('settle', parallaxUpdate)
+  }
+  if (indexUpdate) parallaxInstance.off('select', indexUpdate)
   parallaxInstance = null
   parallaxUpdate = null
+  indexUpdate = null
 }
 
 const { flickity, ready, reload, destroy: destroyFlickity } = useFlickity(carouselElement, () => ({
   cellAlign: 'left',
-  contain: true,
+  contain: false,
   draggable: true,
   freeScroll: false,
   friction: 0.28,
@@ -164,7 +175,7 @@ const { flickity, ready, reload, destroy: destroyFlickity } = useFlickity(carous
   percentPosition: true,
   pageDots: false,
   prevNextButtons: false,
-  wrapAround: true,
+  wrapAround: false,
   onReady: bindParallax,
 }))
 
@@ -253,6 +264,7 @@ onBeforeUnmount(() => {
         type="button"
         class="page-section-press-quotes__arrow page-section-press-quotes__arrow--prev"
         aria-label="Previous press quote"
+        :disabled="!canGoPrev"
         @click="scrollByArrow(-1)"
       >
         <svg
@@ -267,43 +279,52 @@ onBeforeUnmount(() => {
         </svg>
       </button>
 
-      <div
-        class="page-section-press-quotes__viewport"
-        :class="{ 'is-ready': ready }"
-      >
+      <div class="page-section-press-quotes__frame">
         <div
-          ref="carouselElement"
-          class="page-section-press-quotes__carousel"
+          class="page-section-press-quotes__viewport"
+          :class="{ 'is-ready': ready }"
         >
           <div
-            v-for="(quote, index) in quotes"
-            :key="quoteKey(quote, index)"
-            class="page-section-press-quotes__cell"
+            ref="carouselElement"
+            class="page-section-press-quotes__carousel"
           >
-            <article class="page-section-press-quotes__card">
-              <div class="page-section-press-quotes__visual">
-                <div class="page-section-press-quotes__layers">
-                  <div
-                    v-for="layerIndex in 3"
-                    :key="`layer-${layerIndex}`"
-                    class="page-section-press-quotes__layer"
-                    :style="{ zIndex: layerIndex }"
-                  >
-                    <img
-                      v-if="hasLayerImage(quote, `layer${layerIndex}`)"
-                      data-parallax-layer
-                      class="page-section-press-quotes__layer-img"
-                      :src="layerImageUrl(quote, `layer${layerIndex}`)"
-                      :alt="layerAlt(quote, layerIndex)"
-                      draggable="false"
-                      loading="lazy"
+            <div
+              v-for="(quote, index) in quotes"
+              :key="quoteKey(quote, index)"
+              class="page-section-press-quotes__cell"
+            >
+              <article class="page-section-press-quotes__card">
+                <div class="page-section-press-quotes__visual">
+                  <div class="page-section-press-quotes__layers">
+                    <div
+                      v-for="layerIndex in 3"
+                      :key="`layer-${layerIndex}`"
+                      class="page-section-press-quotes__layer"
+                      :style="{ zIndex: layerIndex }"
                     >
+                      <img
+                        v-if="hasLayerImage(quote, `layer${layerIndex}`)"
+                        data-parallax-layer
+                        class="page-section-press-quotes__layer-img"
+                        :src="layerImageUrl(quote, `layer${layerIndex}`)"
+                        :alt="layerAlt(quote, layerIndex)"
+                        draggable="false"
+                        loading="lazy"
+                      >
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </div>
         </div>
+
+        <HandwrittenScrollCounter
+          v-if="quotes.length > 1"
+          :index="currentIndex"
+          :total="quotes.length"
+          placement="bottom-right"
+        />
       </div>
 
       <button
@@ -311,6 +332,7 @@ onBeforeUnmount(() => {
         type="button"
         class="page-section-press-quotes__arrow page-section-press-quotes__arrow--next"
         aria-label="Next press quote"
+        :disabled="!canGoNext"
         @click="scrollByArrow(1)"
       >
         <svg
@@ -333,12 +355,14 @@ onBeforeUnmount(() => {
   --press-quotes-frame-width: min(100%, 1420px);
   --press-quotes-frame-ratio: 1420 / 800;
   --press-quotes-layer-scale: 1600 / 1420;
+  --press-quotes-slide-gap: 15px;
   position: relative;
   padding: clamp(3rem, 8vw, 6rem) 0;
   color: var(--text-color);
   background: var(--background-color);
   overflow: hidden;
 }
+
 
 .page-section-press-quotes__header {
   padding: 0 var(--gutter) clamp(1.5rem, 4vw, 2.75rem);
@@ -372,12 +396,17 @@ onBeforeUnmount(() => {
   gap: clamp(0.75rem, 2vw, 1.5rem);
 }
 
-.page-section-press-quotes__viewport {
+.page-section-press-quotes__frame {
   position: relative;
   flex: 0 1 var(--press-quotes-frame-width);
   width: var(--press-quotes-frame-width);
+}
+
+.page-section-press-quotes__viewport {
+  position: relative;
+  width: 100%;
   aspect-ratio: var(--press-quotes-frame-ratio);
-  overflow: hidden;
+  overflow: visible;
   visibility: hidden;
 }
 
@@ -417,6 +446,12 @@ onBeforeUnmount(() => {
   outline-offset: 4px;
 }
 
+.page-section-press-quotes__arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
 .page-section-press-quotes__carousel {
   width: 100%;
   height: 100%;
@@ -424,40 +459,42 @@ onBeforeUnmount(() => {
 
 .page-section-press-quotes__carousel:not(.flickity-enabled) {
   display: flex;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .page-section-press-quotes__cell {
-  width: 100%;
+  width: calc(100% - var(--press-quotes-slide-gap));
   height: 100%;
   flex-shrink: 0;
-  overflow: hidden;
+  margin-right: var(--press-quotes-slide-gap);
+  overflow: visible;
 }
 
 .page-section-press-quotes__carousel :deep(.flickity-cell) {
-  margin-right: 0;
+  width: calc(100% - var(--press-quotes-slide-gap));
+  margin-right: var(--press-quotes-slide-gap);
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .page-section-press-quotes__card {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .page-section-press-quotes__visual {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   background: color-mix(in srgb, var(--text-color) 8%, var(--background-color));
 }
 
 .page-section-press-quotes__layers {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .page-section-press-quotes__layer {
@@ -484,7 +521,7 @@ onBeforeUnmount(() => {
 }
 
 .page-section-press-quotes__carousel :deep(.flickity-viewport) {
-  overflow: hidden;
+  overflow: visible;
   height: 100% !important;
   transition: height 0.2s;
 }

@@ -45,12 +45,15 @@ export function resolveSectionLoopVideo(section, prefix) {
   }
 
   if (uploadUrl) {
+    const dimensions = section[`${prefix}Video`]?.asset?.metadata?.dimensions
     return {
       kind: 'mp4',
       url: uploadUrl,
       url720: uploadUrl,
       url1080: uploadUrl,
       posterUrl: '',
+      width: dimensions?.width,
+      height: dimensions?.height,
     }
   }
 
