@@ -17,6 +17,7 @@ export const PAGE_TEXT_COLOR_OPTIONS = [
 ]
 
 export const DEFAULT_PAGE_COLOR = 'fuji'
+export const DEFAULT_UNSET_PAGE_BACKGROUND = 'crema'
 export const DEFAULT_MENU_BACKGROUND_COLOR = 'crema'
 export const DEFAULT_MENU_BORDER_COLOR = '#999'
 export const DEFAULT_MENU_HIGHLIGHT_COLOR = 'arancio'
@@ -185,8 +186,14 @@ export function getPageColorVars(colors = {}) {
     basketIconColor,
   } = colors
 
-  const background = toCssColor(pageColor, DEFAULT_PAGE_COLOR)
-  const text = toCssColor(resolvePageTextColor(pageTextColor, pageColor), 'obsidian')
+  const background = toCssColor(
+    pageColor || DEFAULT_UNSET_PAGE_BACKGROUND,
+    DEFAULT_UNSET_PAGE_BACKGROUND,
+  )
+  const text = toCssColor(
+    resolvePageTextColor(pageTextColor, pageColor || DEFAULT_UNSET_PAGE_BACKGROUND),
+    'obsidian',
+  )
   const menuBackground = toCssColor(menuBackgroundColor, DEFAULT_MENU_BACKGROUND_COLOR)
   const menuBorder = menuBorderColor
     ? toCssColor(menuBorderColor, DEFAULT_MENU_BORDER_COLOR)

@@ -81,6 +81,10 @@
           v-else-if="section.sectionType === 'ugc'"
           :section="section"
         />
+        <PageSectionQuarters
+          v-else-if="section.sectionType === 'quarters'"
+          :section="section"
+        />
         <PageSectionReflections
           v-else-if="section.sectionType === 'reflections'"
           :section="section"

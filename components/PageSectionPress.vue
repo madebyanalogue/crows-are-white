@@ -133,9 +133,34 @@ const activeAspectRatio = computed(() => {
   return link?.imageAspectRatio || defaultMediaAspectRatio.value
 })
 
+const PRESS_MEDIA_WIDTHS = new Set(['50', '60', '70', '80', '90', '100'])
+
+const mediaWidth = computed(() => {
+  const value = props.section?.pressMediaWidth
+  return PRESS_MEDIA_WIDTHS.has(value) ? value : '70'
+})
+
+const mediaHorizontalAlign = computed(() => {
+  const align = props.section?.pressMediaHorizontalAlign
+  if (align === 'left' || align === 'right') return align
+  return 'center'
+})
+
+const mediaVerticalAlign = computed(() => {
+  const align = props.section?.pressMediaVerticalAlign
+  if (align === 'top' || align === 'bottom') return align
+  return 'center'
+})
+
+const pressLayoutClasses = computed(() => [
+  `is-media-valign-${mediaVerticalAlign.value}`,
+  `is-media-align-${mediaHorizontalAlign.value}`,
+])
+
 const pressMediaStyle = computed(() => ({
   '--press-aspect-w': activeAspectRatio.value.width,
   '--press-aspect-h': activeAspectRatio.value.height,
+  '--press-media-width': `${mediaWidth.value}%`,
 }))
 
 watch(
@@ -215,6 +240,7 @@ const showDefaultCaption = computed(() => {
 <template>
   <section
     class="page-section-press"
+    :class="pressLayoutClasses"
     aria-label="Press"
   >
     <div class="page-section-press__layout">
@@ -374,35 +400,32 @@ const showDefaultCaption = computed(() => {
 <style scoped>
 .page-section-press {
   --press-border: color-mix(in srgb, var(--text-color) 15%, transparent);
-  --press-nav-clearance: calc(2rem + 50px + 1.25rem);
+  --press-nav-clearance: 75px;
+  --press-line-padding: clamp(1.5rem, 6vh, 3.5rem);
   --press-aspect-w: 9;
   --press-aspect-h: 16;
+  --press-media-width: 70%;
   position: relative;
   min-height: 100dvh;
-  color: var(--text-color);
-  background: var(--background-color);
-}
-
-@media (min-width: 700px) {
-  .page-section-press {
-    --press-nav-clearance: calc(3.5rem + 50px + 1.5rem);
-  }
+  color: inherit;
 }
 
 .page-section-press__layout {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto minmax(0, 1fr);
-  min-height: calc(100dvh - var(--press-nav-clearance));
-  padding-top: var(--press-nav-clearance);
+  box-sizing: border-box;
+  height: 100dvh;
+  padding-block: var(--press-line-padding);
+  padding-block-start: calc(var(--press-line-padding) + var(--press-nav-clearance));
+  
+  min-height: 0;
 }
 
 @media (min-width: 900px) {
   .page-section-press__layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
-    min-height: calc(100dvh - var(--press-nav-clearance));
-    padding-top: var(--press-nav-clearance);
   }
 }
 
@@ -415,12 +438,12 @@ const showDefaultCaption = computed(() => {
     display: block;
     position: absolute;
     left: 50%;
-    top: calc(var(--press-nav-clearance) + clamp(1.5rem, 6vh, 3.5rem));
-    bottom: clamp(1.5rem, 6vh, 3.5rem);
+    top: calc(var(--press-line-padding) + var(--press-nav-clearance));
     width: 1px;
     background: var(--press-border);
     transform: translateX(-50%);
     pointer-events: none;
+    height: calc(100% - calc(var(--press-line-padding) * 2) - var(--press-nav-clearance));
   }
 }
 
@@ -428,36 +451,40 @@ const showDefaultCaption = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: min(420px, 45dvh);
-  padding: clamp(1rem, 4vw, 2rem) ;
+  min-height: 0;
+  height: 100%;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.page-section-press.is-media-valign-top .page-section-press__media {
+  align-items: flex-start;
+}
+
+.page-section-press.is-media-valign-bottom .page-section-press__media {
+  align-items: flex-end;
+}
+
+.page-section-press.is-media-align-left .page-section-press__media {
+  justify-content: flex-start;
+}
+
+.page-section-press.is-media-align-right .page-section-press__media {
+  justify-content: flex-end;
 }
 
 @media (min-width: 900px) {
   .page-section-press__media {
-    min-height: 0;
-    height: 100%;
     overflow: visible;
-    container-type: size;
-    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 4vw, 9rem);
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
   }
 }
 
 .page-section-press__stack {
   position: relative;
   flex: 0 0 auto;
+  width: var(--press-media-width);
+  max-width: 100%;
   aspect-ratio: var(--press-aspect-w) / var(--press-aspect-h);
-  width: min(
-    100%,
-    calc((100dvh - var(--press-nav-clearance) - 14rem) * var(--press-aspect-w) / var(--press-aspect-h)),
-    calc(480px * var(--press-aspect-w) / var(--press-aspect-h))
-  );
-}
-
-@media (min-width: 900px) {
-  .page-section-press__stack {
-    width: min(100cqw, calc(100cqh * var(--press-aspect-w) / var(--press-aspect-h)));
-    max-height: 100cqh;
-  }
 }
 
 .page-section-press__links {
@@ -511,6 +538,12 @@ const showDefaultCaption = computed(() => {
   transform: rotate(-3deg);
   transform-origin: bottom right;
   pointer-events: none;
+}
+
+.page-section-press.is-media-valign-bottom .page-section-press__caption {
+  top: auto;
+  bottom: calc(100% + .75em);
+  transform-origin: top right;
 }
 
 .page-section-press__caption--after-video {

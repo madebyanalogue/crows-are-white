@@ -439,6 +439,9 @@ function pageSectionProjection() {
     relatedProductsCollection,
     relatedProductsLimit,
     relatedProductsExcludeCurrent,
+    pressMediaWidth,
+    pressMediaHorizontalAlign,
+    pressMediaVerticalAlign,
     pressDefaultMedia {
       mediaType,
       alt,
@@ -584,6 +587,27 @@ function pageSectionProjection() {
     ugcMaxItems,
     ugcPaddingTop,
     ugcPaddingBottom,
+    quartersTitle,
+    quartersUseWrapper,
+    quartersItems[] {
+      _key,
+      mediaType,
+      alt,
+      image ${imageProjection},
+      videoSource,
+      loopCloudflare720,
+      loopCloudflare1080,
+      videoId,
+      videoFile {
+        asset-> {
+          _id,
+          url,
+          mimeType
+        }
+      }
+    },
+    quartersPaddingTop,
+    quartersPaddingBottom,
     reflectionsTitle,
     reflectionsWatchingFromTitle,
     reflectionsIntro,
