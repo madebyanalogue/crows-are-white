@@ -453,7 +453,7 @@ const showDefaultCaption = computed(() => {
   justify-content: center;
   min-height: 0;
   height: 100%;
-  padding: clamp(1rem, 4vw, 2rem);
+  padding: var(--wrapper-padding);
 }
 
 .page-section-press.is-media-valign-top .page-section-press__media {
@@ -475,7 +475,6 @@ const showDefaultCaption = computed(() => {
 @media (min-width: 900px) {
   .page-section-press__media {
     overflow: visible;
-    padding: 0 clamp(1.25rem, 4vw, 3rem);
   }
 }
 
