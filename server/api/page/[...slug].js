@@ -521,8 +521,10 @@ function pageSectionProjection() {
     letterboxVideoFit,
     letterboxParallax,
     letterboxUseWrapper,
+    letterboxMinHeightViewport,
     letterboxVideoWidth,
     letterboxVideoAlign,
+    letterboxVideoVerticalAlign,
     letterboxVideoSource,
     letterboxVideo {
       asset-> {

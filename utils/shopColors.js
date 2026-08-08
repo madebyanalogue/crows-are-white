@@ -14,7 +14,7 @@ export function resolveShopChromeColors(shopPageSource, siteSettingsShopColors) 
   return {
     pageColor: fromSettings.pageColor ?? fromPage.pageColor ?? fallback.pageColor,
     pageTextColor: fromSettings.pageTextColor ?? fromPage.pageTextColor ?? fallback.pageTextColor,
-    menuBackgroundColor: fromPage.menuBackgroundColor ?? fallback.menuBackgroundColor,
+    menuBackgroundColor: fallback.menuBackgroundColor,
   }
 }
 

@@ -137,8 +137,10 @@ const overlayStyle = computed(() => {
 })
 
 const notchClipStyle = computed(() => {
-  if (!props.notchCorners || !props.notchMaskColor) return undefined
-  return { '--cinematic-notch-mask-color': props.notchMaskColor }
+  if (!props.notchCorners) return undefined
+  return {
+    '--cinematic-notch-mask-color': props.notchMaskColor || 'var(--background-color, #f0f0ed)',
+  }
 })
 
 let scaleProxy = { value: 0 }
@@ -296,6 +298,10 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
         :class="{ 'cinematic-video-frame__notch-clip': notchCorners }"
         :style="notchClipStyle"
       >
+        <div
+          class="cinematic-video-frame__notch-content"
+          :class="{ 'has-notch-corners': notchCorners }"
+        >
       <button
         v-if="!isOpen"
         type="button"
@@ -408,6 +414,26 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
           />
         </div>
       </div>
+        </div>
+
+        <template v-if="notchCorners">
+          <div
+            class="cinematic-video-frame__notch cinematic-video-frame__notch--tl"
+            aria-hidden="true"
+          />
+          <div
+            class="cinematic-video-frame__notch cinematic-video-frame__notch--tr"
+            aria-hidden="true"
+          />
+          <div
+            class="cinematic-video-frame__notch cinematic-video-frame__notch--bl"
+            aria-hidden="true"
+          />
+          <div
+            class="cinematic-video-frame__notch cinematic-video-frame__notch--br"
+            aria-hidden="true"
+          />
+        </template>
       </div>
     </div>
 
@@ -457,12 +483,47 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   container-type: inline-size;
   --cinematic-notch-radius: clamp(8px, 0.94cqi, 15px);
   --cinematic-notch-mask-color: var(--background-color, #f0f0ed);
+  position: relative;
   aspect-ratio: 16 / 9;
   height: auto;
+  background: var(--cinematic-notch-mask-color);
+}
+
+.cinematic-video-frame__notch-content.has-notch-corners {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: var(--cinematic-notch-radius);
-  corner-shape: notch;
+}
+
+.cinematic-video-frame__notch {
+  position: absolute;
+  z-index: 8;
+  width: var(--cinematic-notch-radius);
+  height: var(--cinematic-notch-radius);
   background: var(--cinematic-notch-mask-color);
+  pointer-events: none;
+}
+
+.cinematic-video-frame__notch--tl {
+  top: 0;
+  left: 0;
+}
+
+.cinematic-video-frame__notch--tr {
+  top: 0;
+  right: 0;
+}
+
+.cinematic-video-frame__notch--bl {
+  bottom: 0;
+  left: 0;
+}
+
+.cinematic-video-frame__notch--br {
+  right: 0;
+  bottom: 0;
 }
 
 .cinematic-video-frame__stage.is-open {
@@ -482,8 +543,16 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
+}
+
+.cinematic-video-frame__stage:fullscreen .cinematic-video-frame__notch-content.has-notch-corners,
+.cinematic-video-frame__stage:-webkit-full-screen .cinematic-video-frame__notch-content.has-notch-corners {
   border-radius: 0;
-  corner-shape: unset;
+}
+
+.cinematic-video-frame__stage:fullscreen .cinematic-video-frame__notch,
+.cinematic-video-frame__stage:-webkit-full-screen .cinematic-video-frame__notch {
+  display: none;
 }
 
 .cinematic-video-frame__hit {

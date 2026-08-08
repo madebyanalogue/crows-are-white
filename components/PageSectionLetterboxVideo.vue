@@ -87,6 +87,8 @@ const parallaxEnabled = computed(() => props.section?.letterboxParallax !== fals
 
 const useWrapper = computed(() => props.section?.letterboxUseWrapper === true)
 
+const useViewportMinHeight = computed(() => props.section?.letterboxMinHeightViewport === true)
+
 const videoWidth = computed(() => {
   const value = props.section?.letterboxVideoWidth
   if (!value || value === '100') return '100%'
@@ -100,6 +102,13 @@ const videoAlignClass = computed(() => {
   if (align === 'left') return 'is-align-left'
   if (align === 'right') return 'is-align-right'
   return 'is-align-center'
+})
+
+const videoVerticalAlignClass = computed(() => {
+  const align = props.section?.letterboxVideoVerticalAlign
+  if (align === 'top') return 'is-valign-top'
+  if (align === 'bottom') return 'is-valign-bottom'
+  return 'is-valign-center'
 })
 
 const usesStaticMediaLayer = computed(() =>
@@ -223,6 +232,7 @@ useVideoParallax(sectionRef, parallaxRef, {
       'is-parallax-disabled': !parallaxEnabled,
       'is-wrapped': useWrapper,
       'is-image': hasImage,
+      'is-viewport-min-height': useViewportMinHeight,
     }"
     :style="sectionStyle"
     :aria-label="hasImage ? 'Image' : 'Video'"
@@ -231,6 +241,7 @@ useVideoParallax(sectionRef, parallaxRef, {
       class="page-section-letterbox-video__container"
       :class="[
         videoAlignClass,
+        videoVerticalAlignClass,
         { wrapper: useWrapper },
       ]"
     >
@@ -311,10 +322,20 @@ useVideoParallax(sectionRef, parallaxRef, {
   overflow: hidden;
 }
 
-.page-section-letterbox-video.is-natural-shape,
-.page-section-letterbox-video.is-wrapped {
+.page-section-letterbox-video.is-viewport-min-height {
+  min-height: 100dvh;
+}
+
+.page-section-letterbox-video.is-natural-shape:not(.is-viewport-min-height),
+.page-section-letterbox-video.is-wrapped:not(.is-viewport-min-height) {
   aspect-ratio: auto;
   min-height: 0;
+  height: auto;
+}
+
+.page-section-letterbox-video.is-natural-shape.is-viewport-min-height,
+.page-section-letterbox-video.is-wrapped.is-viewport-min-height {
+  aspect-ratio: auto;
   height: auto;
 }
 
@@ -324,6 +345,15 @@ useVideoParallax(sectionRef, parallaxRef, {
   justify-content: center;
   width: 100%;
   height: 100%;
+  min-height: inherit;
+}
+
+.page-section-letterbox-video__container.is-valign-top {
+  align-items: flex-start;
+}
+
+.page-section-letterbox-video__container.is-valign-bottom {
+  align-items: flex-end;
 }
 
 .page-section-letterbox-video__container.is-align-left {

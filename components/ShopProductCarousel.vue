@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
 .shop-product-carousel {
   --shop-carousel-slides-visible: 1.5;
   --shop-carousel-visible-gaps: 1;
-  --shop-carousel-gap: 15px;
+  --shop-carousel-gap: 5px;
 }
 
 @media (min-width: 660px) {

@@ -7,6 +7,8 @@ export function useShopChromeColorsState() {
 export function useShopPageColor(shopPageSource) {
   const { shopColors: siteShopColors, menuColors } = useSiteSettings()
   const shopChromeColorsState = useShopChromeColorsState()
+  const isTransitioning = useState('pageTransitioning', () => false)
+  const { pending, applied, swapped } = useAppliedPageColors()
 
   const { data: shopPageColors } = useAsyncData(
     'page-shop-color',
@@ -32,8 +34,17 @@ export function useShopPageColor(shopPageSource) {
   ))
 
   watchEffect(() => {
-    shopChromeColorsState.value = colors.value
-  })
+    const resolved = colors.value
 
-  usePageColor(colors)
+    shopChromeColorsState.value = resolved
+    pending.value = resolved
+
+    const shouldApplyNow = import.meta.server
+      || !isTransitioning.value
+      || swapped.value
+
+    if (shouldApplyNow) {
+      applied.value = resolved
+    }
+  })
 }
