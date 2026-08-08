@@ -28,127 +28,49 @@ usePageColor(computed(() =>
   page.value ? extractPageChromeColors(page.value) : REFLECTIONS_PAGE_COLORS_FALLBACK,
 ))
 
-const modalOpen = ref(false)
-const { items, pending } = useReflections(500)
+function mapPageBackgroundToSection(source) {
+  if (!source) return {}
 
-const hasBackgroundVideo = computed(() => page.value?.pageBackgroundMediaType === 'video')
-
-function openModal() {
-  modalOpen.value = true
+  return {
+    reflectionsBackgroundMediaType: source.pageBackgroundMediaType,
+    reflectionsBackgroundVideoSource: source.pageBackgroundVideoSource,
+    reflectionsBackgroundVideo: source.pageBackgroundVideo,
+    reflectionsBackgroundLoopCloudflare720: source.pageBackgroundLoopCloudflare720,
+    reflectionsBackgroundLoopCloudflare1080: source.pageBackgroundLoopCloudflare1080,
+    reflectionsBackgroundOverlayOpacity: source.pageBackgroundOverlayOpacity,
+    reflectionsBackgroundScrimOpacity: source.pageBackgroundScrimOpacity,
+  }
 }
 
-function closeModal() {
-  modalOpen.value = false
-}
+const section = computed(() => {
+  const fromSections = (page.value?.sections || []).find(
+    (entry) => entry?.sectionType === 'reflections',
+  )
+
+  if (fromSections) {
+    return {
+      ...mapPageBackgroundToSection(page.value),
+      ...fromSections,
+      reflectionsTitle: fromSections.reflectionsTitle?.trim()
+        || page.value?.title
+        || 'Reflections',
+    }
+  }
+
+  return {
+    sectionType: 'reflections',
+    reflectionsTitle: page.value?.title || 'Reflections',
+    reflectionsMaxItems: 10,
+    ...mapPageBackgroundToSection(page.value),
+  }
+})
 </script>
 
 <template>
-  <article
-    class="reflections-page"
-    :class="{ 'reflections-page--has-background': hasBackgroundVideo }"
-  >
-    <PageFixedBackground
-      :page="page"
-      title="Reflections background"
-    />
-
-    <div class="reflections-page__content">
-      <div class="wrapper">
-        <header class="reflections-page__header">
-          <div class="reflections-page__intro">
-            <h3 class="reflections-page__title h3 serif light">
-              {{ page?.title || 'Reflections' }}
-            </h3>
-          </div>
-
-          <button
-            type="button"
-            class="reflections-page__submit serif"
-            @click="openModal"
-          >
-            Leave a reflection
-          </button>
-        </header>
-      </div>
-
-    <div class="wrapper reflections-page__wall">
-      <ReflectionWall
-        :items="items"
-        :pending="pending"
-      />
-    </div>
-
-    <ReflectionSubmitModal
-      :open="modalOpen"
-      @close="closeModal"
-    />
-    </div>
-  </article>
+  <PageSectionReflections
+    v-if="page"
+    :section="section"
+    is-first-section
+    full-page
+  />
 </template>
-
-<style scoped>
-.reflections-page {
-  position: relative;
-  isolation: isolate;
-  min-height: 100dvh;
-  background: var(--background-color, #fff);
-  color: var(--text-color, #111010);
-  padding-bottom: var(--section-padding);
-}
-
-.reflections-page--has-background {
-  background: transparent;
-}
-
-.reflections-page__content {
-  position: relative;
-  z-index: 1;
-}
-
-.reflections-page__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: clamp(1rem, 3vw, 2rem);
-  padding-top: var(--page-top-offset);
-}
-
-.reflections-page__intro {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: left;
-}
-
-.reflections-page__title {
-  margin: 0;
-}
-
-.reflections-page__submit {
-  flex-shrink: 0;
-  border: 0;
-  padding: 0;
-  background: none;
-  color: inherit;
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 300;
-  letter-spacing: 0.04em;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.reflections-page__submit:hover {
-  opacity: 0.65;
-}
-
-.reflections-page__submit:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
-.reflections-page__wall {
-  padding-top: clamp(1rem, 2.5vw, 1.75rem);
-}
-</style>

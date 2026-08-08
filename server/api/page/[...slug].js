@@ -574,7 +574,22 @@ function pageSectionProjection() {
     reflectionsTitle,
     reflectionsIntro,
     reflectionsMaxItems,
-    reflectionsShowViewAll,
+    reflectionsBackgroundMediaType,
+    reflectionsBackgroundVideoSource,
+    reflectionsBackgroundVideo {
+      asset-> {
+        _id,
+        url,
+        mimeType,
+        metadata {
+          dimensions
+        }
+      }
+    },
+    reflectionsBackgroundLoopCloudflare720,
+    reflectionsBackgroundLoopCloudflare1080,
+    reflectionsBackgroundOverlayOpacity,
+    reflectionsBackgroundScrimOpacity,
     reflectionsPaddingTop,
     reflectionsPaddingBottom
   }`

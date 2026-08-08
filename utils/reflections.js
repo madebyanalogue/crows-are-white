@@ -57,6 +57,19 @@ export function formatReflectionLocation({ city, country }) {
   return ''
 }
 
+export function formatReflectionNameCity({ name, city }) {
+  const normalizedName = normalizeReflectionField(name)
+  const normalizedCity = normalizeReflectionField(city)
+
+  if (normalizedName && normalizedCity) {
+    return `${normalizedName}, ${normalizedCity}`
+  }
+
+  if (normalizedName) return normalizedName
+  if (normalizedCity) return normalizedCity
+  return ''
+}
+
 export function formatReflectionAttribution({ name, city, country }) {
   const normalizedName = normalizeReflectionField(name)
   const normalizedCity = normalizeReflectionField(city)

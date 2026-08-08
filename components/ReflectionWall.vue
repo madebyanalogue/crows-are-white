@@ -8,22 +8,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  limit: {
-    type: Number,
-    default: 0,
-  },
-})
-
-const displayItems = computed(() => {
-  const list = props.items ?? []
-  if (!props.limit || props.limit <= 0) return list
-  return list.slice(0, props.limit)
 })
 
 const openId = ref(null)
+const wallRef = ref(null)
 
 function openCard(id) {
   openId.value = id
+}
+
+function closeOpenCard() {
+  openId.value = null
 }
 
 function closeCard(id) {
@@ -31,16 +26,43 @@ function closeCard(id) {
     openId.value = null
   }
 }
+
+function handleDocumentClick(event) {
+  if (!openId.value) return
+
+  const openCardEl = wallRef.value?.querySelector('.reflection-card--open')
+  if (!openCardEl || openCardEl.contains(event.target)) return
+
+  closeOpenCard()
+}
+
+watch(openId, (id) => {
+  if (!import.meta.client) return
+
+  document.removeEventListener('click', handleDocumentClick)
+
+  if (!id) return
+
+  setTimeout(() => {
+    document.addEventListener('click', handleDocumentClick)
+  }, 0)
+})
+
+onUnmounted(() => {
+  if (!import.meta.client) return
+  document.removeEventListener('click', handleDocumentClick)
+})
 </script>
 
 <template>
   <div
+    ref="wallRef"
     class="reflection-wall"
-    :class="{ 'reflection-wall--loading': pending && !displayItems.length }"
+    :class="{ 'reflection-wall--loading': pending && !items.length }"
     aria-live="polite"
   >
     <div
-      v-for="(item, index) in displayItems"
+      v-for="(item, index) in items"
       :key="item._id"
       class="reflection-wall__cell"
     >
@@ -54,7 +76,7 @@ function closeCard(id) {
     </div>
 
     <p
-      v-if="!pending && !displayItems.length"
+      v-if="!pending && !items.length"
       class="reflection-wall__empty"
     >
       No reflections yet. Be the first to leave one.

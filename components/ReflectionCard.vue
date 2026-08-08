@@ -1,5 +1,5 @@
 <script setup>
-import { getReflectionPaperStyle, formatReflectionLocation } from '~/utils/reflections'
+import { getReflectionPaperStyle, formatReflectionNameCity } from '~/utils/reflections'
 
 const props = defineProps({
   item: {
@@ -21,10 +21,10 @@ const emit = defineEmits(['open', 'close'])
 const paperColor = computed(() => props.item?.paperColor || 'peach')
 const paperStyle = computed(() => getReflectionPaperStyle(paperColor.value))
 const reflectionText = computed(() => props.item?.reflection || '')
-const locationLabel = computed(() =>
-  formatReflectionLocation({
+const attributionLabel = computed(() =>
+  formatReflectionNameCity({
+    name: props.item?.name,
     city: props.item?.city,
-    country: props.item?.country,
   }),
 )
 const countryLabel = computed(() => props.item?.country?.trim() || '')
@@ -112,10 +112,10 @@ function handleClick() {
             {{ reflectionText }}
           </p>
           <footer
-            v-if="locationLabel"
+            v-if="attributionLabel"
             class="reflection-card__attribution"
           >
-            {{ locationLabel }}
+            {{ attributionLabel }}
           </footer>
           <p
             v-if="isPending"
