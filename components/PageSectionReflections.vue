@@ -191,6 +191,9 @@ function closeModal() {
 .page-section-reflections__content {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3.5vw, 5rem);
 }
 
 .page-section-reflections__header {
@@ -212,20 +215,11 @@ function closeModal() {
   white-space: nowrap;
 }
 
-.page-section-reflections__wall {
-  padding-top: clamp(1rem, 2.5vw, 1.75rem);
-}
-
-.page-section-reflections__watching-from {
-  padding-top: clamp(1.25rem, 3vw, 2rem);
-}
-
 .page-section-reflections__footer {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.85rem;
-  padding-top: clamp(1.25rem, 3vw, 2rem);
 }
 
 .page-section-reflections__action {

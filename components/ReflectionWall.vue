@@ -65,6 +65,7 @@ onUnmounted(() => {
       v-for="(item, index) in items"
       :key="item._id"
       class="reflection-wall__cell"
+      :class="{ 'reflection-wall__cell--open': openId === item._id }"
     >
       <ReflectionCard
         :item="item"
@@ -86,18 +87,26 @@ onUnmounted(() => {
 
 <style scoped>
 .reflection-wall {
+  --reflection-cell-aspect: 1.55;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.75rem, 1.8vw, 1.15rem);
+  gap: clamp(0.35rem, 1vw, 0.6rem) clamp(0.75rem, 1.8vw, 1.15rem);
 }
 
 .reflection-wall__cell {
-  aspect-ratio: 1;
+  position: relative;
+  z-index: 0;
+  aspect-ratio: var(--reflection-cell-aspect, 1.4);
   min-width: 0;
   min-height: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+}
+
+.reflection-wall__cell--open {
+  z-index: 2;
+  align-items: center;
 }
 
 @media (min-width: 700px) {

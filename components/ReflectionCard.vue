@@ -133,21 +133,34 @@ function handleClick() {
 .reflection-card {
   --reflection-paper-bg: #f1c1ae;
   --reflection-paper-text: #3a2a22;
+  position: relative;
+  z-index: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 0;
   --reflection-paper-bg: #f7f6f4 !important;
 }
 
+.reflection-card--open {
+  z-index: 1;
+  align-items: center;
+  height: 100%;
+}
+
+.reflection-card--open .reflection-card__toggle {
+  align-items: center;
+  height: 100%;
+}
+
 .reflection-card__toggle {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
-  height: 100%;
+  height: auto;
   padding: 0;
   border: 0;
   background: none;
