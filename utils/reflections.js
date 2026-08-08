@@ -1,9 +1,9 @@
 export const REFLECTION_PAPER_COLORS = [
-  { value: 'peach', label: 'Peach', hex: '#f1c1ae', text: '#3a2a22' },
-  { value: 'blush', label: 'Blush', hex: '#f5d3e2', text: '#3a2430' },
-  { value: 'butter', label: 'Butter', hex: '#fae8ac', text: '#3a3420' },
-  { value: 'rose', label: 'Rose', hex: '#d08b80', text: '#3a2420' },
-  { value: 'apricot', label: 'Apricot', hex: '#e0ac88', text: '#3a2c22' },
+  { value: 'peach', label: 'Peach', hex: '#ddc8bc', text: '#4a4038' },
+  { value: 'blush', label: 'Blush', hex: '#e4d2da', text: '#44363c' },
+  { value: 'butter', label: 'Butter', hex: '#ebe3cc', text: '#464038' },
+  { value: 'rose', label: 'Rose', hex: '#caa399', text: '#443630' },
+  { value: 'apricot', label: 'Apricot', hex: '#d9bdab', text: '#463e36' },
 ]
 
 export const REFLECTION_PAPER_COLOR_VALUES = new Set(
@@ -42,6 +42,19 @@ const MAX_REFLECTION_LENGTH = 500
 
 export function normalizeReflectionField(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
+}
+
+export function formatReflectionLocation({ city, country }) {
+  const normalizedCity = normalizeReflectionField(city)
+  const normalizedCountry = normalizeReflectionField(country)
+
+  if (normalizedCity && normalizedCountry) {
+    return `${normalizedCity}, ${normalizedCountry}`
+  }
+
+  if (normalizedCountry) return normalizedCountry
+  if (normalizedCity) return normalizedCity
+  return ''
 }
 
 export function formatReflectionAttribution({ name, city, country }) {

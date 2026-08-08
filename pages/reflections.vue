@@ -31,14 +31,7 @@ usePageColor(computed(() =>
 const modalOpen = ref(false)
 const { items, pending } = useReflections(500)
 
-const introText = computed(() => {
-  const richText = page.value?.richText
-  if (Array.isArray(richText) && richText.length) return null
-  return [
-    'Visitors from around the world have left their reflections.',
-    'Read a few, or leave one of your own.',
-  ]
-})
+const hasBackgroundVideo = computed(() => page.value?.pageBackgroundMediaType === 'video')
 
 function openModal() {
   modalOpen.value = true
@@ -50,43 +43,33 @@ function closeModal() {
 </script>
 
 <template>
-  <article class="reflections-page">
-    <div class="wrapper">
-      <header class="reflections-page__header page-content__intro page-content__intro--single grid-1">
-        <div class="page-content__intro-title text-center">
-          <h1 class="h1 serif light">
-            {{ page?.title || 'Reflections' }}
-          </h1>
-        </div>
+  <article
+    class="reflections-page"
+    :class="{ 'reflections-page--has-background': hasBackgroundVideo }"
+  >
+    <PageFixedBackground
+      :page="page"
+      title="Reflections background"
+    />
 
-        <SanityContent
-          v-if="page?.richText?.length"
-          :blocks="page.richText"
-          class="rich-text underline-links page-content__intro-copy max-central-content"
-        />
-        <div
-          v-else-if="introText"
-          class="reflections-page__intro max-central-content"
-        >
-          <p
-            v-for="(paragraph, index) in introText"
-            :key="index"
-          >
-            {{ paragraph }}
-          </p>
-        </div>
+    <div class="reflections-page__content">
+      <div class="wrapper">
+        <header class="reflections-page__header">
+          <div class="reflections-page__intro">
+            <h3 class="reflections-page__title h3 serif light">
+              {{ page?.title || 'Reflections' }}
+            </h3>
+          </div>
 
-        <div class="reflections-page__actions">
           <button
             type="button"
-            class="reflections-page__submit"
+            class="reflections-page__submit serif"
             @click="openModal"
           >
             Leave a reflection
           </button>
-        </div>
-      </header>
-    </div>
+        </header>
+      </div>
 
     <div class="wrapper reflections-page__wall">
       <ReflectionWall
@@ -99,45 +82,70 @@ function closeModal() {
       :open="modalOpen"
       @close="closeModal"
     />
+    </div>
   </article>
 </template>
 
 <style scoped>
 .reflections-page {
+  position: relative;
+  isolation: isolate;
   min-height: 100dvh;
   background: var(--background-color, #fff);
   color: var(--text-color, #111010);
   padding-bottom: var(--section-padding);
 }
 
-.reflections-page__intro {
-  text-align: center;
-  color: color-mix(in srgb, var(--text-color, #111010) 72%, transparent);
+.reflections-page--has-background {
+  background: transparent;
 }
 
-.reflections-page__intro p {
+.reflections-page__content {
+  position: relative;
+  z-index: 1;
+}
+
+.reflections-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 2rem);
+  padding-top: var(--page-top-offset);
+}
+
+.reflections-page__intro {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.reflections-page__title {
   margin: 0;
 }
 
-.reflections-page__intro p + p {
-  margin-top: 0.45rem;
-}
-
-.reflections-page__actions {
-  display: flex;
-  justify-content: center;
-  padding-top: 0.75rem;
-}
-
 .reflections-page__submit {
-  border: 1px solid var(--text-color, #111010);
-  border-radius: 999px;
-  padding: 0.72rem 1.2rem;
-  background: var(--text-color, #111010);
-  color: var(--background-color, #fff);
-  font: inherit;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 300;
   letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
   cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.reflections-page__submit:hover {
+  opacity: 0.65;
+}
+
+.reflections-page__submit:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .reflections-page__wall {

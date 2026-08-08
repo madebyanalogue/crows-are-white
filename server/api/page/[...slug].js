@@ -618,6 +618,22 @@ export default defineEventHandler(async (event) => {
       devBackgroundImage {
         asset-> { url }
       },
+      pageBackgroundMediaType,
+      pageBackgroundVideoSource,
+      pageBackgroundVideo {
+        asset-> {
+          _id,
+          url,
+          mimeType,
+          metadata {
+            dimensions
+          }
+        }
+      },
+      pageBackgroundLoopCloudflare720,
+      pageBackgroundLoopCloudflare1080,
+      pageBackgroundOverlayOpacity,
+      pageBackgroundScrimOpacity,
       richText[] ${portableTextProjection},
       richTextTwoColumns,
       richTextPaddingTop,

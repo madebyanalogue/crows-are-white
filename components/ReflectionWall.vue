@@ -39,14 +39,19 @@ function closeCard(id) {
     :class="{ 'reflection-wall--loading': pending && !displayItems.length }"
     aria-live="polite"
   >
-    <ReflectionCard
-      v-for="item in displayItems"
+    <div
+      v-for="(item, index) in displayItems"
       :key="item._id"
-      :item="item"
-      :open="openId === item._id"
-      @open="openCard"
-      @close="closeCard"
-    />
+      class="reflection-wall__cell"
+    >
+      <ReflectionCard
+        :item="item"
+        :index="index"
+        :open="openId === item._id"
+        @open="openCard"
+        @close="closeCard"
+      />
+    </div>
 
     <p
       v-if="!pending && !displayItems.length"
@@ -62,6 +67,15 @@ function closeCard(id) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(0.75rem, 1.8vw, 1.15rem);
+}
+
+.reflection-wall__cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (min-width: 700px) {

@@ -28,6 +28,10 @@ const props = defineProps({
     type: String,
     default: 'large',
   },
+  isFirstSection: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const SECTION_PADDING_VALUES = {
@@ -73,9 +77,11 @@ const fetchLimit = computed(() => {
 })
 
 const sectionStyle = computed(() => ({
-  paddingTop: SECTION_PADDING_VALUES[resolveSectionPadding(
-    props.section?.reflectionsPaddingTop ?? props.paddingTop,
-  )],
+  paddingTop: props.isFirstSection
+    ? 'var(--page-top-offset)'
+    : SECTION_PADDING_VALUES[resolveSectionPadding(
+      props.section?.reflectionsPaddingTop ?? props.paddingTop,
+    )],
   paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(
     props.section?.reflectionsPaddingBottom ?? props.paddingBottom,
   )],

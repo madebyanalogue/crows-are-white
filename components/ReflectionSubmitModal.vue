@@ -2,6 +2,7 @@
 import {
   REFLECTION_COUNTRIES,
   REFLECTION_PAPER_COLORS,
+  getReflectionPaperStyle,
 } from '~/utils/reflections'
 
 const props = defineProps({
@@ -27,6 +28,8 @@ const dialogRef = ref(null)
 const rendered = ref(false)
 
 const { addPendingItem } = useReflectionsPendingCache()
+
+const modalPaperStyle = computed(() => getReflectionPaperStyle(form.paperColor))
 
 watch(
   () => props.open,
@@ -114,6 +117,7 @@ onUnmounted(() => {
       <div
         ref="dialogRef"
         class="reflection-modal"
+        :style="modalPaperStyle"
         role="dialog"
         aria-modal="true"
         aria-labelledby="reflection-modal-title"
@@ -309,8 +313,8 @@ onUnmounted(() => {
   max-height: min(92dvh, 760px);
   overflow: auto;
   border-radius: 4px;
-  background: var(--background-color, #fff);
-  color: var(--text-color, #111010);
+  background: var(--reflection-paper-bg, #ddc8bc);
+  color: var(--reflection-paper-text, #4a4038);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
 }
 
@@ -334,7 +338,7 @@ onUnmounted(() => {
   height: 2rem;
   border: 0;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--text-color, #111010) 8%, transparent);
+  background: color-mix(in srgb, var(--reflection-paper-text, #4a4038) 8%, transparent);
   color: inherit;
   font-size: 1.35rem;
   line-height: 1;
@@ -378,16 +382,16 @@ onUnmounted(() => {
   text-transform: none;
   letter-spacing: 0.02em;
   font-size: 0.72rem;
-  color: color-mix(in srgb, var(--text-color, #111010) 58%, transparent);
+  color: color-mix(in srgb, var(--reflection-paper-text, #4a4038) 58%, transparent);
 }
 
 .reflection-modal__input,
 .reflection-modal__select,
 .reflection-modal__textarea {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--text-color, #111010) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--reflection-paper-text, #4a4038) 16%, transparent);
   border-radius: 2px;
-  background: #fff;
+  background: color-mix(in srgb, #fff 72%, var(--reflection-paper-bg, #ddc8bc));
   color: inherit;
   font: inherit;
   padding: 0.75rem 0.85rem;
@@ -425,15 +429,16 @@ onUnmounted(() => {
 .reflection-modal__color-label {
   display: block;
   padding: 0.55rem 0.45rem;
-  border: 1px solid color-mix(in srgb, var(--text-color, #111010) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--reflection-paper-text, #4a4038) 12%, transparent);
   border-radius: 2px;
   font-size: 0.72rem;
   text-align: center;
   letter-spacing: 0.04em;
+  color: var(--reflection-paper-text, #4a4038);
 }
 
 .reflection-modal__color-input:checked + .reflection-modal__color-label {
-  outline: 2px solid var(--text-color, #111010);
+  outline: 2px solid var(--reflection-paper-text, #4a4038);
   outline-offset: 1px;
 }
 
@@ -451,7 +456,7 @@ onUnmounted(() => {
 }
 
 .reflection-modal__button {
-  border: 1px solid color-mix(in srgb, var(--text-color, #111010) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--reflection-paper-text, #4a4038) 18%, transparent);
   border-radius: 999px;
   padding: 0.72rem 1.1rem;
   background: transparent;
@@ -461,8 +466,8 @@ onUnmounted(() => {
 }
 
 .reflection-modal__button--primary {
-  background: var(--text-color, #111010);
-  color: var(--background-color, #fff);
+  background: var(--reflection-paper-text, #4a4038);
+  color: var(--reflection-paper-bg, #ddc8bc);
   border-color: transparent;
 }
 

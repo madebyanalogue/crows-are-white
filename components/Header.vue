@@ -169,6 +169,7 @@ const menuOpen = ref(false)
 const heroMenuActive = useHeroMenuActive()
 const heroMenuFrosted = useHeroMenuFrosted()
 const pageTitle = useState('pageTitle', () => '')
+const awaitingPageTitle = ref(false)
 const { getMenuItemUrl } = useMenuLinks()
 const navInnerRef = ref(null)
 const pageNameWrapRef = ref(null)
@@ -245,6 +246,10 @@ const currentPageName = computed(() => {
   if (path === '/') return 'Home'
   if (isShopProductPath(path)) return 'Shop'
 
+  if (awaitingPageTitle.value) {
+    return labelFromMenu(path) || humanizePath(path)
+  }
+
   const title = pageTitle.value?.trim()
   if (title) return title
 
@@ -266,8 +271,12 @@ const copyrightLabel = computed(() => {
 })
 
 watch(() => route.path, () => {
-  pageTitle.value = ''
+  awaitingPageTitle.value = true
 }, { flush: 'pre' })
+
+watch(pageTitle, (title) => {
+  if (title?.trim()) awaitingPageTitle.value = false
+})
 
 function setDisplayedPageName(name) {
   killPageNameTween()
@@ -501,6 +510,7 @@ async function onRouteChange(fullPath, oldFullPath) {
   await dropPromise
 
   const nextName = await waitForTitleSettle()
+  awaitingPageTitle.value = false
   suppressPageNameIn = false
   await revealPageName(nextName)
 }

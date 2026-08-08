@@ -50,6 +50,7 @@ body {
   --wrapper-max-width: 2060px;
   /* Floating Neon-style header: top offset + bar height */
   --header-height: 112;
+  --page-top-offset: calc(var(--header-height) * 1px + clamp(1.5rem, 4vw, 2.5rem));
   --mobile-menu-font-size: 16px;
 
   --grid-columns: 12;

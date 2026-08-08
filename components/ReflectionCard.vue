@@ -1,5 +1,5 @@
 <script setup>
-import { getReflectionPaperStyle } from '~/utils/reflections'
+import { getReflectionPaperStyle, formatReflectionLocation } from '~/utils/reflections'
 
 const props = defineProps({
   item: {
@@ -10,6 +10,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  index: {
+    type: Number,
+    default: 0,
+  },
 })
 
 const emit = defineEmits(['open', 'close'])
@@ -17,8 +21,35 @@ const emit = defineEmits(['open', 'close'])
 const paperColor = computed(() => props.item?.paperColor || 'peach')
 const paperStyle = computed(() => getReflectionPaperStyle(paperColor.value))
 const reflectionText = computed(() => props.item?.reflection || '')
-const attribution = computed(() => props.item?.attribution || 'Anonymous')
+const locationLabel = computed(() =>
+  formatReflectionLocation({
+    city: props.item?.city,
+    country: props.item?.country,
+  }),
+)
+const countryLabel = computed(() => props.item?.country?.trim() || '')
 const isPending = computed(() => props.item?.isPending === true)
+
+const paperTilt = computed(() => {
+  const position = props.index + 1
+  if (position % 4 !== 0 && position % 5 !== 0) return null
+
+  const seed = String(props.item?._id ?? props.index)
+  let hash = 0
+
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i)
+    hash |= 0
+  }
+
+  const magnitude = 1 + (Math.abs(hash) % 3)
+  const sign = hash % 2 === 0 ? 1 : -1
+  return `${sign * magnitude}deg`
+})
+
+const paperSurfaceStyle = computed(() =>
+  paperTilt.value ? { transform: `rotate(${paperTilt.value})` } : undefined,
+)
 
 function openCard() {
   emit('open', props.item._id)
@@ -55,25 +86,36 @@ function handleClick() {
       <div
         class="reflection-card__paper"
         :class="{ 'reflection-card__paper--open': open }"
+        :style="paperSurfaceStyle"
       >
         <div
           v-if="!open"
           class="reflection-card__folded"
-          aria-hidden="true"
         >
-          <span class="reflection-card__fold-line" />
-          <span class="reflection-card__fold-corner" />
+          <span
+            class="reflection-card__fold-crease"
+            aria-hidden="true"
+          />
+          <p
+            v-if="countryLabel"
+            class="reflection-card__country"
+          >
+            {{ countryLabel }}
+          </p>
         </div>
 
         <div
           v-else
           class="reflection-card__inside"
         >
-          <blockquote class="reflection-card__quote serif">
-            “{{ reflectionText }}”
-          </blockquote>
-          <footer class="reflection-card__attribution">
-            {{ attribution }}
+          <p class="reflection-card__quote serif">
+            {{ reflectionText }}
+          </p>
+          <footer
+            v-if="locationLabel"
+            class="reflection-card__attribution"
+          >
+            {{ locationLabel }}
           </footer>
           <p
             v-if="isPending"
@@ -90,14 +132,22 @@ function handleClick() {
 <style scoped>
 .reflection-card {
   --reflection-paper-bg: #f1c1ae;
-  --reflection-paper-shadow: rgba(17, 16, 16, 0.12);
   --reflection-paper-text: #3a2a22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   min-height: 0;
+  --reflection-paper-bg: #eee !important;
 }
 
 .reflection-card__toggle {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  height: 100%;
   padding: 0;
   border: 0;
   background: none;
@@ -109,61 +159,69 @@ function handleClick() {
 
 .reflection-card__paper {
   position: relative;
-  min-height: clamp(7.5rem, 14vw, 9.5rem);
+  width: 96%;
+  aspect-ratio: 2 / 1;
   border-radius: 2px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.28), transparent 42%),
-    var(--reflection-paper-bg);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.45) inset,
-    0 10px 24px -12px var(--reflection-paper-shadow);
+  background: var(--reflection-paper-bg);
+  box-shadow: none;
   overflow: hidden;
-  transition:
-    min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.35s ease,
-    transform 0.35s ease;
+  container-type: size;
 }
 
 .reflection-card__paper--open {
-  min-height: clamp(11rem, 22vw, 16rem);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.45) inset,
-    0 18px 36px -16px var(--reflection-paper-shadow);
-  transform: translateY(-2px);
+  aspect-ratio: 1 / 1;
+  box-shadow: none;
+}
+
+.reflection-card__paper--open::before,
+.reflection-card__paper--open::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  border-top: 1px dotted color-mix(in srgb, var(--reflection-paper-text) 14%, transparent);
+  pointer-events: none;
+}
+
+.reflection-card__paper--open::before {
+  top: 25%;
+}
+
+.reflection-card__paper--open::after {
+  top: 75%;
 }
 
 .reflection-card__folded {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  height: 100%;
+  color: var(--reflection-paper-text);
 }
 
-.reflection-card__fold-line {
+.reflection-card__fold-crease {
   position: absolute;
-  inset: 18% 12% auto;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--reflection-paper-text) 18%, transparent) 20%,
-    color-mix(in srgb, var(--reflection-paper-text) 18%, transparent) 80%,
-    transparent
-  );
-  transform: rotate(-8deg);
+  inset: 0 0 50%;
+  border-bottom: 1px solid color-mix(in srgb, var(--reflection-paper-text) 18%, transparent);
+  /* border-radius: 0 0 18px 18px;
+  corner-shape: bevel; */
+  pointer-events: none;
 }
 
-.reflection-card__fold-corner {
+.reflection-card__country {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 2.4rem;
-  height: 2.4rem;
-  background: linear-gradient(
-    225deg,
-    color-mix(in srgb, var(--reflection-paper-text) 8%, white) 0%,
-    color-mix(in srgb, var(--reflection-paper-text) 14%, var(--reflection-paper-bg)) 100%
-  );
-  clip-path: polygon(100% 0, 0 0, 100% 100%);
-  box-shadow: -1px 1px 0 rgba(255, 255, 255, 0.35) inset;
+  z-index: 1;
+  inset: 50% 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 8%;
+  font-size: 14cqmin;
+  font-family: var(--serif);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-align: center;
 }
 
 .reflection-card__inside {
@@ -171,45 +229,41 @@ function handleClick() {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1rem;
-  min-height: inherit;
-  padding: clamp(1rem, 2.2vw, 1.35rem);
+  height: 100%;
+  min-height: 0;
+  padding: 8%;
   color: var(--reflection-paper-text);
-  animation: reflection-unfold 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes reflection-unfold {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  overflow-y: auto;
 }
 
 .reflection-card__quote {
   margin: 0;
-  font-size: clamp(0.95rem, 1.35vw, 1.08rem);
+  font-size: 8cqmin;
   font-weight: 300;
-  line-height: 1.45;
+  line-height: 1.3;
   letter-spacing: 0.01em;
+  text-align: center;
 }
 
 .reflection-card__attribution {
+  position: absolute;
+  right: 8%;
+  bottom: 8%;
   margin: 0;
-  font-size: clamp(0.72rem, 1vw, 0.82rem);
-  letter-spacing: 0.04em;
+  font-size: 5cqmin;
+  font-family: var(--serif-body);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   text-transform: none;
-  color: color-mix(in srgb, var(--reflection-paper-text) 72%, transparent);
+  color: inherit;
+  text-align: right;
 }
 
 .reflection-card__pending-note {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 7cqmin;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--reflection-paper-text) 58%, transparent);
@@ -218,15 +272,5 @@ function handleClick() {
 .reflection-card--pending .reflection-card__paper {
   outline: 1px dashed color-mix(in srgb, var(--reflection-paper-text) 24%, transparent);
   outline-offset: -4px;
-}
-
-@media (hover: hover) {
-  .reflection-card__toggle:hover .reflection-card__paper {
-    transform: translateY(-1px);
-  }
-
-  .reflection-card--open .reflection-card__toggle:hover .reflection-card__paper {
-    transform: translateY(-3px);
-  }
 }
 </style>

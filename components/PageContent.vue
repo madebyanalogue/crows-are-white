@@ -83,6 +83,7 @@
         <PageSectionReflections
           v-else-if="section.sectionType === 'reflections'"
           :section="section"
+          :is-first-section="index === 0"
         />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
