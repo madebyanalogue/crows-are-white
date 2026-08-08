@@ -45,6 +45,10 @@ const resolvedTitle = computed(() =>
   props.section?.reflectionsTitle?.trim() || props.title,
 )
 
+const watchingFromTitle = computed(() =>
+  props.section?.reflectionsWatchingFromTitle?.trim() || 'Watching From',
+)
+
 const initialVisibleCount = computed(() => {
   const value = Number(props.section?.reflectionsMaxItems)
   if (!Number.isFinite(value) || value <= 0) return 10
@@ -64,6 +68,9 @@ const sectionStyle = computed(() => ({
   paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(
     props.section?.reflectionsPaddingBottom ?? props.paddingBottom,
   )],
+  '--reflection-card-border': props.section?.reflectionsHideCardBorder === true
+    ? 'none'
+    : '1px solid var(--mid-border)',
 }))
 
 const modalOpen = ref(false)
@@ -122,6 +129,13 @@ function closeModal() {
         <h3 class="page-section-reflections__title h3 serif light">
           {{ resolvedTitle }}
         </h3>
+        <button
+          type="button"
+          class="page-section-reflections__action serif"
+          @click="openModal"
+        >
+          Share a reflection
+        </button>
       </div>
 
       <div class="page-section-reflections__wall wrapper">
@@ -131,22 +145,24 @@ function closeModal() {
         />
       </div>
 
-      <div class="page-section-reflections__footer wrapper">
+      <div
+        v-if="hasMore"
+        class="page-section-reflections__footer wrapper"
+      >
         <button
-          v-if="hasMore"
           type="button"
           class="page-section-reflections__action serif"
           @click="loadMore"
         >
           View more
         </button>
-        <button
-          type="button"
-          class="page-section-reflections__action serif"
-          @click="openModal"
-        >
-          Leave a reflection
-        </button>
+      </div>
+
+      <div class="page-section-reflections__watching-from wrapper">
+        <WatchingFromSection
+          :items="items"
+          :title="watchingFromTitle"
+        />
       </div>
     </div>
 
@@ -187,10 +203,21 @@ function closeModal() {
 .page-section-reflections__title {
   margin: 0;
   text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-section-reflections__header .page-section-reflections__action {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .page-section-reflections__wall {
   padding-top: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.page-section-reflections__watching-from {
+  padding-top: clamp(1.25rem, 3vw, 2rem);
 }
 
 .page-section-reflections__footer {

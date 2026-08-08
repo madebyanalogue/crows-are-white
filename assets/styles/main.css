@@ -9,6 +9,15 @@ body {
   background-image:none !important;
 }
 
+html.is-preloader-active {
+  background-color: #f0f0ed;
+}
+
+html.is-preloader-active body {
+  overflow: hidden;
+  background-color: #f0f0ed;
+}
+
 :root {
   --unit: 12px;
   --shop-bg: var(--background-color, #fff);
@@ -40,7 +49,7 @@ body {
   --background-color-rgb: var(--light-grey-rgb);
   --text-color-rgb: var(--black-rgb);
   --menu-background-color: var(--crema);
-  --menu-border-color: var(--menu-background-color);
+  --menu-border-color: #999;
   --menu-text-color: var(--obsidian);
   --menu-highlight-color: var(--arancio);
   --basket-icon-color: var(--menu-text-color);
@@ -110,7 +119,8 @@ body {
   --crayon: #f7f7f7;
   --crema: #F0F0ED;
   --racing-green: #0e3e27;
-  --aintree: #061c11;
+  
+  --mid-border:#bbb;
 
 
   --screenings-ink: #111010;
@@ -141,32 +151,13 @@ body {
   padding: 0;
 }
 
-@property --footer-fade-progress {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
-}
-
 html {
-  background-color: var(--footer-transition-background, var(--background-color));
+  background-color: var(--background-color);
 }
 
 body {
   color: var(--text-color);
-  background-color: var(--footer-transition-background, var(--background-color));
-}
-
-html.is-footer-background-fade {
-  --footer-transition-background: color-mix(
-    in srgb,
-    var(--footer-fade-start-bg, var(--background-color)) calc((1 - var(--footer-fade-progress)) * 100%),
-    var(--footer-fade-end-bg, var(--background-color)) calc(var(--footer-fade-progress) * 100%)
-  );
-  --footer-transition-footer-color: color-mix(
-    in srgb,
-    var(--footer-fade-start-color, var(--text-color)) calc((1 - var(--footer-fade-progress)) * 100%),
-    var(--footer-fade-end-color, var(--text-color)) calc(var(--footer-fade-progress) * 100%)
-  );
+  background-color: var(--background-color);
 }
 
 html.page-colors-transition-ready:not(.is-page-transitioning),
@@ -176,18 +167,6 @@ html.page-colors-transition-ready:not(.is-page-transitioning) body {
 
 html.is-page-transitioning,
 html.is-page-transitioning body {
-  transition: none;
-}
-
-html.is-footer-background-fade:not(.is-page-transitioning),
-html.is-footer-background-fade:not(.is-page-transitioning) body,
-html.is-footer-background-fade:not(.is-page-transitioning) .footer {
-  transition: background-color 0.6s ease, color 0.6s ease;
-}
-
-html.is-footer-background-fade.is-footer-background-fade-scrubbing,
-html.is-footer-background-fade.is-footer-background-fade-scrubbing body,
-html.is-footer-background-fade.is-footer-background-fade-scrubbing .footer {
   transition: none;
 }
 

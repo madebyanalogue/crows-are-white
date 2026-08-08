@@ -1,5 +1,5 @@
 import { resolveSanityAssetUrl } from '~/utils/sanity'
-import { extractPageChromeColors } from '~/utils/pageColors'
+import { extractPageChromeColors, extractSiteMenuColors } from '~/utils/pageColors'
 import {
   defaultFooterMenus,
   defaultMainMenu,
@@ -47,12 +47,18 @@ export function useSiteSettings() {
   const privacyMenu = computed(() => settings.value?.privacyMenu || defaultPrivacyMenu)
   const siteTitle = computed(() => settings.value?.title || 'Crows Are White')
   const preloaderDisabled = computed(() => settings.value?.disablePreloader === true)
+  const preloaderText = computed(() => settings.value?.preloaderText?.trim() || '')
+  const preloaderTextJa = computed(() => settings.value?.preloaderTextJa?.trim() || '')
+  const preloaderHoldSeconds = computed(() => {
+    const value = Number(settings.value?.preloaderHoldSeconds)
+    if (!Number.isFinite(value)) return 1.2
+    return Math.min(Math.max(value, 0), 30)
+  })
   const preloaderBackgroundColor = computed(() => settings.value?.preloaderBackgroundColor || 'crema')
   const preloaderForegroundColor = computed(() => settings.value?.preloaderForegroundColor || 'obsidian')
   const pageTransitionWipeColor = computed(() => settings.value?.pageTransitionWipeColor || 'aintree')
   const footerBackgroundColor = computed(() => settings.value?.footerBackgroundColor || 'crayon')
   const footerTextColor = computed(() => settings.value?.footerTextColor || 'racing-green')
-  const disableFooterBackgroundFade = computed(() => settings.value?.disableFooterBackgroundFade === true)
   const seoTitle = computed(() => settings.value?.seoTitle || settings.value?.title || 'Crows Are White')
   const seoDescription = computed(() => settings.value?.seoDescription || '')
   const facebookShareImage = computed(() => resolveSanityAssetUrl(settings.value?.facebookShareImage?.asset))
@@ -99,6 +105,7 @@ export function useSiteSettings() {
   const cartDisplayMode = computed(() =>
     settings.value?.cartDisplayMode === 'drawer' ? 'drawer' : 'dropdown',
   )
+  const menuColors = computed(() => extractSiteMenuColors(settings.value || {}))
   const shopColors = computed(() => extractPageChromeColors(settings.value?.shopColors || {}))
   const shopNewsletterBackground = computed(() => {
     const background = settings.value?.shopNewsletterBackground
@@ -140,12 +147,14 @@ export function useSiteSettings() {
     privacyMenu,
     siteTitle,
     preloaderDisabled,
+    preloaderText,
+    preloaderTextJa,
+    preloaderHoldSeconds,
     preloaderBackgroundColor,
     preloaderForegroundColor,
     pageTransitionWipeColor,
     footerBackgroundColor,
     footerTextColor,
-    disableFooterBackgroundFade,
     seoTitle,
     seoDescription,
     facebookShareImage,
@@ -168,6 +177,7 @@ export function useSiteSettings() {
     socialLinks,
     mailchimpAction,
     cartDisplayMode,
+    menuColors,
     shopColors,
     shopNewsletterBackground,
   }

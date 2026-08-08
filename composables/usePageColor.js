@@ -1,4 +1,10 @@
-import { getPageColorHtmlAttrs, pageBackgroundVar, extractPageChromeColors } from '~/utils/pageColors'
+import {
+  extractPageChromeColors,
+  extractSiteMenuColors,
+  getPageColorHtmlAttrs,
+  mergePageChromeColors,
+  pageBackgroundVar,
+} from '~/utils/pageColors'
 import { getCachedPageForRoute } from '~/utils/videoSectionFlags'
 import { isShopRoute, resolveShopChromeColors } from '~/utils/shopColors'
 
@@ -17,15 +23,25 @@ export function applyPendingPageColors() {
   }
 }
 
+function getSiteMenuColors(nuxtApp) {
+  const settings = nuxtApp?.payload?.data?.siteSettings
+    ?? nuxtApp?.static?.data?.siteSettings
+    ?? null
+
+  return extractSiteMenuColors(settings || {})
+}
+
 function getKnownPageColorsForPath(nuxtApp, path) {
   if (!path) return null
 
+  const siteMenu = getSiteMenuColors(nuxtApp)
+
   if (path === '/articles' || path === '/articles/') {
-    return extractPageChromeColors()
+    return mergePageChromeColors({}, siteMenu)
   }
 
   if (path.startsWith('/articles/')) {
-    return extractPageChromeColors({ pageColor: 'crayon' })
+    return mergePageChromeColors({ pageColor: 'crayon' }, siteMenu)
   }
 
   if (isShopRoute(path)) {
@@ -41,16 +57,16 @@ function getKnownPageColorsForPath(nuxtApp, path) {
       ?? nuxtApp?.static?.data?.siteSettings
       ?? null
 
-    return resolveShopChromeColors(
-      shopPage,
-      siteSettings?.shopColors,
+    return mergePageChromeColors(
+      resolveShopChromeColors(shopPage, siteSettings?.shopColors),
+      siteMenu,
     )
   }
 
   const page = getCachedPageForRoute(nuxtApp, path)
   if (!page) return null
 
-  return extractPageChromeColors(page)
+  return mergePageChromeColors(page, siteMenu)
 }
 
 export async function applyPageColorsFromRoute(path) {
@@ -65,9 +81,9 @@ export async function applyPageColorsFromRoute(path) {
     try {
       const slug = path === '/' ? 'home' : path.replace(/^\//, '')
       const pageColors = await $fetch(`/api/page-color/${slug}`)
-      colors = extractPageChromeColors(pageColors)
+      colors = mergePageChromeColors(pageColors, getSiteMenuColors(nuxtApp))
     } catch {
-      colors = extractPageChromeColors()
+      colors = mergePageChromeColors({}, getSiteMenuColors(nuxtApp))
     }
   }
 
@@ -78,10 +94,11 @@ export async function applyPageColorsFromRoute(path) {
 export function usePageColor(page) {
   const isTransitioning = useState('pageTransitioning', () => false)
   const { pending, applied, swapped } = useAppliedPageColors()
+  const { menuColors } = useSiteSettings()
 
   watchEffect(() => {
     const pageValue = unref(page)
-    const colors = extractPageChromeColors(pageValue)
+    const colors = mergePageChromeColors(pageValue, menuColors.value)
 
     pending.value = colors
 
@@ -106,18 +123,6 @@ export function usePageColorHead() {
 export function suspendPageColorTransitions() {
   if (!import.meta.client) return
   document.documentElement.classList.remove('page-colors-transition-ready')
-}
-
-export function resetFooterBackgroundFadeState() {
-  if (!import.meta.client) return
-
-  const root = document.documentElement
-  root.classList.remove('is-footer-background-fade', 'is-footer-background-fade-scrubbing')
-  root.style.removeProperty('--footer-fade-progress')
-  root.style.removeProperty('--footer-fade-start-bg')
-  root.style.removeProperty('--footer-fade-start-color')
-  root.style.removeProperty('--footer-fade-end-bg')
-  root.style.removeProperty('--footer-fade-end-color')
 }
 
 export function enablePageColorTransitions() {

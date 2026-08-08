@@ -2,7 +2,6 @@ import {
   applyPageColorsFromRoute,
   applyPendingPageColors,
   initPageColorTransitions,
-  resetFooterBackgroundFadeState,
   resumePageColorTransitions,
   suspendPageColorTransitions,
   usePageColorHead,
@@ -26,7 +25,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   async function syncDestinationPageState(path) {
     if (!path) return
 
-    resetFooterBackgroundFadeState()
     await applyPageColorsFromRoute(path)
     swapped.value = true
   }
@@ -39,7 +37,6 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   document.addEventListener('crows:page-transition-swap', () => {
     if (!swapped.value) {
-      resetFooterBackgroundFadeState()
       nuxtApp.runWithContext(() => applyPendingPageColors())
       swapped.value = true
     }

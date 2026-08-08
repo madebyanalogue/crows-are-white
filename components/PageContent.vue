@@ -84,6 +84,7 @@
           v-else-if="section.sectionType === 'reflections'"
           :section="section"
           :is-first-section="index === 0"
+          :full-page="sections.length === 1"
         />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->

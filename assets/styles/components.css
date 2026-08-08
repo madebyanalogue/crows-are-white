@@ -11,14 +11,11 @@
 /* Source: app.vue */
 #app.is--hidden {
   visibility: hidden;
-  opacity: 0;
   pointer-events: none;
 }
 
 #app:not(.is--hidden) {
   visibility: visible;
-  opacity: 1;
-  transition: opacity 0.2s ease-in;
 }
 
 .page-transition-outer,
@@ -199,114 +196,75 @@ a.trustpilot-stars {
   inset: 0;
   z-index: 99999;
   overflow: hidden;
-  background: transparent;
+  pointer-events: auto;
+  transform-origin: top center;
+  will-change: transform;
+  background: #f0f0ed;
 }
 
-.preloader__clipper {
+.preloader__background {
   position: absolute;
-  top: 0;
-  height: 100%;
+  inset: 0;
   display: flex;
   align-items: center;
-  background: var(--preloader-bg, var(--crema));
-  color: var(--preloader-fg, var(--obsidian));
-  overflow: clip;
-  z-index: 2;
-  will-change: clip-path;
-  clip-path: inset(0 0 0 0);
-}
-
-.preloader__clipper--left {
-  left: 0;
-  width: 50%;
-  justify-content: flex-end;
+  justify-content: center;
   padding: var(--wrapper-padding);
+  background: #f0f0ed;
+  opacity: 1;
 }
 
-.preloader__clipper--right {
-  right: 0;
-  width: 50%;
-  justify-content: flex-start;
-  padding: var(--wrapper-padding);
+.preloader__text-box {
+  opacity: 0;
+  position: relative;
+  padding: 1rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
+  outline-offset: 5px;
+  color: var(--obsidian);
+  text-align: center;
 }
 
-.preloader__logotype {
-  width: min(36vw, 18rem);
-  height: auto;
+.preloader__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-family: var(--serif-body);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
 }
 
-.preloader__icon {
-  width: min(28vw, 9rem);
-  height: auto;
-}
-
-.preloader__loader {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  width: 2px;
-  height: 140px;
-  pointer-events: none;
-}
-
-.preloader__loader-track {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--preloader-fg, var(--obsidian)) 20%, transparent);
-  border-radius: 2px;
-}
-
-.preloader__loader-bar {
-  position: absolute;
-  inset: 0;
-  background: var(--preloader-fg, var(--obsidian));
-  border-radius: 2px;
-  transform: scaleY(0);
-  transform-origin: 50% 100%;
-  will-change: transform;
-}
-
-.preloader__mobile-logo {
-  position: absolute;
-  top: 50%;
-  z-index: 4;
-  display: none;
-  width: min(60vw, 20rem);
-  color: var(--preloader-fg, var(--obsidian));
-  pointer-events: none;
-}
-
-/* Each half is centred on the screen's vertical centre line so that,
-   together, they form one centred logotype. Each clipper masks its half. */
-.preloader__mobile-logo--left {
-  left: 100%;
-  transform: translate(-50%, -50%);
-}
-
-.preloader__mobile-logo--right {
-  left: 0;
-  transform: translate(-50%, -50%);
-}
-
-.preloader__mobile-logotype {
+.preloader__text-line {
   display: block;
-  width: 100%;
-  height: auto;
 }
 
-@media (max-width: 999px) {
-  .preloader__logo-wrap {
-    visibility: hidden;
+.preloader__text-separator {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .preloader__text {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0;
+    white-space: nowrap;
   }
 
-  .preloader__loader {
-    display: none;
+  .preloader__text-line {
+    display: inline;
   }
 
-  .preloader__mobile-logo {
-    display: block;
+  .preloader__text-separator {
+    display: inline-block;
+    width: 1px;
+    height: 0.95em;
+    margin: 0 1rem;
+    background: color-mix(in srgb, var(--obsidian) 24%, transparent);
+    vertical-align: middle;
   }
 }
 
@@ -4074,8 +4032,8 @@ body.header-mobile-open {
 .footer {
   position: relative;
   z-index: 1;
-  background: var(--footer-transition-background, var(--footer-background-color));
-  color: var(--footer-transition-footer-color, var(--footer-color));
+  background: var(--footer-background-color);
+  color: var(--footer-color);
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -4096,13 +4054,13 @@ body.header-mobile-open {
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--footer-transition-footer-color, var(--footer-color));
+  color: var(--footer-color);
   display: block;
 }
 
 .footer__icon :global(.crows-icon__shape) {
   fill: none;
-  stroke: var(--footer-transition-footer-color, var(--footer-color));
+  stroke: var(--footer-color);
   stroke-width: 0.85;
   vector-effect: non-scaling-stroke;
 }
@@ -4188,7 +4146,7 @@ body.header-mobile-open {
 .strapline--container {
   display: flex;
   flex-direction: column;
-  --trustpilot-wordmark-fill: var(--footer-transition-footer-color, var(--footer-color));
+  --trustpilot-wordmark-fill: var(--footer-color);
 }
 
 .footer-icon-container {

@@ -1,4 +1,5 @@
 import {
+  DEFAULT_MENU_BORDER_COLOR,
   DEFAULT_MENU_HIGHLIGHT_COLOR,
   getPageColorVars,
   normalizeColorValue,
@@ -44,7 +45,7 @@ function applyHeroMenuBorderColor(result, heroMenuBorderColor) {
   if (heroMenuBorderColor) {
     result['--menu-border-color'] = toCssColor(
       heroMenuBorderColor,
-      DEFAULT_MENU_HIGHLIGHT_COLOR,
+      DEFAULT_MENU_BORDER_COLOR,
     )
   }
 }
@@ -116,14 +117,6 @@ export const HERO_MENU_CSS_VARS = [
   '--basket-icon-color',
 ]
 
-export function heroSectionHasMenuChrome(section = {}) {
-  const {
-    heroMenuFrosted,
-    heroMenuBackgroundColor,
-    heroMenuTextColor,
-    heroMenuBorderColor,
-  } = extractHeroChromeColors(section)
-
-  return heroMenuFrosted
-    || Boolean(heroMenuBackgroundColor || heroMenuTextColor || heroMenuBorderColor)
+export function heroSectionHasMenuChrome() {
+  return false
 }

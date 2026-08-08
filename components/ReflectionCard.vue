@@ -139,7 +139,7 @@ function handleClick() {
   width: 100%;
   height: 100%;
   min-height: 0;
-  --reflection-paper-bg: #eee !important;
+  --reflection-paper-bg: #f7f6f4 !important;
 }
 
 .reflection-card__toggle {
@@ -161,11 +161,12 @@ function handleClick() {
   position: relative;
   width: 96%;
   aspect-ratio: 2 / 1;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--reflection-paper-bg);
   box-shadow: none;
   overflow: hidden;
   container-type: size;
+  border: var(--reflection-card-border, 1px solid var(--mid-border));
 }
 
 .reflection-card__paper--open {
@@ -180,7 +181,7 @@ function handleClick() {
   left: 0;
   right: 0;
   z-index: 0;
-  border-top: 1px dotted color-mix(in srgb, var(--reflection-paper-text) 14%, transparent);
+  border-top: 0.035em dashed color-mix(in srgb, var(--reflection-paper-text) 40%, transparent);
   pointer-events: none;
 }
 

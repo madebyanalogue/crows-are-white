@@ -3,43 +3,38 @@
     v-show="showPreloader"
     ref="preloaderEl"
     class="preloader"
-    :style="preloaderStyle"
     data-loading-container
   >
-    <div ref="clipperLeftEl" class="preloader__clipper preloader__clipper--left">
-      <div ref="logotypeEl" class="preloader__logo-wrap" style="opacity: 0">
-        <span class="preloader__wordmark">{{ siteTitle }}</span>
+    <div
+      ref="backgroundEl"
+      class="preloader__background"
+    >
+      <div
+        v-if="hasPreloaderText"
+        ref="textBoxEl"
+        class="preloader__text-box"
+      >
+        <p class="preloader__text">
+          <span
+            v-if="preloaderText"
+            class="preloader__text-line"
+          >{{ preloaderText }}</span>
+          <span
+            v-if="preloaderText && preloaderTextJa"
+            class="preloader__text-separator"
+            aria-hidden="true"
+          />
+          <span
+            v-if="preloaderTextJa"
+            class="preloader__text-line preloader__text-line--ja"
+          >{{ preloaderTextJa }}</span>
+        </p>
       </div>
-      <div ref="mobileLogoLeftEl" class="preloader__mobile-logo preloader__mobile-logo--left" style="opacity: 0">
-        <span class="preloader__mobile-wordmark">{{ siteTitle }}</span>
-      </div>
-    </div>
-
-    <div ref="clipperRightEl" class="preloader__clipper preloader__clipper--right">
-      <div ref="iconEl" class="preloader__logo-wrap" style="opacity: 0">
-        <CrowsIcon class="preloader__icon" aria-hidden="true" />
-      </div>
-      <div ref="mobileLogoRightEl" class="preloader__mobile-logo preloader__mobile-logo--right" style="opacity: 0">
-        <span class="preloader__mobile-wordmark">{{ siteTitle }}</span>
-      </div>
-    </div>
-
-    <div ref="loaderEl" class="preloader__loader">
-      <div class="preloader__loader-track" aria-hidden="true" />
-      <div ref="loaderBarEl" class="preloader__loader-bar" />
     </div>
   </div>
 </template>
 
 <script setup>
-import {
-  CONTENT_REVEAL_DURATION,
-  TRANSITION_EASE,
-} from '~/composables/usePageTransition'
-import { toCssColor, DEFAULT_MENU_BACKGROUND_COLOR } from '~/utils/pageColors'
-
-const PRELOADER_FADE_DURATION = CONTENT_REVEAL_DURATION
-
 const props = defineProps({
   enabled: {
     type: Boolean,
@@ -48,51 +43,19 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['preloader-complete', 'preloader-ready'])
-const { preloaderBackgroundColor, preloaderForegroundColor, siteTitle } = useSiteSettings()
+
+const { preloaderText, preloaderTextJa, preloaderHoldSeconds } = useSiteSettings()
+
+const hasPreloaderText = computed(() =>
+  Boolean(preloaderText.value || preloaderTextJa.value),
+)
 
 const showPreloader = ref(props.enabled)
 const preloaderEl = ref(null)
-const clipperLeftEl = ref(null)
-const clipperRightEl = ref(null)
-const loaderEl = ref(null)
-const loaderBarEl = ref(null)
-const logotypeEl = ref(null)
-const iconEl = ref(null)
-const mobileLogoLeftEl = ref(null)
-const mobileLogoRightEl = ref(null)
+const backgroundEl = ref(null)
+const textBoxEl = ref(null)
 
 let animationTimeline = null
-let loaderHidden = false
-
-const preloaderStyle = computed(() => ({
-  '--preloader-bg': toCssColor(preloaderBackgroundColor.value, DEFAULT_MENU_BACKGROUND_COLOR),
-  '--preloader-fg': toCssColor(preloaderForegroundColor.value, 'obsidian'),
-}))
-
-function applyClipPaths(leftAmount, rightAmount) {
-  if (clipperLeftEl.value) {
-    clipperLeftEl.value.style.clipPath = `inset(0 ${leftAmount}% 0 0)`
-  }
-  if (clipperRightEl.value) {
-    clipperRightEl.value.style.clipPath = `inset(0 0 0 ${rightAmount}%)`
-  }
-}
-
-function hideLoaderIfClipStarted(leftAmount, rightAmount) {
-  if (loaderHidden || !loaderEl.value) return
-
-  const leftClippedPx = (leftAmount / 100) * (clipperLeftEl.value?.offsetWidth || 0)
-  const rightClippedPx = (rightAmount / 100) * (clipperRightEl.value?.offsetWidth || 0)
-
-  if (leftClippedPx > 1 || rightClippedPx > 1) {
-    loaderHidden = true
-    window.gsap?.to(loaderEl.value, {
-      autoAlpha: 0,
-      duration: 0.1,
-      overwrite: true,
-    })
-  }
-}
 
 function resetScrollToTop() {
   window.scrollTo(0, 0)
@@ -136,10 +99,16 @@ function lockScroll() {
 
 let preloaderCompleteSignaled = false
 
+function clearPreloaderShell() {
+  document.documentElement.classList.remove('is-preloader-active')
+  document.documentElement.style.backgroundColor = ''
+}
+
 function signalPreloaderComplete() {
   if (preloaderCompleteSignaled) return
   preloaderCompleteSignaled = true
 
+  clearPreloaderShell()
   unlockScroll()
   document.body.classList.add('preloader-complete')
   document.dispatchEvent(new CustomEvent('preloader-complete'))
@@ -152,6 +121,7 @@ function finishPreloader() {
 
 function skipPreloader() {
   showPreloader.value = false
+  clearPreloaderShell()
   unlockScroll()
   document.body.classList.add('preloader-ready')
   emit('preloader-ready')
@@ -163,123 +133,105 @@ function markPreloaderReady() {
   document.body.classList.add('preloader-ready')
 }
 
-async function initPreloaderAnimation() {
-  const gsap = window.gsap
-  if (!gsap || !preloaderEl.value) return
+function initPreloaderAnimation(gsap) {
+  const textFadeInDuration = 1.8
+  const textHoldDuration = preloaderHoldSeconds.value
+  const textFadeOutDuration = 0.45
+  const wipeDuration = 0.4
 
-  loaderHidden = false
-  lockScroll()
-  markPreloaderReady()
+  gsap.set(preloaderEl.value, {
+    scaleY: 1,
+    scaleX: 1,
+    transformOrigin: 'top center',
+  })
 
-  const isMobile = window.matchMedia('(max-width: 999px)').matches
+  gsap.set(backgroundEl.value, { opacity: 1 })
 
-  if (isMobile) {
-    initMobileAnimation(gsap)
+  if (textBoxEl.value) {
+    gsap.set(textBoxEl.value, { opacity: 0 })
+  }
+
+  animationTimeline = gsap.timeline({
+    onComplete: finishPreloader,
+  })
+
+  let cursor = 0
+
+  if (textBoxEl.value) {
+    animationTimeline.to(textBoxEl.value, {
+      opacity: 1,
+      duration: textFadeInDuration,
+      ease: 'power2.out',
+      onStart: markPreloaderReady,
+    }, cursor)
+
+    cursor += textFadeInDuration + textHoldDuration
+
+    animationTimeline.to(textBoxEl.value, {
+      opacity: 0,
+      duration: textFadeOutDuration,
+      ease: 'power2.inOut',
+    }, cursor)
+
+    cursor += textFadeOutDuration
+  } else {
+    markPreloaderReady()
+    cursor += textHoldDuration
+  }
+
+  animationTimeline.to(preloaderEl.value, {
+    scaleY: 0,
+    scaleX: 1,
+    transformOrigin: 'top center',
+    duration: wipeDuration,
+    ease: 'none',
+    onStart: () => {
+      if (preloaderEl.value) {
+        preloaderEl.value.style.pointerEvents = 'none'
+      }
+      signalPreloaderComplete()
+    },
+  }, cursor)
+}
+
+async function waitForGsap() {
+  if (window.gsap) return window.gsap
+
+  return new Promise((resolve) => {
+    const check = () => {
+      if (window.gsap) {
+        resolve(window.gsap)
+        return
+      }
+      requestAnimationFrame(check)
+    }
+    check()
+  })
+}
+
+async function initPreloader() {
+  const gsap = await waitForGsap()
+  if (!gsap || !preloaderEl.value || !backgroundEl.value) return
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    skipPreloader()
     return
   }
 
-  const barFillDuration = 1
-  const barFillStart = 0.15
-  const barFillEnd = barFillStart + barFillDuration
-  const revealDuration = 2
-  const revealDelay = barFillEnd + 0.4
-  const fadeStart = revealDelay + revealDuration
-
-  gsap.set(loaderBarEl.value, {
-    scaleY: 0,
-    transformOrigin: '50% 100%',
-  })
-  applyClipPaths(0, 0)
-
-  const clipAmounts = { left: 0, right: 0 }
-
-  animationTimeline = gsap.timeline({
-    onComplete: finishPreloader,
-  })
-
-  animationTimeline.to([logotypeEl.value, iconEl.value], {
-    opacity: 1,
-    duration: 1,
-    ease: 'none',
-  })
-
-  animationTimeline.to(loaderBarEl.value, {
-    scaleY: 1,
-    duration: barFillDuration,
-    ease: 'power3.in',
-  }, barFillStart)
-
-  animationTimeline.to(clipAmounts, {
-    left: 100,
-    right: 100,
-    duration: revealDuration,
-    ease: 'power4.inOut',
-    onUpdate: () => {
-      applyClipPaths(clipAmounts.left, clipAmounts.right)
-      hideLoaderIfClipStarted(clipAmounts.left, clipAmounts.right)
-    },
-  }, revealDelay)
-
-  animationTimeline.to(preloaderEl.value, {
-    autoAlpha: 0,
-    duration: PRELOADER_FADE_DURATION,
-    ease: TRANSITION_EASE,
-    pointerEvents: 'none',
-    onStart: signalPreloaderComplete,
-  }, fadeStart)
+  initPreloaderAnimation(gsap)
 }
 
-function initMobileAnimation(gsap) {
-  const logoFadeDuration = 1.2
-  const logoHold = 0.4
-  const revealDuration = 2
-  const revealDelay = logoFadeDuration + logoHold
-  const fadeStart = revealDelay + revealDuration
-
-  applyClipPaths(0, 0)
-
-  const clipAmounts = { left: 0, right: 0 }
-
-  animationTimeline = gsap.timeline({
-    onComplete: finishPreloader,
-  })
-
-  animationTimeline.to([mobileLogoLeftEl.value, mobileLogoRightEl.value], {
-    opacity: 1,
-    duration: logoFadeDuration,
-    ease: 'power2.out',
-  })
-
-  animationTimeline.to(clipAmounts, {
-    left: 100,
-    right: 100,
-    duration: revealDuration,
-    ease: 'power4.inOut',
-    onUpdate: () => {
-      applyClipPaths(clipAmounts.left, clipAmounts.right)
-    },
-  }, revealDelay)
-
-  animationTimeline.to(preloaderEl.value, {
-    autoAlpha: 0,
-    duration: PRELOADER_FADE_DURATION,
-    ease: TRANSITION_EASE,
-    pointerEvents: 'none',
-    onStart: signalPreloaderComplete,
-  }, fadeStart)
-}
-
-onMounted(() => {
+onMounted(async () => {
   if (!props.enabled) {
     skipPreloader()
     return
   }
 
   lockScroll()
+  document.documentElement.classList.add('is-preloader-active')
 
-  nextTick(() => {
-    setTimeout(initPreloaderAnimation, 100)
-  })
+  await nextTick()
+  initPreloader()
 })
 
 onUnmounted(() => {
@@ -294,124 +246,75 @@ onUnmounted(() => {
   inset: 0;
   z-index: 99999;
   overflow: hidden;
-  background: transparent;
+  pointer-events: auto;
+  transform-origin: top center;
+  will-change: transform;
+  background: #f0f0ed;
 }
 
-.preloader__clipper {
+.preloader__background {
   position: absolute;
-  top: 0;
-  height: 100%;
+  inset: 0;
   display: flex;
   align-items: center;
-  background: var(--preloader-bg, var(--crema));
-  color: var(--preloader-fg, var(--obsidian));
-  overflow: clip;
-  z-index: 2;
-  will-change: clip-path;
-  clip-path: inset(0 0 0 0);
-}
-
-.preloader__clipper--left {
-  left: 0;
-  width: 50%;
-  justify-content: flex-end;
+  justify-content: center;
   padding: var(--wrapper-padding);
+  background: #f0f0ed;
+  opacity: 1;
 }
 
-.preloader__clipper--right {
-  right: 0;
-  width: 50%;
-  justify-content: flex-start;
-  padding: var(--wrapper-padding);
+.preloader__text-box {
+  opacity: 0;
+  position: relative;
+  padding: 1rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
+  outline-offset: 5px;
+  color: var(--obsidian);
+  text-align: center;
 }
 
-.preloader__wordmark {
-  display: block;
-  font-family: var(--serif);
-  font-size: clamp(1.25rem, 3vw, 2rem);
+.preloader__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-family: var(--serif-body);
+  font-size: 17px;
   font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
 }
 
-.preloader__icon {
-  width: min(28vw, 9rem);
-  height: auto;
-}
-
-.preloader__mobile-wordmark {
+.preloader__text-line {
   display: block;
-  width: max-content;
-  font-family: var(--serif);
-  font-size: clamp(1.5rem, 8vw, 2.5rem);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  white-space: nowrap;
 }
 
-.preloader__loader {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  width: 2px;
-  height: 140px;
-  pointer-events: none;
-}
-
-.preloader__loader-track {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--preloader-fg, var(--obsidian)) 20%, transparent);
-  border-radius: 2px;
-}
-
-.preloader__loader-bar {
-  position: absolute;
-  inset: 0;
-  background: var(--preloader-fg, var(--obsidian));
-  border-radius: 2px;
-  transform: scaleY(0);
-  transform-origin: 50% 100%;
-  will-change: transform;
-}
-
-.preloader__mobile-logo {
-  position: absolute;
-  top: 50%;
-  z-index: 4;
+.preloader__text-separator {
   display: none;
-  width: min(60vw, 20rem);
-  color: var(--preloader-fg, var(--obsidian));
-  pointer-events: none;
 }
 
-/* Each half is centred on the screen's vertical centre line so that,
-   together, they form one centred logotype. Each clipper masks its half. */
-.preloader__mobile-logo--left {
-  left: 100%;
-  transform: translate(-50%, -50%);
-}
-
-.preloader__mobile-logo--right {
-  left: 0;
-  transform: translate(-50%, -50%);
-}
-
-@media (max-width: 999px) {
-  .preloader__logo-wrap {
-    visibility: hidden;
+@media (min-width: 700px) {
+  .preloader__text {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0;
+    white-space: nowrap;
   }
 
-  .preloader__loader {
-    display: none;
+  .preloader__text-line {
+    display: inline;
   }
 
-  .preloader__mobile-logo {
-    display: block;
+  .preloader__text-separator {
+    display: inline-block;
+    width: 1px;
+    height: 0.95em;
+    margin: 0 1rem;
+    background: color-mix(in srgb, var(--obsidian) 24%, transparent);
+    vertical-align: middle;
   }
 }
 </style>

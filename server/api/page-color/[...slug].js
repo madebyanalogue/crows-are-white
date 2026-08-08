@@ -11,12 +11,7 @@ export default defineEventHandler(async (event) => {
       `*[${pageDocumentFilter()}][0] {
         showFooter,
         ${colorField('pageColor')},
-        ${colorField('pageTextColor')},
-        ${colorField('menuBackgroundColor')},
-        ${colorField('menuBorderColor')},
-        ${colorField('menuTextColor')},
-        ${colorField('menuHighlightColor')},
-        ${colorField('basketIconColor')}
+        ${colorField('pageTextColor')}
       }`,
       { slug },
       sanityFetchOptions({ timeout: 10000 }),

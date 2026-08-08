@@ -1,11 +1,12 @@
 import { resolveShopChromeColors } from '~/utils/shopColors'
+import { mergePageChromeColors } from '~/utils/pageColors'
 
 export function useShopChromeColorsState() {
   return useState('shopChromeColors', () => null)
 }
 
 export function useShopPageColor(shopPageSource) {
-  const { shopColors: siteShopColors } = useSiteSettings()
+  const { shopColors: siteShopColors, menuColors } = useSiteSettings()
   const shopChromeColorsState = useShopChromeColorsState()
 
   const { data: shopPageColors } = useAsyncData(
@@ -23,9 +24,12 @@ export function useShopPageColor(shopPageSource) {
     },
   )
 
-  const colors = computed(() => resolveShopChromeColors(
-    unref(shopPageSource) || shopPageColors.value,
-    siteShopColors.value,
+  const colors = computed(() => mergePageChromeColors(
+    resolveShopChromeColors(
+      unref(shopPageSource) || shopPageColors.value,
+      siteShopColors.value,
+    ),
+    menuColors.value,
   ))
 
   watchEffect(() => {

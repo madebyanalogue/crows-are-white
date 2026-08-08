@@ -18,6 +18,7 @@ export const PAGE_TEXT_COLOR_OPTIONS = [
 
 export const DEFAULT_PAGE_COLOR = 'fuji'
 export const DEFAULT_MENU_BACKGROUND_COLOR = 'crema'
+export const DEFAULT_MENU_BORDER_COLOR = '#999'
 export const DEFAULT_MENU_HIGHLIGHT_COLOR = 'arancio'
 export const DEFAULT_PAGE_TRANSITION_WIPE_COLOR = 'aintree'
 
@@ -144,6 +145,35 @@ export function extractPageChromeColors(source = {}) {
   }
 }
 
+export function extractSiteMenuColors(settings = {}) {
+  const fromMenu = settings?.menuColors || {}
+  const legacyShop = settings?.shopColors || {}
+
+  return extractPageChromeColors({
+    menuBackgroundColor: legacyShop.menuBackgroundColor,
+    menuBorderColor: legacyShop.menuBorderColor,
+    menuTextColor: legacyShop.menuTextColor,
+    menuHighlightColor: legacyShop.menuHighlightColor,
+    basketIconColor: legacyShop.basketIconColor,
+    ...fromMenu,
+  })
+}
+
+export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
+  const page = extractPageChromeColors(pageSource)
+  const siteMenu = extractPageChromeColors(siteMenuSource)
+
+  return {
+    pageColor: page.pageColor,
+    pageTextColor: page.pageTextColor,
+    menuBackgroundColor: siteMenu.menuBackgroundColor,
+    menuBorderColor: siteMenu.menuBorderColor,
+    menuTextColor: siteMenu.menuTextColor,
+    menuHighlightColor: siteMenu.menuHighlightColor,
+    basketIconColor: siteMenu.basketIconColor,
+  }
+}
+
 export function getPageColorVars(colors = {}) {
   const {
     pageColor,
@@ -159,8 +189,8 @@ export function getPageColorVars(colors = {}) {
   const text = toCssColor(resolvePageTextColor(pageTextColor, pageColor), 'obsidian')
   const menuBackground = toCssColor(menuBackgroundColor, DEFAULT_MENU_BACKGROUND_COLOR)
   const menuBorder = menuBorderColor
-    ? toCssColor(menuBorderColor, DEFAULT_MENU_BACKGROUND_COLOR)
-    : menuBackground
+    ? toCssColor(menuBorderColor, DEFAULT_MENU_BORDER_COLOR)
+    : DEFAULT_MENU_BORDER_COLOR
   const menuText = toCssColor(
     resolvePageTextColor(menuTextColor, menuBackgroundColor || DEFAULT_MENU_BACKGROUND_COLOR),
     'obsidian',

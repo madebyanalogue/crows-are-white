@@ -30,6 +30,13 @@ export default defineNuxtConfig({
           content: 'Crows Are White — documentary directed by Ahsen Nadeem. Official film website.',
         },
       ],
+      script: [
+        {
+          key: 'preloader-shell',
+          tagPosition: 'head',
+          innerHTML: `(function(){var p=location.pathname;if(p==='/'||p===''){document.documentElement.classList.add('is-preloader-active');document.documentElement.style.backgroundColor='#f0f0ed';}})();`,
+        },
+      ],
       link: [
         { rel: 'preconnect', href: 'https://use.typekit.net', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://use.typekit.net/qfm4jik.css' },

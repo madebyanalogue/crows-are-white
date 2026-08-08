@@ -683,7 +683,7 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 0;
   background-color: var(--menu-background-color, var(--crema));
-  border: 1px solid var(--menu-border-color, var(--menu-background-color, var(--crema)));
+  border: 3px double var(--menu-border-color, #999);
   pointer-events: none;
   transition: inset 0.32s ease;
 }
@@ -705,7 +705,7 @@ onBeforeUnmount(() => {
   background-color: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(20px);
-  border-color: var(--menu-border-color, transparent);
+  border-color: var(--menu-border-color, #999);
 }
 
 .site-header__bar {

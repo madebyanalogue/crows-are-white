@@ -1,12 +1,10 @@
 <template>
   <div id="__crows-app">
-    <ClientOnly>
-      <Preloader
-        :enabled="shouldRunPreloader"
-        @preloader-complete="onPreloaderComplete"
-        @preloader-ready="onPreloaderReady"
-      />
-    </ClientOnly>
+    <Preloader
+      :enabled="shouldRunPreloader"
+      @preloader-complete="onPreloaderComplete"
+      @preloader-ready="onPreloaderReady"
+    />
 
     <ClientOnly>
       <LayoutGrid />
@@ -217,31 +215,35 @@ useHead(() => ({
 }))
 
 function onPreloaderReady() {
-  preloaderReady.value = true
   if (process.client) {
     document.body.classList.add('preloader-ready')
   }
 }
 
 function onPreloaderComplete() {
+  preloaderReady.value = true
   headerCanReveal.value = true
   if (process.client) {
     document.body.classList.add('preloader-complete')
   }
 }
+
+onMounted(() => {
+  if (!shouldRunPreloader.value) {
+    preloaderReady.value = true
+    headerCanReveal.value = true
+  }
+})
 </script>
 
 <style>
 #app.is--hidden {
   visibility: hidden;
-  opacity: 0;
   pointer-events: none;
 }
 
 #app:not(.is--hidden) {
   visibility: visible;
-  opacity: 1;
-  transition: opacity 0.2s ease-in;
 }
 
 .page-transition-outer,

@@ -46,12 +46,14 @@ export default defineEventHandler(async () => {
   const query = `*[_type == "siteSettings"][0] {
     title,
     disablePreloader,
+    preloaderText,
+    preloaderTextJa,
+    preloaderHoldSeconds,
     ${colorField('preloaderBackgroundColor')},
     ${colorField('preloaderForegroundColor')},
     ${colorField('pageTransitionWipeColor')},
     ${colorField('footerBackgroundColor')},
     ${colorField('footerTextColor')},
-    disableFooterBackgroundFade,
     seoTitle,
     seoDescription,
     facebookShareImage {
@@ -115,6 +117,13 @@ export default defineEventHandler(async () => {
       countries
     },
     cartDisplayMode,
+    menuColors {
+      ${colorField('menuBackgroundColor')},
+      ${colorField('menuBorderColor')},
+      ${colorField('menuTextColor')},
+      ${colorField('menuHighlightColor')},
+      ${colorField('basketIconColor')}
+    },
     shopColors {
       ${colorField('pageColor')},
       ${colorField('pageTextColor')},
