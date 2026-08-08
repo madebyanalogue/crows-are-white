@@ -105,6 +105,7 @@ defineExpose(api)
   >
     <CinematicVideoFrame
       ref="frameRef"
+      notch-corners
       :title="label"
       :provider="playerProvider"
       :video-src="trailerSrc"

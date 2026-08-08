@@ -1,5 +1,4 @@
-import { resolveShopChromeColors } from '~/utils/shopColors'
-import { mergePageChromeColors } from '~/utils/pageColors'
+import { resolveShopChromeColors, mergeShopChromeColors } from '~/utils/shopColors'
 
 export function useShopChromeColorsState() {
   return useState('shopChromeColors', () => null)
@@ -24,7 +23,7 @@ export function useShopPageColor(shopPageSource) {
     },
   )
 
-  const colors = computed(() => mergePageChromeColors(
+  const colors = computed(() => mergeShopChromeColors(
     resolveShopChromeColors(
       unref(shopPageSource) || shopPageColors.value,
       siteShopColors.value,

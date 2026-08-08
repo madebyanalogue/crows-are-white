@@ -120,6 +120,7 @@ html.is-preloader-active body {
   --crema: #F0F0ED;
   --racing-green: #0e3e27;
   
+  --light-border:#ddd;
   --mid-border:#bbb;
 
 
@@ -187,6 +188,14 @@ a {
   padding-right: var(--wrapper-padding);
   margin: 0 auto;
   width: 100%;
+}
+
+.page-section-chrome--border-top {
+  border-top: 1px solid var(--light-border);
+}
+
+.page-section-chrome--border-bottom {
+  border-bottom: 1px solid var(--light-border);
 }
 
 .page-section-columns {

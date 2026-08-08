@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer" :style="footerStyleVars">
+  <footer class="footer">
     <div class="footer-content wrapper">
       <div class="footer__inner grid-1 gap-section section-padding">
         <div class="grid-1 gap-section gap-md-0">
@@ -81,16 +81,12 @@
 </template>
 
 <script setup>
-import { toCssColor } from '~/utils/pageColors'
-
 const {
   footerMenus,
   footerStrapline,
   footerLegal,
   privacyMenu,
   footerShowTrustpilot,
-  footerBackgroundColor,
-  footerTextColor,
 } = useSiteSettings()
 
 const footerMenuGroups = computed(() =>
@@ -110,19 +106,14 @@ const {
   onPointerOver,
   onPointerLeave,
 } = provideMenuLinkGroupHover()
-
-const footerStyleVars = computed(() => ({
-  '--footer-background-color': toCssColor(footerBackgroundColor.value, 'crayon'),
-  '--footer-color': toCssColor(footerTextColor.value, 'racing-green'),
-}))
 </script>
 
 <style scoped>
 .footer {
   position: relative;
   z-index: 1;
-  background: var(--footer-background-color);
-  color: var(--footer-color);
+  background: var(--background-color);
+  color: var(--text-color);
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -223,7 +214,7 @@ const footerStyleVars = computed(() => ({
 .strapline--container {
   display: flex;
   flex-direction: column;
-  --trustpilot-wordmark-fill: var(--footer-color);
+  --trustpilot-wordmark-fill: var(--text-color);
 }
 
 .footer__strapline {

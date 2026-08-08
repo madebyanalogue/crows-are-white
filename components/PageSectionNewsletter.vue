@@ -11,6 +11,7 @@ const props = defineProps({
 })
 
 const title = computed(() => props.section?.newsletterTitle?.trim() || 'Newsletter')
+const intro = computed(() => props.section?.newsletterIntro?.trim() || '')
 
 const resolvedTextColor = computed(() => {
   const { newsletterTextColor, newsletterBackgroundColor } = props.section || {}
@@ -64,6 +65,13 @@ const sectionStyle = computed(() => {
 
   return style
 })
+
+const useWrapper = computed(() => props.section?.newsletterUseWrapper === true)
+
+const innerClass = computed(() => ({
+  wrapper: useWrapper.value,
+  'page-section-newsletter__inner--contained': useWrapper.value,
+}))
 </script>
 
 <template>
@@ -71,10 +79,25 @@ const sectionStyle = computed(() => {
     class="page-section-newsletter"
     :style="sectionStyle"
   >
-    <NewsletterBlock
-      :title="title"
-      :background="background"
-    />
+    <div
+      class="page-section-newsletter__inner"
+      :class="innerClass"
+    >
+      <NewsletterBlock
+        :title="title"
+        :intro="intro"
+        :background="background"
+      />
+    </div>
   </div>
 </template>
 
+<style scoped>
+.page-section-newsletter__inner--contained {
+  padding-block: var(--wrapper-padding);
+}
+
+.page-section-newsletter__inner:not(.page-section-newsletter__inner--contained) {
+  width: 100%;
+}
+</style>

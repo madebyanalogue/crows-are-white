@@ -27,6 +27,14 @@ const sectionTitle = computed(() => props.section?.pressQuotesTitle?.trim() || '
 const showTitle = computed(() => props.section?.pressQuotesShowTitle !== false)
 const isStackMode = computed(() => props.section?.pressQuotesStackMode === true)
 
+const contentAlign = computed(() => {
+  const align = props.section?.pressQuotesAlign
+  if (align === 'left' || align === 'right') return align
+  return 'center'
+})
+
+const alignClass = computed(() => `is-align-${contentAlign.value}`)
+
 const carouselElement = ref(null)
 const prefersReducedMotion = ref(false)
 const currentIndex = ref(0)
@@ -166,12 +174,12 @@ function unbindParallax() {
 }
 
 const { flickity, ready, reload, destroy: destroyFlickity } = useFlickity(carouselElement, () => ({
-  cellAlign: 'left',
+  cellAlign: contentAlign.value,
   contain: false,
   draggable: true,
   freeScroll: false,
-  friction: 0.28,
-  selectedAttraction: 0.025,
+  friction: 0.24,
+  selectedAttraction: 0.012,
   percentPosition: true,
   pageDots: false,
   prevNextButtons: false,
@@ -180,7 +188,7 @@ const { flickity, ready, reload, destroy: destroyFlickity } = useFlickity(carous
 }))
 
 watch(
-  () => quotes.value.length,
+  () => [quotes.value.length, contentAlign.value],
   async () => {
     if (!quotes.value.length || isStackMode.value) return
     await nextTick()
@@ -212,7 +220,10 @@ onBeforeUnmount(() => {
   <section
     v-if="hasQuotes"
     class="page-section-press-quotes"
-    :class="{ 'is-stack-mode': isStackMode }"
+    :class="[
+      alignClass,
+      { 'is-stack-mode': isStackMode },
+    ]"
     aria-label="Press Quotes"
   >
     <div
@@ -357,7 +368,11 @@ onBeforeUnmount(() => {
   --press-quotes-layer-scale: 1600 / 1420;
   --press-quotes-slide-gap: 15px;
   position: relative;
-  padding: clamp(3rem, 8vw, 6rem) 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100dvh;
+  padding-block: clamp(3rem, 8vw, 6rem);
   color: var(--text-color);
   background: var(--background-color);
   overflow: hidden;
@@ -365,7 +380,19 @@ onBeforeUnmount(() => {
 
 
 .page-section-press-quotes__header {
-  padding: 0 var(--gutter) clamp(1.5rem, 4vw, 2.75rem);
+  padding: 0 0 clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.page-section-press-quotes.is-align-left .page-section-press-quotes__header {
+  text-align: left;
+}
+
+.page-section-press-quotes.is-align-center .page-section-press-quotes__header {
+  text-align: center;
+}
+
+.page-section-press-quotes.is-align-right .page-section-press-quotes__header {
+  text-align: right;
 }
 
 .page-section-press-quotes__title {
@@ -378,9 +405,19 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: clamp(2rem, 6vw, 4rem);
-  padding-inline: var(--gutter);
+}
+
+.page-section-press-quotes.is-align-left .page-section-press-quotes__stack {
+  align-items: flex-start;
+}
+
+.page-section-press-quotes.is-align-center .page-section-press-quotes__stack {
+  align-items: center;
+}
+
+.page-section-press-quotes.is-align-right .page-section-press-quotes__stack {
+  align-items: flex-end;
 }
 
 .page-section-press-quotes__stack-item {
@@ -392,8 +429,20 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__stage {
   display: flex;
   align-items: center;
-  justify-content: center;
+  width: 100%;
   gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.page-section-press-quotes.is-align-left .page-section-press-quotes__stage {
+  justify-content: flex-start;
+}
+
+.page-section-press-quotes.is-align-center .page-section-press-quotes__stage {
+  justify-content: center;
+}
+
+.page-section-press-quotes.is-align-right .page-section-press-quotes__stage {
+  justify-content: flex-end;
 }
 
 .page-section-press-quotes__frame {
@@ -480,7 +529,9 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__card {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  border-radius: 15px;
+  overflow: hidden;
+  corner-shape: notch;
 }
 
 .page-section-press-quotes__visual {

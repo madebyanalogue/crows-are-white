@@ -83,6 +83,14 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  notchCorners: {
+    type: Boolean,
+    default: false,
+  },
+  notchMaskColor: {
+    type: String,
+    default: '',
+  },
   showFullscreen: {
     type: Boolean,
     default: false,
@@ -126,6 +134,11 @@ const canPlay = computed(() => {
 const overlayStyle = computed(() => {
   if (!props.overlayColor) return undefined
   return { '--background-color': props.overlayColor, color: props.overlayColor }
+})
+
+const notchClipStyle = computed(() => {
+  if (!props.notchCorners || !props.notchMaskColor) return undefined
+  return { '--cinematic-notch-mask-color': props.notchMaskColor }
 })
 
 let scaleProxy = { value: 0 }
@@ -273,8 +286,16 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
     <div
       ref="stageRef"
       class="cinematic-video-frame__stage"
-      :class="{ 'is-open': isOpen }"
+      :class="{
+        'is-open': isOpen,
+        'has-notch-corners': notchCorners,
+      }"
     >
+      <div
+        class="cinematic-video-frame__stage-inner"
+        :class="{ 'cinematic-video-frame__notch-clip': notchCorners }"
+        :style="notchClipStyle"
+      >
       <button
         v-if="!isOpen"
         type="button"
@@ -387,6 +408,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
           />
         </div>
       </div>
+      </div>
     </div>
 
     <div
@@ -419,6 +441,30 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   background: #000;
 }
 
+.cinematic-video-frame__stage.has-notch-corners {
+  aspect-ratio: auto;
+  overflow: visible;
+  background: transparent;
+}
+
+.cinematic-video-frame__stage-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cinematic-video-frame__notch-clip {
+  container-type: inline-size;
+  --cinematic-notch-radius: clamp(8px, 0.94cqi, 15px);
+  --cinematic-notch-mask-color: var(--background-color, #f0f0ed);
+  aspect-ratio: 16 / 9;
+  height: auto;
+  overflow: hidden;
+  border-radius: var(--cinematic-notch-radius);
+  corner-shape: notch;
+  background: var(--cinematic-notch-mask-color);
+}
+
 .cinematic-video-frame__stage.is-open {
   z-index: 55;
 }
@@ -429,6 +475,15 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   height: 100vh;
   max-width: none;
   aspect-ratio: auto;
+}
+
+.cinematic-video-frame__stage:fullscreen .cinematic-video-frame__notch-clip,
+.cinematic-video-frame__stage:-webkit-full-screen .cinematic-video-frame__notch-clip {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  corner-shape: unset;
 }
 
 .cinematic-video-frame__hit {

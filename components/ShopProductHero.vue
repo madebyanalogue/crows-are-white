@@ -484,6 +484,7 @@ function incrementQty() {
   --site-header-panel-width-closed: 360px;
   --shop-product-actions-offset: 50px;
   --shop-product-actions-stack-height: calc(var(--site-header-bar-height) * 2 + 15px);
+  --shop-line:#eee;
 
   height: 100dvh;
   min-height: 600px;

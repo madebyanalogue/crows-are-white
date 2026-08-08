@@ -6,7 +6,7 @@ import {
   pageBackgroundVar,
 } from '~/utils/pageColors'
 import { getCachedPageForRoute } from '~/utils/videoSectionFlags'
-import { isShopRoute, resolveShopChromeColors } from '~/utils/shopColors'
+import { isShopRoute, resolveShopChromeColors, mergeShopChromeColors } from '~/utils/shopColors'
 
 export function useAppliedPageColors() {
   return {
@@ -57,7 +57,7 @@ function getKnownPageColorsForPath(nuxtApp, path) {
       ?? nuxtApp?.static?.data?.siteSettings
       ?? null
 
-    return mergePageChromeColors(
+    return mergeShopChromeColors(
       resolveShopChromeColors(shopPage, siteSettings?.shopColors),
       siteMenu,
     )

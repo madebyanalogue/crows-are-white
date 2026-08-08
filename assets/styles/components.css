@@ -4032,8 +4032,8 @@ body.header-mobile-open {
 .footer {
   position: relative;
   z-index: 1;
-  background: var(--footer-background-color);
-  color: var(--footer-color);
+  background: var(--background-color);
+  color: var(--text-color);
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -4054,13 +4054,13 @@ body.header-mobile-open {
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--footer-color);
+  color: var(--text-color);
   display: block;
 }
 
 .footer__icon :global(.crows-icon__shape) {
   fill: none;
-  stroke: var(--footer-color);
+  stroke: var(--text-color);
   stroke-width: 0.85;
   vector-effect: non-scaling-stroke;
 }
@@ -4146,7 +4146,7 @@ body.header-mobile-open {
 .strapline--container {
   display: flex;
   flex-direction: column;
-  --trustpilot-wordmark-fill: var(--footer-color);
+  --trustpilot-wordmark-fill: var(--text-color);
 }
 
 .footer-icon-container {

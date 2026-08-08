@@ -28,32 +28,34 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
     class="shop-products-section"
     aria-label="Featured products"
   >
-    <ShopProductCarousel
-      :products="products"
-      :pending="pending"
-      aria-label="Featured products carousel"
-    >
-      <template
-        v-if="title || (!pending && products.length)"
-        #header
+    <div class="wrapper">
+      <ShopProductCarousel
+        :products="products"
+        :pending="pending"
+        aria-label="Featured products carousel"
       >
-        <div class="shop-products-section__header">
-          <h2
-            v-if="title"
-            class="shop-products-section__title serif"
-          >
-            {{ title }}
-          </h2>
-          <NuxtLink
-            v-if="!pending && products.length"
-            to="/shop"
-            class="shop-products-section__view-all serif"
-          >
-            View all
-          </NuxtLink>
-        </div>
-      </template>
-    </ShopProductCarousel>
+        <template
+          v-if="title || (!pending && products.length)"
+          #header
+        >
+          <div class="shop-products-section__header">
+            <h2
+              v-if="title"
+              class="shop-products-section__title serif"
+            >
+              {{ title }}
+            </h2>
+            <NuxtLink
+              v-if="!pending && products.length"
+              to="/shop"
+              class="shop-products-section__view-all serif"
+            >
+              View all
+            </NuxtLink>
+          </div>
+        </template>
+      </ShopProductCarousel>
+    </div>
   </section>
 </template>
 
@@ -122,5 +124,16 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
 
 .shop-products-section :deep(.shop-product-card__price) {
   justify-content: flex-end;
+}
+
+.shop-products-section .wrapper :deep(.shop-product-carousel__header),
+.shop-products-section .wrapper :deep(.shop-product-carousel__viewport),
+.shop-products-section .wrapper :deep(.shop-product-carousel__empty) {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.shop-products-section .wrapper :deep(.shop-product-carousel__viewport) {
+  scroll-padding-inline: 0;
 }
 </style>

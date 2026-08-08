@@ -1,6 +1,6 @@
 <script setup>
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
-import { toCssColor, DEFAULT_PAGE_COLOR } from '~/utils/pageColors'
+import { resolveSanityAssetUrl } from '~/utils/sanity'
 
 const props = defineProps({
   section: {
@@ -59,9 +59,36 @@ const videoFit = computed(() =>
 
 const parallaxEnabled = computed(() => props.section?.letterboxParallax !== false)
 
+const useWrapper = computed(() => props.section?.letterboxUseWrapper === true)
+
+const videoWidth = computed(() => {
+  const value = props.section?.letterboxVideoWidth
+  if (!value || value === '100') return '100%'
+  return `${value}%`
+})
+
+const hasCustomWidth = computed(() => videoWidth.value !== '100%')
+
+const videoAlignClass = computed(() => {
+  const align = props.section?.letterboxVideoAlign
+  if (align === 'left') return 'is-align-left'
+  if (align === 'right') return 'is-align-right'
+  return 'is-align-center'
+})
+
 const usesStaticMediaLayer = computed(() =>
   !parallaxEnabled.value || videoFit.value === 'contain',
 )
+
+const overlayImageUrl = computed(() =>
+  resolveSanityAssetUrl(props.section?.letterboxOverlayImage?.asset) || '',
+)
+
+const overlayImageAlt = computed(() =>
+  props.section?.letterboxOverlayImage?.alt?.trim() || '',
+)
+
+const hasOverlayImage = computed(() => Boolean(overlayImageUrl.value))
 
 function onMediaDimensions(dimensions) {
   if (!dimensions?.width || !dimensions?.height) return
@@ -127,13 +154,18 @@ function onLinkClick(event) {
 }
 
 const sectionStyle = computed(() => {
-  const style = {}
-  const backgroundColor = props.section?.letterboxBackgroundColor
-  if (backgroundColor) {
-    style.background = toCssColor(backgroundColor, DEFAULT_PAGE_COLOR)
-  }
+  if (!hasNaturalShape.value || hasCustomWidth.value) return undefined
 
-  if (hasNaturalShape.value) {
+  const dims = resolvedMediaDimensions.value
+  return {
+    aspectRatio: `${dims.width} / ${dims.height}`,
+  }
+})
+
+const frameStyle = computed(() => {
+  const style = { width: videoWidth.value }
+
+  if (hasNaturalShape.value && hasCustomWidth.value) {
     const dims = resolvedMediaDimensions.value
     style.aspectRatio = `${dims.width} / ${dims.height}`
   }
@@ -156,49 +188,68 @@ useVideoParallax(sectionRef, parallaxRef, {
       'is-natural-shape': hasNaturalShape,
       'is-contained': videoFit === 'contain',
       'is-parallax-disabled': !parallaxEnabled,
+      'is-wrapped': useWrapper,
     }"
     :style="sectionStyle"
     aria-label="Video"
   >
     <div
-      class="page-section-letterbox-video__frame"
-      :class="{ 'is-natural-shape': hasNaturalShape }"
+      class="page-section-letterbox-video__container"
+      :class="[
+        videoAlignClass,
+        { wrapper: useWrapper },
+      ]"
     >
       <div
-        ref="parallaxRef"
-        class="page-section-letterbox-video__parallax"
-        :class="{ 'is-static': usesStaticMediaLayer }"
+        class="page-section-letterbox-video__frame"
+        :class="{ 'is-natural-shape': hasNaturalShape }"
+        :style="frameStyle"
       >
-        <SectionLoopVideo
-          :loop="loop"
-          title="Letterbox video"
-          aspect-class="page-section-letterbox-video__video"
-          :object-fit="videoFit"
-          @media-dimensions="onMediaDimensions"
-        />
-      </div>
+        <div
+          ref="parallaxRef"
+          class="page-section-letterbox-video__parallax"
+          :class="{ 'is-static': usesStaticMediaLayer }"
+        >
+          <SectionLoopVideo
+            :loop="loop"
+            title="Letterbox video"
+            aspect-class="page-section-letterbox-video__video"
+            :object-fit="videoFit"
+            @media-dimensions="onMediaDimensions"
+          />
+        </div>
 
-      <div
-        v-if="overlayLink"
-        class="page-section-letterbox-video__link-wrap"
-      >
-        <NuxtLink
-          v-if="overlayLink.useRouterLink"
-          :to="overlayLink.href"
-          class="page-section-letterbox-video__link large-title"
-          @click="onLinkClick"
+        <img
+          v-if="hasOverlayImage"
+          class="page-section-letterbox-video__overlay"
+          :src="overlayImageUrl"
+          :alt="overlayImageAlt"
+          draggable="false"
+          loading="lazy"
         >
-          {{ overlayLink.label }}
-        </NuxtLink>
-        <a
-          v-else
-          :href="overlayLink.href"
-          class="page-section-letterbox-video__link large-title"
-          :target="overlayLink.target"
-          :rel="overlayLink.rel"
+
+        <div
+          v-if="overlayLink"
+          class="page-section-letterbox-video__link-wrap"
         >
-          {{ overlayLink.label }}
-        </a>
+          <NuxtLink
+            v-if="overlayLink.useRouterLink"
+            :to="overlayLink.href"
+            class="page-section-letterbox-video__link large-title"
+            @click="onLinkClick"
+          >
+            {{ overlayLink.label }}
+          </NuxtLink>
+          <a
+            v-else
+            :href="overlayLink.href"
+            class="page-section-letterbox-video__link large-title"
+            :target="overlayLink.target"
+            :rel="overlayLink.rel"
+          >
+            {{ overlayLink.label }}
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -214,13 +265,29 @@ useVideoParallax(sectionRef, parallaxRef, {
   aspect-ratio: 2.5;
   min-height: 500px;
   overflow: hidden;
-  background: var(--obsidian, #111010);
 }
 
-.page-section-letterbox-video.is-natural-shape {
+.page-section-letterbox-video.is-natural-shape,
+.page-section-letterbox-video.is-wrapped {
   aspect-ratio: auto;
   min-height: 0;
   height: auto;
+}
+
+.page-section-letterbox-video__container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.page-section-letterbox-video__container.is-align-left {
+  justify-content: flex-start;
+}
+
+.page-section-letterbox-video__container.is-align-right {
+  justify-content: flex-end;
 }
 
 .page-section-letterbox-video__frame {
@@ -234,8 +301,7 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 .page-section-letterbox-video__frame.is-natural-shape {
   aspect-ratio: auto;
-  width: 100%;
-  height: 100%;
+  height: auto;
   max-height: none;
 }
 
@@ -256,7 +322,7 @@ useVideoParallax(sectionRef, parallaxRef, {
   height: 100%;
 }
 
-.page-section-letterbox-video.is-contained :deep(.section-loop-video) {
+.page-section-letterbox-video :deep(.section-loop-video) {
   background: transparent;
 }
 
@@ -268,6 +334,17 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 .page-section-letterbox-video.is-contained :deep(.section-loop-video__el) {
   object-fit: contain;
+}
+
+.page-section-letterbox-video__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .page-section-letterbox-video__link-wrap {

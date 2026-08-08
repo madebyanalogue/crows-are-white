@@ -41,6 +41,8 @@ function pageSectionProjection() {
     _id,
     _type,
     sectionType,
+    sectionBorderTop,
+    sectionBorderBottom,
     basicPageHeadline,
     basicPagePaddingTop,
     basicPagePaddingBottom,
@@ -74,6 +76,7 @@ function pageSectionProjection() {
     contactFormMarketingConsentLabel,
     contactFormMarketingConsentRequired,
     newsletterTitle,
+    newsletterIntro,
     ${colorField('newsletterBackgroundColor')},
     ${colorField('newsletterTextColor')},
     newsletterMediaType,
@@ -89,6 +92,7 @@ function pageSectionProjection() {
     newsletterVideoSource,
     newsletterLoopCloudflare720,
     newsletterLoopCloudflare1080,
+    newsletterUseWrapper,
     contactInformationItems[] {
       _key,
       title,
@@ -489,6 +493,7 @@ function pageSectionProjection() {
     pressQuotesTitle,
     pressQuotesShowTitle,
     pressQuotesStackMode,
+    pressQuotesAlign,
     pressQuotesItems[]-> {
       _id,
       quote,
@@ -513,6 +518,9 @@ function pageSectionProjection() {
     letterboxAspectRatio,
     letterboxVideoFit,
     letterboxParallax,
+    letterboxUseWrapper,
+    letterboxVideoWidth,
+    letterboxVideoAlign,
     letterboxVideoSource,
     letterboxVideo {
       asset-> {
@@ -526,6 +534,7 @@ function pageSectionProjection() {
     },
     letterboxLoopCloudflare720,
     letterboxLoopCloudflare1080,
+    letterboxOverlayImage ${imageProjection},
     letterboxLinkText,
     letterboxLink {
       type,

@@ -24,6 +24,7 @@
       </div>
 
       <template v-for="(section, index) in sections" :key="section._id || index">
+        <PageSectionChrome :section="section">
         <PageSectionHero
           v-if="section.sectionType === 'hero'"
           :section="section"
@@ -182,6 +183,7 @@
           :section="section"
         />
         -->
+        </PageSectionChrome>
       </template>
   </div>
 </template>

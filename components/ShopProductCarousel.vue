@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: 1rem;
   min-height: clamp(2.5rem, 6vw, 3.25rem);
-  margin-bottom: 1.25rem;
+  margin-bottom: 2rem;
   padding: 0 clamp(1rem, 3vw, 2rem);
 }
 
@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
 
 .shop-product-carousel__slide :deep(.shop-product-card) {
   height: 100%;
-  border-radius: 10px;
+  border-radius: 4px;
   overflow: hidden;
   background: #fff;
 }

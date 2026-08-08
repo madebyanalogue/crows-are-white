@@ -90,6 +90,12 @@ const sectionStyle = computed(() => {
   return style
 })
 
+const notchMaskColor = computed(() => {
+  const backgroundColor = props.section?.trailerBackgroundColor
+  if (!backgroundColor) return ''
+  return toCssColor(backgroundColor, DEFAULT_PAGE_COLOR)
+})
+
 const localRuntime = ref(
   typeof props.section?.trailerRuntimeSeconds === 'number'
     ? props.section.trailerRuntimeSeconds
@@ -178,6 +184,8 @@ onBeforeUnmount(() => {
     <div class="page-section-columns wrapper">
       <CinematicVideoFrame
         ref="frameRef"
+        notch-corners
+        :notch-mask-color="notchMaskColor"
         :title="title"
         :runtime="displayRuntime"
         :overlay-color="overlayColor"
