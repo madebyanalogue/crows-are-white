@@ -25,11 +25,30 @@ const sectionRef = ref(null)
 const parallaxRef = ref(null)
 
 const loop = computed(() => resolveSectionLoopVideo(props.section, 'letterbox'))
-const hasVideo = computed(() => Boolean(
+
+const mediaType = computed(() =>
+  props.section?.letterboxMediaType === 'image' ? 'image' : 'video',
+)
+
+const mainImageUrl = computed(() =>
+  mediaType.value === 'image'
+    ? resolveSanityAssetUrl(props.section?.letterboxImage?.asset) || ''
+    : '',
+)
+
+const mainImageAlt = computed(() =>
+  props.section?.letterboxImage?.alt?.trim() || '',
+)
+
+const hasImage = computed(() => Boolean(mainImageUrl.value))
+
+const hasVideo = computed(() => mediaType.value === 'video' && Boolean(
   loop.value?.url720
   || loop.value?.url
   || loop.value?.youtubeId,
 ))
+
+const hasMedia = computed(() => hasVideo.value || hasImage.value)
 
 const usesNaturalShape = computed(() => {
   const ratio = props.section?.letterboxAspectRatio
@@ -41,6 +60,13 @@ const mediaDimensions = ref(null)
 const resolvedMediaDimensions = computed(() => {
   const runtime = mediaDimensions.value
   if (runtime?.width && runtime?.height) return runtime
+
+  if (mediaType.value === 'image') {
+    const dims = props.section?.letterboxImage?.asset?.metadata?.dimensions
+    if (dims?.width && dims?.height) {
+      return { width: dims.width, height: dims.height }
+    }
+  }
 
   const width = loop.value?.width
   const height = loop.value?.height
@@ -93,6 +119,13 @@ const hasOverlayImage = computed(() => Boolean(overlayImageUrl.value))
 function onMediaDimensions(dimensions) {
   if (!dimensions?.width || !dimensions?.height) return
   mediaDimensions.value = dimensions
+}
+
+function onImageLoad(event) {
+  onMediaDimensions({
+    width: event.target.naturalWidth,
+    height: event.target.naturalHeight,
+  })
 }
 
 const overlayLink = computed(() => {
@@ -181,7 +214,7 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 <template>
   <section
-    v-if="hasVideo"
+    v-if="hasMedia"
     ref="sectionRef"
     class="page-section-letterbox-video"
     :class="{
@@ -189,9 +222,10 @@ useVideoParallax(sectionRef, parallaxRef, {
       'is-contained': videoFit === 'contain',
       'is-parallax-disabled': !parallaxEnabled,
       'is-wrapped': useWrapper,
+      'is-image': hasImage,
     }"
     :style="sectionStyle"
-    aria-label="Video"
+    :aria-label="hasImage ? 'Image' : 'Video'"
   >
     <div
       class="page-section-letterbox-video__container"
@@ -211,12 +245,22 @@ useVideoParallax(sectionRef, parallaxRef, {
           :class="{ 'is-static': usesStaticMediaLayer }"
         >
           <SectionLoopVideo
+            v-if="hasVideo"
             :loop="loop"
             title="Letterbox video"
             aspect-class="page-section-letterbox-video__video"
             :object-fit="videoFit"
             @media-dimensions="onMediaDimensions"
           />
+          <img
+            v-else-if="hasImage"
+            class="page-section-letterbox-video__image"
+            :src="mainImageUrl"
+            :alt="mainImageAlt"
+            draggable="false"
+            loading="lazy"
+            @load="onImageLoad"
+          >
         </div>
 
         <img
@@ -333,6 +377,17 @@ useVideoParallax(sectionRef, parallaxRef, {
 }
 
 .page-section-letterbox-video.is-contained :deep(.section-loop-video__el) {
+  object-fit: contain;
+}
+
+.page-section-letterbox-video__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-section-letterbox-video.is-contained .page-section-letterbox-video__image {
   object-fit: contain;
 }
 

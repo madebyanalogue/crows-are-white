@@ -515,6 +515,8 @@ function pageSectionProjection() {
     textImageStackPaddingBottom,
     textImageStackReverseOrder,
     ${colorField('letterboxBackgroundColor')},
+    letterboxMediaType,
+    letterboxImage ${imageProjection},
     letterboxAspectRatio,
     letterboxVideoFit,
     letterboxParallax,
