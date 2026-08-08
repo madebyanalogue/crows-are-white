@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   },
   sitemap: {
     excludeAppSources: ['nuxt:pages'],
-    exclude: ['/articles', '/api/**'],
+    exclude: ['/articles', '/api/**', '/share-your-journey'],
     sources: ['/api/__sitemap__/urls'],
   },
   css: ['~/assets/styles/main.css', '~/assets/css/plyr-custom.css'],
@@ -55,12 +55,15 @@ export default defineNuxtConfig({
     salesforceLeadSource: process.env.SALESFORCE_LEAD_SOURCE || 'Website',
     trustpilotApiKey: process.env.TRUSTPILOT_API_KEY || '',
     trustpilotBusinessUnitId: process.env.TRUSTPILOT_BUSINESS_UNIT_ID || '',
+    sanityWriteToken: process.env.SANITY_WRITE_TOKEN || '',
     sanityUseCdn: process.env.SANITY_USE_CDN === 'true',
     shopifyStoreDomain: process.env.NUXT_SHOPIFY_STORE_DOMAIN || '',
     shopifyStorefrontToken: process.env.NUXT_SHOPIFY_STOREFRONT_TOKEN || '',
+    shopifyWebhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET || '',
     mockShopify: process.env.NUXT_MOCK_SHOPIFY === 'true',
     public: {
       shopifyStoreDomain: process.env.NUXT_PUBLIC_SHOPIFY_STORE_DOMAIN || '',
+      siteUrl: siteUrl,
       sanity: {
         projectId: process.env.SANITY_PROJECT_ID || process.env.NUXT_SANITY_PROJECT_ID || '11cdscj2',
         dataset: process.env.SANITY_DATASET || process.env.NUXT_SANITY_DATASET || 'production',
@@ -79,6 +82,16 @@ export default defineNuxtConfig({
     preset: 'vercel',
     compressPublicAssets: true,
     routeRules: {
+      '/api/ugc': {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        },
+      },
+      '/api/shop/webhooks/**': {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      },
       '/api/**': {
         headers: {
           'Cache-Control': 'no-store',

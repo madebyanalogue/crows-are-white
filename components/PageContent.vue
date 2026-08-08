@@ -76,6 +76,14 @@
           v-else-if="section.sectionType === 'letterboxVideo'"
           :section="section"
         />
+        <PageSectionUgc
+          v-else-if="section.sectionType === 'ugc'"
+          :section="section"
+        />
+        <PageSectionReflections
+          v-else-if="section.sectionType === 'reflections'"
+          :section="section"
+        />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--

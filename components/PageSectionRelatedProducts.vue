@@ -47,18 +47,20 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
     class="shop-products-section"
     aria-label="Related products"
   >
-    <h2
-      v-if="title"
-      class="shop-products-section__title serif"
-    >
-      {{ title }}
-    </h2>
-
     <ShopProductCarousel
       :products="products"
       :pending="pending"
       aria-label="Related products carousel"
-    />
+    >
+      <template
+        v-if="title"
+        #header
+      >
+        <h2 class="shop-products-section__title serif">
+          {{ title }}
+        </h2>
+      </template>
+    </ShopProductCarousel>
   </section>
 </template>
 
@@ -70,9 +72,10 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
 }
 
 .shop-products-section__title {
-  margin: 0 0 1.25rem;
-  padding: 0 clamp(1rem, 3vw, 2rem);
+  margin: 0;
+  padding: 0;
   font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 300;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

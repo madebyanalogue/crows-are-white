@@ -11,11 +11,12 @@ const props = defineProps<{
 const viewportRef = ref<HTMLElement | null>(null)
 const atStart = ref(true)
 const atEnd = ref(false)
+const hasOverflow = ref(false)
 
 const skeletonCount = 4
 
 const showControls = computed(() =>
-  !props.pending && props.products.length > 1,
+  !props.pending && props.products.length > 1 && hasOverflow.value,
 )
 
 const canGoPrev = computed(() => !atStart.value)
@@ -29,11 +30,23 @@ function getSlideWidth() {
   return slide?.offsetWidth ?? 0
 }
 
+function getSlideStride() {
+  const slideWidth = getSlideWidth()
+  if (!slideWidth) return 0
+
+  const track = viewportRef.value?.querySelector('.shop-product-carousel__track') as HTMLElement | null
+  if (!track) return slideWidth
+
+  const gap = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || '0')
+  return slideWidth + (Number.isFinite(gap) ? gap : 0)
+}
+
 function updateScrollState() {
   const viewport = viewportRef.value
   if (!viewport) return
 
   const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
+  hasOverflow.value = maxScroll > 1
   atStart.value = viewport.scrollLeft <= 1
   atEnd.value = viewport.scrollLeft >= maxScroll - 1
 }
@@ -42,11 +55,11 @@ function scrollBySlides(direction: -1 | 1) {
   const viewport = viewportRef.value
   if (!viewport) return
 
-  const slideWidth = getSlideWidth()
-  if (!slideWidth) return
+  const slideStride = getSlideStride()
+  if (!slideStride) return
 
   viewport.scrollBy({
-    left: direction * slideWidth,
+    left: direction * slideStride,
     behavior: 'smooth',
   })
 }
@@ -101,6 +114,61 @@ onBeforeUnmount(() => {
     :aria-label="ariaLabel"
   >
     <div
+      v-if="$slots.header || showControls"
+      class="shop-product-carousel__header"
+    >
+      <div
+        v-if="$slots.header"
+        class="shop-product-carousel__header-start"
+      >
+        <slot name="header" />
+      </div>
+
+      <div
+        v-if="showControls"
+        class="shop-product-carousel__controls"
+      >
+        <button
+          type="button"
+          class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
+          aria-label="Previous products"
+          :disabled="!canGoPrev"
+          @click="goPrev"
+        >
+          <svg
+            viewBox="0 0 13 12"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              stroke="currentColor"
+              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
+          aria-label="Next products"
+          :disabled="!canGoNext"
+          @click="goNext"
+        >
+          <svg
+            viewBox="0 0 13 12"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              stroke="currentColor"
+              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div
       v-if="pending"
       class="shop-product-carousel__viewport"
       aria-busy="true"
@@ -125,62 +193,18 @@ onBeforeUnmount(() => {
 
     <div
       v-else
-      class="shop-product-carousel__stage"
+      :ref="bindViewport"
+      class="shop-product-carousel__viewport"
     >
-      <button
-        v-if="showControls"
-        type="button"
-        class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
-        aria-label="Previous products"
-        :disabled="!canGoPrev"
-        @click="goPrev"
-      >
-        <svg
-          viewBox="0 0 13 12"
-          fill="none"
-          aria-hidden="true"
+      <div class="shop-product-carousel__track">
+        <div
+          v-for="product in products"
+          :key="product.variantId"
+          class="shop-product-carousel__slide"
         >
-          <path
-            stroke="currentColor"
-            d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-          />
-        </svg>
-      </button>
-
-      <div
-        :ref="bindViewport"
-        class="shop-product-carousel__viewport"
-      >
-        <div class="shop-product-carousel__track">
-          <div
-            v-for="product in products"
-            :key="product.variantId"
-            class="shop-product-carousel__slide"
-          >
-            <ShopProductCard :product="product" />
-          </div>
+          <ShopProductCard :product="product" />
         </div>
       </div>
-
-      <button
-        v-if="showControls"
-        type="button"
-        class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
-        aria-label="Next products"
-        :disabled="!canGoNext"
-        @click="goNext"
-      >
-        <svg
-          viewBox="0 0 13 12"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            stroke="currentColor"
-            d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-          />
-        </svg>
-      </button>
     </div>
   </div>
 </template>
@@ -188,36 +212,56 @@ onBeforeUnmount(() => {
 <style scoped>
 .shop-product-carousel {
   --shop-carousel-slides-visible: 1.5;
+  --shop-carousel-visible-gaps: 1;
+  --shop-carousel-gap: 15px;
 }
 
 @media (min-width: 660px) {
   .shop-product-carousel {
     --shop-carousel-slides-visible: 3.5;
+    --shop-carousel-visible-gaps: 3;
   }
 }
 
 @media (min-width: 1000px) {
   .shop-product-carousel {
     --shop-carousel-slides-visible: 4;
+    --shop-carousel-visible-gaps: 3;
   }
 }
 
-.shop-product-carousel__stage {
+.shop-product-carousel__header {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  min-height: clamp(2.5rem, 6vw, 3.25rem);
+  margin-bottom: 1.25rem;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+}
+
+.shop-product-carousel__header-start {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.shop-product-carousel__controls {
+  display: flex;
+  flex: 0 0 auto;
   align-items: stretch;
+  justify-content: flex-end;
 }
 
 .shop-product-carousel__viewport {
-  flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 0;
+  scroll-padding-inline: clamp(1rem, 3vw, 2rem);
   touch-action: pan-x;
-  border-top: 1px solid var(--shop-line);
-  border-bottom: 1px solid var(--shop-line);
+  padding: 0 clamp(1rem, 3vw, 2rem);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -228,27 +272,35 @@ onBeforeUnmount(() => {
 
 .shop-product-carousel__track {
   display: flex;
-  background:white;
+  gap: var(--shop-carousel-gap);
 }
 
 .shop-product-carousel__slide {
-  flex: 0 0 calc(100% / var(--shop-carousel-slides-visible));
+  flex: 0 0 calc(
+    (100% - (var(--shop-carousel-gap) * var(--shop-carousel-visible-gaps)))
+    / var(--shop-carousel-slides-visible)
+  );
   min-width: 0;
-  aspect-ratio: 1;
-  border-right: 1px solid var(--shop-line);
+  aspect-ratio: 0.8;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
+.shop-product-carousel__slide :deep(.shop-product-card) {
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
 .shop-product-carousel__arrow {
-  flex: 0 0 clamp(2.5rem, 6vw, 3.5rem);
   display: grid;
   place-items: center;
+  width: clamp(2.5rem, 6vw, 3.25rem);
+  height: clamp(2.5rem, 6vw, 3.25rem);
   margin: 0;
   padding: 0;
-  border: 0;
-  border-top: 1px solid var(--shop-line);
-  border-bottom: 1px solid var(--shop-line);
+  border: 1px solid var(--shop-line);
   background: var(--shop-bg);
   color: inherit;
   cursor: pointer;
@@ -256,11 +308,7 @@ onBeforeUnmount(() => {
 }
 
 .shop-product-carousel__arrow--prev {
-  border-right: 1px solid var(--shop-line);
-}
-
-.shop-product-carousel__arrow--next {
-  border-left: 1px solid var(--shop-line);
+  border-right: 0;
 }
 
 .shop-product-carousel__arrow svg {
@@ -290,8 +338,6 @@ onBeforeUnmount(() => {
 .shop-product-carousel__empty {
   margin: 0;
   padding: 2rem clamp(1rem, 3vw, 2rem);
-  border-top: 1px solid var(--shop-line);
-  border-bottom: 1px solid var(--shop-line);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }

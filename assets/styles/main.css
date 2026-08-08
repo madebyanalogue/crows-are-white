@@ -13,7 +13,7 @@ body {
   --unit: 12px;
   --shop-bg: var(--background-color, #fff);
   --shop-text: var(--text-color, #111010);
-  --shop-line: #ddd;
+  --shop-line: #fff;
 
   --header-padding-top: 20px;
   --header-padding: 25px;

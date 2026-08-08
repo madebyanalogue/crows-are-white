@@ -376,7 +376,7 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 }
 
 .shop-grid .shop-cell {
-  aspect-ratio: 1;
+  aspect-ratio: 0.8;
 }
 
 </style>

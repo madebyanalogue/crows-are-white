@@ -168,7 +168,12 @@ function onLinkLeave(event) {
   const link = event.currentTarget
   const next = event.relatedTarget
   if (next instanceof Node && link.contains(next)) return
-  resetToDefault()
+  if (next instanceof Element && next.closest('.page-section-press__link')) return
+  activeLinkKey.value = null
+}
+
+function onLinkBlur() {
+  activeLinkKey.value = null
 }
 
 function linkDisplayLabel(link) {
@@ -216,6 +221,7 @@ const showDefaultCaption = computed(() => {
       <div
         class="page-section-press__media"
         :class="{ 'page-section-press__media--empty': !showMediaPanel }"
+        @pointerenter="resetToDefault"
       >
         <div
           v-if="showMediaPanel"
@@ -305,7 +311,7 @@ const showDefaultCaption = computed(() => {
             :target="link.target"
             :rel="link.rel"
             @focus="onLinkHover(index)"
-            @blur="resetToDefault"
+            @blur="onLinkBlur"
             @pointerenter="onLinkHover(index)"
             @pointerleave="onLinkLeave"
           >
@@ -432,7 +438,7 @@ const showDefaultCaption = computed(() => {
     height: 100%;
     overflow: visible;
     container-type: size;
-    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 5vw, 9rem);
+    padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 4vw, 9rem);
   }
 }
 

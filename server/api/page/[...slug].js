@@ -566,7 +566,17 @@ function pageSectionProjection() {
     assembleWidgetSecondaryColor,
     assembleWidgetBackgroundColor,
     assembleWidgetPaddingTop,
-    assembleWidgetPaddingBottom
+    assembleWidgetPaddingBottom,
+    ugcTitle,
+    ugcMaxItems,
+    ugcPaddingTop,
+    ugcPaddingBottom,
+    reflectionsTitle,
+    reflectionsIntro,
+    reflectionsMaxItems,
+    reflectionsShowViewAll,
+    reflectionsPaddingTop,
+    reflectionsPaddingBottom
   }`
 }
 

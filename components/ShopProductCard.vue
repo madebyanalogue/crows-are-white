@@ -119,18 +119,22 @@ const productTo = computed(() => {
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: opacity 0.35s ease;
+  object-position: center;
   -webkit-user-drag: none;
   user-select: none;
 }
 
 .shop-product-card__image--hover {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   object-position: center;
+  transform: translate(-50%, -50%);
   opacity: 0;
 }
 
@@ -167,11 +171,10 @@ const productTo = computed(() => {
 
 .shop-product-card__title,
 .shop-product-card__price {
-  font-size: clamp(12px, 1.5vw, 14px);
+  font-size: clamp(12px, 1.5vw, 17px);
   font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   line-height: 1.2;
+  font-family: var(--serif-body);
 }
 
 .shop-product-card__price {

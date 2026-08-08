@@ -8,7 +8,8 @@ const builderSections = computed(() =>
   (page.value?.sections || []).filter((section) =>
     section?.sectionType === 'newsletter'
     || section?.sectionType === 'featuredProducts'
-    || section?.sectionType === 'relatedProducts',
+    || section?.sectionType === 'relatedProducts'
+    || section?.sectionType === 'ugc',
   ),
 )
 
