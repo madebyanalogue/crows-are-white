@@ -66,7 +66,6 @@ const geocodeError = ref('')
 const reflectionFormOpen = ref(false)
 const reflectionFormRef = ref(null)
 const activeReflectionIndex = ref(0)
-const carouselCardOpen = ref(false)
 const mapStageRef = ref(null)
 const viewerHeight = ref(null)
 const belowViewportRef = ref(null)
@@ -164,21 +163,6 @@ const hasHeaderActions = computed(() =>
 )
 
 const hasMapBackgroundImage = computed(() => Boolean(props.mapBackgroundImage?.url))
-
-watch(
-  () => activeReflection.value?._id,
-  () => {
-    carouselCardOpen.value = false
-  },
-)
-
-function onCarouselCardOpen() {
-  carouselCardOpen.value = true
-}
-
-function onCarouselCardClose() {
-  carouselCardOpen.value = false
-}
 
 function updateBelowScrollState() {
   const viewport = belowViewportRef.value
@@ -313,7 +297,6 @@ function selectMarker(marker) {
 
   selectedMarker.value = marker
   activeReflectionIndex.value = 0
-  carouselCardOpen.value = false
   emit('select-marker', marker)
 }
 
@@ -481,7 +464,6 @@ watch(
     if (markerId) return
     selectedMarker.value = null
     activeReflectionIndex.value = 0
-    carouselCardOpen.value = false
   },
 )
 
@@ -723,13 +705,9 @@ onBeforeUnmount(() => {
                 :key="activeReflection._id"
                 :item="activeReflection"
                 :index="activeReflectionIndex"
-                :open="carouselCardOpen"
+                readonly
                 :paper-tilt-max="activeReflection?.longform ? 0 : 2"
                 :disable-paper-tilt="Boolean(activeReflection?.longform)"
-                click-only
-                show-folded-location
-                @open="onCarouselCardOpen"
-                @close="onCarouselCardClose"
               />
             </div>
           </div>
