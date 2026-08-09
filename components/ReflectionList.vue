@@ -39,9 +39,12 @@ const listItems = computed(() =>
         :key="item._id"
         class="reflection-list__item"
       >
-        <h2 class="reflection-list__quote h2 serif light">
+        <h3
+          class="reflection-list__quote h3 light"
+          :class="{ 'reflection-list__quote--longform': item.longform }"
+        >
           {{ item.reflection }}
-        </h2>
+        </h3>
         <cite
           v-if="item.attribution"
           class="reflection-list__cite serif"
@@ -90,9 +93,19 @@ const listItems = computed(() =>
 
 .reflection-list__quote {
   margin: 0;
+  font-family: var(--serif-body);
   font-weight: 300;
   line-height: 1.25;
   letter-spacing: 0.01em;
+}
+
+.reflection-list__quote--longform {
+  max-width: 800px;
+  margin-inline: auto;
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+  line-height: 1.35;
+  font-weight: 400;
+  text-align: left;
 }
 
 .reflection-list__cite {

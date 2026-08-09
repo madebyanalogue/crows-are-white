@@ -83,6 +83,7 @@ export const REFLECTION_COUNTRIES = [
 const MAX_NAME_LENGTH = 80
 const MAX_LOCATION_LENGTH = 80
 const MAX_REFLECTION_LENGTH = 500
+export const MAX_LONGFORM_REFLECTION_LENGTH = 500
 
 export function normalizeReflectionField(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
@@ -177,6 +178,7 @@ export function mapReflectionDocument(doc) {
     country,
     reflection,
     paperColor,
+    longform: doc.longform === true,
     attribution: formatReflectionAttribution({ name, city, country }),
     status: doc.status || 'approved',
     submittedAt: doc.submittedAt || null,

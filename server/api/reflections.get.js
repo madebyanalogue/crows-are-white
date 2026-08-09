@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
       country,
       reflection,
       paperColor,
+      longform,
       status,
       submittedAt,
       approvedAt

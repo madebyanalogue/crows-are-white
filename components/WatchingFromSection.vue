@@ -1,5 +1,5 @@
 <script setup>
-import { filterReflectionsByMapMarker } from '~/utils/reflections'
+import { filterReflectionsByMapMarker, getReflectionCountries } from '~/utils/reflections'
 
 const props = defineProps({
   items: {
@@ -36,7 +36,7 @@ const props = defineProps({
   },
   viewAllLabel: {
     type: String,
-    default: 'View all reflections →',
+    default: 'View more',
   },
 })
 
@@ -64,6 +64,17 @@ const reflectionLocations = computed(() => aggregateWatchingFromLocations(props.
 
 const mapStats = computed(() => summarizeWatchingFromStats(reflectionLocations.value))
 
+const mapSummaryLabel = computed(() => {
+  const reflectionCount = props.items.length
+  if (!reflectionCount) return ''
+
+  const countryCount = getReflectionCountries(props.items).length
+  const reflectionsLabel = reflectionCount === 1 ? 'Reflection' : 'Reflections'
+  const countriesLabel = countryCount === 1 ? 'country' : 'countries'
+
+  return `${reflectionCount} ${reflectionsLabel}, ${countryCount} ${countriesLabel}`
+})
+
 const displayLocations = computed(() =>
   mergeWatchingFromLocations(reflectionLocations.value, userLocation.value),
 )
@@ -81,9 +92,11 @@ const canStepReflections = computed(() => markerReflections.value.length > 1)
 const resolvedTitle = computed(() => props.title.trim())
 const resolvedIntro = computed(() => props.intro.trim())
 const hasHeading = computed(() =>
-  Boolean(resolvedTitle.value || resolvedIntro.value || props.viewAllPath),
+  Boolean(resolvedTitle.value || resolvedIntro.value),
 )
-const hasHeader = computed(() => hasHeading.value || !props.compact)
+const hasHeader = computed(() =>
+  hasHeading.value || props.viewAllPath || !props.compact,
+)
 
 watch(
   () => activeReflection.value?._id,
@@ -418,23 +431,25 @@ onBeforeUnmount(() => {
         <h3
           v-if="resolvedTitle"
           id="watching-from-heading"
-          class="watching-from-section__title h3 serif light"
+          class="watching-from-section__title h2 serif light"
         >
           {{ resolvedTitle }}
         </h3>
         <p
-          v-if="resolvedIntro || viewAllPath"
+          v-if="resolvedIntro"
           class="watching-from-section__byline light"
         >
-          <template v-if="resolvedIntro">{{ resolvedIntro }}</template><template v-if="resolvedIntro && viewAllPath">&nbsp;</template><NuxtLink
-            v-if="viewAllPath"
-            :to="viewAllPath"
-            class="watching-from-section__view-all"
-          >
-            {{ viewAllLabel }}
-          </NuxtLink>
+          {{ resolvedIntro }}
         </p>
       </div>
+
+      <NuxtLink
+        v-if="viewAllPath"
+        :to="viewAllPath"
+        class="watching-from-section__view-all serif"
+      >
+        {{ viewAllLabel }}
+      </NuxtLink>
 
       <label
         v-if="!compact"
@@ -451,56 +466,65 @@ onBeforeUnmount(() => {
       </label>
     </div>
 
-    <div
-      ref="mapStageRef"
-      class="watching-from-section__map-stage"
-    >
-      <WatchingFromDiagram
-        :locations="displayLocations"
-        :active-location-id="userLocation?.id || ''"
-        :selected-marker-id="selectedMarker?.id || props.selectedMarkerId || ''"
-        @select-marker="selectMarker"
-      />
-
+    <div class="watching-from-section__map-column">
       <div
-        v-if="reflectionFormOpen"
-        class="watching-from-section__map-form-overlay"
-        @click.self="closeReflectionForm"
+        ref="mapStageRef"
+        class="watching-from-section__map-stage"
       >
-        <div
-          class="watching-from-section__map-form-panel"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="reflection-map-title"
-          @click.stop
-        >
-          <button
-            type="button"
-            class="watching-from-section__map-form-close"
-            aria-label="Close reflection form"
-            @click="closeReflectionForm"
-          >
-            ×
-          </button>
+        <WatchingFromDiagram
+          :locations="displayLocations"
+          :active-location-id="userLocation?.id || ''"
+          :selected-marker-id="selectedMarker?.id || props.selectedMarkerId || ''"
+          @select-marker="selectMarker"
+        />
 
-          <ReflectionSubmitForm
-            ref="reflectionFormRef"
-            id-prefix="reflection-map"
-            variant="modal"
-            :show-cancel="false"
-            @submitted="onReflectionSubmitted"
-          />
+        <div
+          v-if="reflectionFormOpen"
+          class="watching-from-section__map-form-overlay"
+          @click.self="closeReflectionForm"
+        >
+          <div
+            class="watching-from-section__map-form-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reflection-map-title"
+            @click.stop
+          >
+            <button
+              type="button"
+              class="watching-from-section__map-form-close"
+              aria-label="Close reflection form"
+              @click="closeReflectionForm"
+            >
+              ×
+            </button>
+
+            <ReflectionSubmitForm
+              ref="reflectionFormRef"
+              id-prefix="reflection-map"
+              variant="modal"
+              :show-cancel="false"
+              @submitted="onReflectionSubmitted"
+            />
+          </div>
         </div>
+
+        <button
+          v-if="showLeaveReflectionButton && !reflectionFormOpen"
+          type="button"
+          class="watching-from-section__leave-reflection serif"
+          @click="openReflectionForm"
+        >
+          Leave a Reflection
+        </button>
       </div>
 
-      <button
-        v-if="showLeaveReflectionButton && !reflectionFormOpen"
-        type="button"
-        class="watching-from-section__leave-reflection serif"
-        @click="openReflectionForm"
+      <p
+        v-if="mapSummaryLabel"
+        class="watching-from-section__map-summary serif"
       >
-        Leave a Reflection
-      </button>
+        {{ mapSummaryLabel }}
+      </p>
     </div>
 
     <div
@@ -536,18 +560,24 @@ onBeforeUnmount(() => {
             </span>
           </button>
 
-          <div class="watching-from-section__viewer-card">
-            <ReflectionCard
-              :key="activeReflection._id"
-              :item="activeReflection"
-              :index="activeReflectionIndex"
-              :open="carouselCardOpen"
-              :paper-tilt-max="2"
-              click-only
-              show-folded-location
-              @open="onCarouselCardOpen"
-              @close="onCarouselCardClose"
-            />
+          <div class="watching-from-section__viewer-stage">
+            <div
+              class="watching-from-section__viewer-card"
+              :class="{ 'watching-from-section__viewer-card--longform': activeReflection?.longform }"
+            >
+              <ReflectionCard
+                :key="activeReflection._id"
+                :item="activeReflection"
+                :index="activeReflectionIndex"
+                :open="carouselCardOpen"
+                :paper-tilt-max="activeReflection?.longform ? 0 : 2"
+                :disable-paper-tilt="Boolean(activeReflection?.longform)"
+                click-only
+                show-folded-location
+                @open="onCarouselCardOpen"
+                @close="onCarouselCardClose"
+              />
+            </div>
           </div>
 
           <button
@@ -602,7 +632,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .watching-from-section {
   display: grid;
-  gap: clamp(0.85rem, 2vw, 1.25rem);
+  gap: clamp(0.85rem, 2.5vw, 3rem) clamp(0.85rem, 2vw, 1.25rem);
 }
 
 @media (min-width: 700px) {
@@ -616,18 +646,26 @@ onBeforeUnmount(() => {
     grid-column: 1 / -1;
   }
 
-  .watching-from-section__map-stage {
+  .watching-from-section__map-column {
     grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.65rem, 1.5vw, 0.85rem);
     min-width: 0;
     align-self: start;
   }
 
-  .watching-from-section:not(:has(.watching-from-section__viewer-wrap)) .watching-from-section__map-stage {
+  .watching-from-section__map-stage {
+    min-width: 0;
+  }
+
+  .watching-from-section:not(:has(.watching-from-section__viewer-wrap)) .watching-from-section__map-column {
     grid-column: 1 / -1;
   }
 
   .watching-from-section__viewer-wrap {
     grid-column: 2;
+    grid-row: auto;
     min-width: 0;
     align-self: start;
     overflow: hidden;
@@ -647,11 +685,14 @@ onBeforeUnmount(() => {
 }
 
 .watching-from-section__view-all {
-  display: inline;
+  justify-self: end;
+  text-align: right;
+  font-family: var(--serif);
+  font-size: clamp(0.95rem, 1.35vw, 1.5rem);
+  font-weight: 300;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
   color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
@@ -664,14 +705,25 @@ onBeforeUnmount(() => {
 
 .watching-from-section__header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: clamp(0.75rem, 2vw, 1rem);
+  align-items: end;
 }
 
 @media (min-width: 700px) {
   .watching-from-section__header {
     grid-template-columns: 3fr 1fr;
-    align-items: end;
     gap: clamp(1rem, 3vw, 2rem);
+  }
+
+  .watching-from-section__view-all {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .watching-from-section__field {
+    grid-column: 2;
+    grid-row: 2;
   }
 }
 
@@ -804,6 +856,16 @@ onBeforeUnmount(() => {
   outline-offset: 2px;
 }
 
+.watching-from-section__map-summary {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(0.875rem, 1.2vw, 0.95rem);
+  font-weight: 300;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+  opacity: 0.72;
+}
+
 .watching-from-section__viewer-wrap {
   display: flex;
   flex-direction: column;
@@ -817,8 +879,11 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: clamp(1rem, 2vw, 2rem);
   width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .watching-from-section__viewer {
@@ -827,12 +892,38 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: clamp(0.5rem, 2vw, 1rem);
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.watching-from-section__viewer-stage {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .watching-from-section__viewer-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: min(100%, 22rem);
-  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+}
+
+.watching-from-section__viewer-card :deep(.reflection-card) {
+  width: 100%;
+  height: 100%;
+}
+
+.watching-from-section__viewer-card--longform {
+  aspect-ratio: 2 / 3;
+  height: auto;
 }
 
 .watching-from-section__counter {
@@ -853,6 +944,8 @@ onBeforeUnmount(() => {
 .watching-from-section__nav {
   display: grid;
   place-items: center;
+  grid-row: 1;
+  align-self: center;
   border: 0;
   padding: 0.35rem 0.5rem;
   background: none;

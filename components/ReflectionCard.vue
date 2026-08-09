@@ -51,6 +51,7 @@ const attributionLabel = computed(() =>
 const foldedLocationLabel = computed(() =>
   normalizeReflectionField(props.item?.city),
 )
+const isLongform = computed(() => props.item?.longform === true)
 const isOpen = computed(() => props.readonly || props.open)
 const allowsHoverOpen = computed(() => !props.readonly && !props.clickOnly)
 
@@ -153,6 +154,7 @@ onBeforeUnmount(() => {
         'reflection-card--pending': isPending,
         'reflection-card--readonly': readonly,
         'reflection-card--hover-open': canHoverOpen && allowsHoverOpen,
+        'reflection-card--longform': isLongform,
       },
     ]"
     :style="paperStyle"
@@ -196,12 +198,16 @@ onBeforeUnmount(() => {
           v-else
           class="reflection-card__inside"
         >
-          <p class="reflection-card__quote serif">
+          <p
+            class="reflection-card__quote"
+            :class="{ 'reflection-card__quote--longform': isLongform }"
+          >
             {{ reflectionText }}
           </p>
           <cite
             v-if="attributionLabel"
             class="reflection-card__attribution"
+            :class="{ 'reflection-card__attribution--longform': isLongform }"
           >
             {{ attributionLabel }}
           </cite>
@@ -237,8 +243,31 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
-.reflection-card--open .reflection-card__toggle {
+.reflection-card--longform {
   align-items: center;
+  justify-content: center;
+}
+
+.reflection-card--longform .reflection-card__toggle {
+  align-items: start;
+  justify-content: center;
+}
+
+.reflection-card--longform .reflection-card__paper {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  height: auto;
+  max-height: 100%;
+}
+
+.reflection-card--longform .reflection-card__paper--open {
+  aspect-ratio: 2 / 3;
+  height: auto;
+  max-height: 100%;
+}
+
+.reflection-card--open .reflection-card__toggle {
+  align-items: start;
   justify-content: center;
   height: 100%;
 }
@@ -302,6 +331,11 @@ onBeforeUnmount(() => {
 
 .reflection-card__paper--open::after {
   top: 75%;
+}
+
+.reflection-card--longform .reflection-card__paper--open::before,
+.reflection-card--longform .reflection-card__paper--open::after {
+  content: none;
 }
 
 .reflection-card__folded {
@@ -381,13 +415,29 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
+.reflection-card--longform .reflection-card__inside {
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 10%;
+}
+
 .reflection-card__quote {
   margin: 0;
   font-size: 8cqmin;
   font-weight: 300;
   line-height: 1.3;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
   text-align: center;
+  font-family: var(--serif-body);
+}
+
+.reflection-card__quote--longform {
+  font-family: var(--serif-body);
+  font-size: clamp(0.875rem, 5.2cqmin, 1.125rem);
+  line-height: 1.35;
+  text-align: left;
+  font-weight: 400;
+  max-width: 800px;
 }
 
 .reflection-card__attribution {
@@ -403,6 +453,14 @@ onBeforeUnmount(() => {
   text-transform: none;
   color: inherit;
   text-align: right;
+}
+
+.reflection-card__attribution--longform {
+  position: static;
+  margin-top: auto;
+  font-size: clamp(0.625rem, 3.4cqmin, 0.75rem);
+  text-align: left;
+  opacity: 0.72;
 }
 
 .reflection-card__pending-note {
