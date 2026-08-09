@@ -20,6 +20,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  lightStyle: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['select-marker'])
@@ -47,30 +51,21 @@ function isSelected(marker) {
   return Boolean(props.selectedMarkerId) && marker.id === props.selectedMarkerId
 }
 
-function markerOpacity(marker) {
-  if (props.selectedMarkerId) {
-    return isSelected(marker) ? 1 : 0.22
-  }
-
-  if (!props.activeLocationId) return marker.isCluster ? 0.9 : 0.82
-
-  return isActive(marker) ? 1 : 0.28
+function markerOpacity() {
+  return 1
 }
 
-function markerRadius(marker) {
-  if (marker.isCluster) {
-    if (isSelected(marker)) return 3.6
-    if (isActive(marker)) return 3.2
-    return 2.6
-  }
+const MARKER_RADIUS = 1.4
+const SELECTED_MARKER_RADIUS = 3.4
+const MARKER_HIT_RADIUS = 5
+const SELECTED_MARKER_HIT_RADIUS = 8
 
-  if (isSelected(marker)) return 3.2
-  if (isActive(marker)) return 2.8
-  return 1.8
+function markerRadius(marker) {
+  return isSelected(marker) ? SELECTED_MARKER_RADIUS : MARKER_RADIUS
 }
 
 function markerHitRadius(marker) {
-  return marker.isCluster ? 8 : 6
+  return isSelected(marker) ? SELECTED_MARKER_HIT_RADIUS : MARKER_HIT_RADIUS
 }
 
 function selectMarker(marker) {
@@ -144,6 +139,7 @@ watch(
   <div
     ref="diagramRef"
     class="watching-from-diagram"
+    :class="{ 'watching-from-diagram--light': lightStyle }"
     @mouseleave="hideTooltip"
   >
     <svg
@@ -181,27 +177,18 @@ watch(
           />
 
           <circle
-            v-if="marker.isCluster"
-            :cx="marker.x"
-            :cy="marker.y"
-            :r="markerRadius(marker) + 2.8"
-            class="watching-from-diagram__marker-halo"
-            :opacity="markerOpacity(marker) * 0.28"
-          />
-
-          <circle
             :cx="marker.x"
             :cy="marker.y"
             :r="markerRadius(marker)"
             class="watching-from-diagram__marker-dot"
-            :opacity="markerOpacity(marker)"
+            :opacity="markerOpacity()"
           />
 
           <circle
             v-if="marker.isCluster"
             :cx="marker.x"
             :cy="marker.y"
-            :r="markerRadius(marker) + 1.8"
+            :r="markerRadius(marker) + 1.4"
             class="watching-from-diagram__marker-ring"
             :opacity="isSelected(marker) || isActive(marker) ? 0.55 : 0.35"
           />
@@ -210,7 +197,7 @@ watch(
             v-else-if="isActive(marker) || isSelected(marker)"
             :cx="marker.x"
             :cy="marker.y"
-            r="5.5"
+            :r="markerRadius(marker) + 2"
             class="watching-from-diagram__marker-ring"
             :opacity="0.35"
           />
@@ -262,6 +249,19 @@ watch(
   opacity: 0.34;
 }
 
+.watching-from-diagram--light .watching-from-diagram__land {
+  stroke: #fff;
+  opacity: 0.4;
+}
+
+.watching-from-diagram--light .watching-from-diagram__marker-dot {
+  fill: #fff;
+}
+
+.watching-from-diagram--light .watching-from-diagram__marker-ring {
+  stroke: #fff;
+}
+
 .watching-from-diagram__marker {
   cursor: pointer;
 }
@@ -271,8 +271,7 @@ watch(
   pointer-events: all;
 }
 
-.watching-from-diagram__marker-dot,
-.watching-from-diagram__marker-halo {
+.watching-from-diagram__marker-dot {
   fill: currentColor;
   pointer-events: none;
   transition:

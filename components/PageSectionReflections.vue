@@ -1,4 +1,6 @@
 <script setup>
+import { resolveSanityAssetUrl } from '~/utils/sanity'
+
 const props = defineProps({
   section: {
     type: Object,
@@ -84,6 +86,19 @@ const watchingFromTitle = computed(() =>
 const watchingFromIntro = computed(() =>
   props.section?.reflectionsWatchingFromIntro?.trim() || '',
 )
+
+const mapBackgroundImage = computed(() => {
+  const image = props.section?.reflectionsMapBackgroundImage
+  const url = resolveSanityAssetUrl(image?.asset)
+  if (!url) return null
+
+  return {
+    url,
+    alt: image?.alt || '',
+  }
+})
+
+const mapLightStyle = computed(() => props.section?.reflectionsMapLightStyle === true)
 
 const fullGridPageSize = computed(() => {
   const value = Number(props.section?.reflectionsMaxItems)
@@ -243,6 +258,8 @@ function selectFullViewTab(tab) {
             :items="items"
             :title="watchingFromTitle"
             :intro="watchingFromIntro"
+            :map-background-image="mapBackgroundImage"
+            :map-light-style="mapLightStyle"
           />
         </div>
       </div>
@@ -282,6 +299,8 @@ function selectFullViewTab(tab) {
           :items="items"
           :title="watchingFromTitle"
           :intro="watchingFromIntro"
+          :map-background-image="mapBackgroundImage"
+          :map-light-style="mapLightStyle"
           :view-all-path="VIEW_ALL_REFLECTIONS_PATH"
           show-leave-reflection-button
         />

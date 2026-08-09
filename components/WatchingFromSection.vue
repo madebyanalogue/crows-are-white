@@ -38,6 +38,14 @@ const props = defineProps({
     type: String,
     default: 'View more',
   },
+  mapBackgroundImage: {
+    type: Object,
+    default: null,
+  },
+  mapLightStyle: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['select-marker', 'submitted'])
@@ -95,8 +103,18 @@ const hasHeading = computed(() =>
   Boolean(resolvedTitle.value || resolvedIntro.value),
 )
 const hasHeader = computed(() =>
-  hasHeading.value || props.viewAllPath || !props.compact,
+  hasHeading.value || hasHeaderActions.value || !props.compact,
 )
+
+const showHeaderLeaveReflection = computed(() =>
+  props.showLeaveReflectionButton && !reflectionFormOpen.value,
+)
+
+const hasHeaderActions = computed(() =>
+  Boolean(props.viewAllPath || showHeaderLeaveReflection.value),
+)
+
+const hasMapBackgroundImage = computed(() => Boolean(props.mapBackgroundImage?.url))
 
 watch(
   () => activeReflection.value?._id,
@@ -443,13 +461,33 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <NuxtLink
-        v-if="viewAllPath"
-        :to="viewAllPath"
-        class="watching-from-section__view-all serif"
+      <div
+        v-if="hasHeaderActions"
+        class="watching-from-section__header-actions"
       >
-        {{ viewAllLabel }}
-      </NuxtLink>
+        <button
+          v-if="showHeaderLeaveReflection"
+          type="button"
+          class="watching-from-section__leave-reflection serif"
+          @click="openReflectionForm"
+        >
+          Leave a Reflection
+        </button>
+
+        <span
+          v-if="viewAllPath && showHeaderLeaveReflection"
+          class="watching-from-section__header-divider"
+          aria-hidden="true"
+        >|</span>
+
+        <NuxtLink
+          v-if="viewAllPath"
+          :to="viewAllPath"
+          class="watching-from-section__view-all serif"
+        >
+          {{ viewAllLabel }}
+        </NuxtLink>
+      </div>
 
       <label
         v-if="!compact"
@@ -470,11 +508,22 @@ onBeforeUnmount(() => {
       <div
         ref="mapStageRef"
         class="watching-from-section__map-stage"
+        :class="{ 'watching-from-section__map-stage--has-background': hasMapBackgroundImage }"
       >
+        <img
+          v-if="hasMapBackgroundImage"
+          class="watching-from-section__map-background"
+          :src="mapBackgroundImage.url"
+          :alt="mapBackgroundImage.alt"
+          draggable="false"
+          loading="lazy"
+        >
+
         <WatchingFromDiagram
           :locations="displayLocations"
           :active-location-id="userLocation?.id || ''"
           :selected-marker-id="selectedMarker?.id || props.selectedMarkerId || ''"
+          :light-style="mapLightStyle"
           @select-marker="selectMarker"
         />
 
@@ -509,14 +558,6 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <button
-          v-if="showLeaveReflectionButton && !reflectionFormOpen"
-          type="button"
-          class="watching-from-section__leave-reflection serif"
-          @click="openReflectionForm"
-        >
-          Leave a Reflection
-        </button>
       </div>
 
       <p
@@ -685,22 +726,37 @@ onBeforeUnmount(() => {
 }
 
 .watching-from-section__view-all {
-  justify-self: end;
   text-align: right;
   font-family: var(--serif);
   font-size: clamp(0.95rem, 1.35vw, 1.5rem);
   font-weight: 300;
   line-height: 1.45;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   color: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
+  text-decoration: none;
   transition: opacity 0.2s ease;
 }
 
 .watching-from-section__view-all:hover {
   opacity: 0.72;
+}
+
+.watching-from-section__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  justify-self: end;
+  gap: clamp(0.65rem, 1.5vw, 1rem);
+  text-align: right;
+}
+
+.watching-from-section__header-divider {
+  font-family: var(--serif);
+  font-size: clamp(0.95rem, 1.35vw, 1.5rem);
+  font-weight: 300;
+  line-height: 1;
+  opacity: 0.35;
 }
 
 .watching-from-section__header {
@@ -716,7 +772,7 @@ onBeforeUnmount(() => {
     gap: clamp(1rem, 3vw, 2rem);
   }
 
-  .watching-from-section__view-all {
+  .watching-from-section__header-actions {
     grid-column: 2;
     grid-row: 1;
   }
@@ -784,11 +840,28 @@ onBeforeUnmount(() => {
 .watching-from-section__map-stage {
   position: relative;
   min-width: 0;
+  overflow: hidden;
   border: 1px dashed color-mix(in srgb, currentColor 24%, transparent);
   background: color-mix(in srgb, currentColor 4%, transparent);
 }
 
+.watching-from-section__map-stage--has-background {
+  background: transparent;
+}
+
+.watching-from-section__map-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
 .watching-from-section__map-stage :deep(.watching-from-diagram) {
+  position: relative;
+  z-index: 1;
   border: 0;
   background: transparent;
 }
@@ -829,22 +902,18 @@ onBeforeUnmount(() => {
 }
 
 .watching-from-section__leave-reflection {
-  position: absolute;
-  right: clamp(0.75rem, 2vw, 1.25rem);
-  bottom: clamp(0.75rem, 2vw, 1.25rem);
-  z-index: 2;
   border: 0;
   padding: 0;
   background: none;
   color: inherit;
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-family: var(--serif);
+  font-size: clamp(0.95rem, 1.35vw, 1.5rem);
   font-weight: 300;
-  letter-spacing: 0.04em;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-decoration: none;
   cursor: pointer;
-  pointer-events: auto;
+  transition: opacity 0.2s ease;
 }
 
 .watching-from-section__leave-reflection:hover {
