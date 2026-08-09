@@ -39,10 +39,7 @@ const listItems = computed(() =>
         :key="item._id"
         class="reflection-list__item"
       >
-        <h3
-          class="reflection-list__quote h3 light"
-          :class="{ 'reflection-list__quote--longform': item.longform }"
-        >
+        <h3 class="reflection-list__quote h3 serif light">
           {{ item.reflection }}
         </h3>
         <cite
@@ -80,7 +77,7 @@ const listItems = computed(() =>
 .reflection-list__item {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.65rem, 1.5vw, 0.85rem);
+  gap: clamp(0.65rem, 1.75vw, 1.4rem);
   margin: 0;
   padding: 0;
   background: none;
@@ -93,19 +90,10 @@ const listItems = computed(() =>
 
 .reflection-list__quote {
   margin: 0;
-  font-family: var(--serif-body);
+  font-family: var(--serif);
   font-weight: 300;
   line-height: 1.25;
-  letter-spacing: 0.01em;
-}
-
-.reflection-list__quote--longform {
-  max-width: 800px;
-  margin-inline: auto;
-  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
-  line-height: 1.35;
-  font-weight: 400;
-  text-align: left;
+  letter-spacing: 0.02em;
 }
 
 .reflection-list__cite {
