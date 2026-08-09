@@ -564,8 +564,9 @@ onBeforeUnmount(() => {
         </div>
 
         <p
-          v-if="canStepReflections"
           class="watching-from-section__counter handwritten"
+          :class="{ 'watching-from-section__counter--hidden': !canStepReflections }"
+          :aria-hidden="!canStepReflections ? 'true' : undefined"
           aria-live="polite"
           :aria-label="`${activeReflectionIndex + 1} of ${markerReflections.length}`"
         >
@@ -829,6 +830,10 @@ onBeforeUnmount(() => {
   text-transform: none;
   opacity: 0.75;
   pointer-events: none;
+}
+
+.watching-from-section__counter--hidden {
+  opacity: 0;
 }
 
 .watching-from-section__nav {

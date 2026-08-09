@@ -71,6 +71,8 @@ onUnmounted(() => {
         :item="item"
         :index="index"
         :open="openId === item._id"
+        click-only
+        show-folded-location
         @open="openCard"
         @close="closeCard"
       />
