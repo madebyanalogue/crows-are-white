@@ -30,6 +30,10 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  disablePaperTilt: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['open', 'close'])
@@ -51,6 +55,8 @@ const isOpen = computed(() => props.readonly || props.open)
 const allowsHoverOpen = computed(() => !props.readonly && !props.clickOnly)
 
 const paperTilt = computed(() => {
+  if (props.disablePaperTilt) return null
+
   const seed = String(props.item?._id ?? props.index)
   let hash = 0
 
@@ -259,8 +265,8 @@ onBeforeUnmount(() => {
 
 .reflection-card__paper {
   position: relative;
-  width: 96%;
-  aspect-ratio: 2 / 1;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 1px;
   background: var(--reflection-paper-bg);
   box-shadow: none;
@@ -272,7 +278,7 @@ onBeforeUnmount(() => {
 }
 
 .reflection-card__paper--open {
-  width: min(96%, 100%);
+  width: 100%;
   max-height: 100%;
   aspect-ratio: 1 / 1;
   box-shadow: none;

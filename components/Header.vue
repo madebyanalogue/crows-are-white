@@ -632,7 +632,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   pointer-events: none;
-  padding: 0 1rem;
+  padding: 0 var(--wrapper-padding);
 }
 
 @media (min-width: 700px) {

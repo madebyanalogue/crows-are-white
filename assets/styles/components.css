@@ -9,15 +9,6 @@
 }
 
 /* Source: app.vue */
-#app.is--hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-#app:not(.is--hidden) {
-  visibility: visible;
-}
-
 .page-transition-outer,
 .page-transition-inner,
 .page-transition-content {
@@ -219,7 +210,7 @@ a.trustpilot-stars {
   padding: 1rem 1.35rem;
   border: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
   outline: 1px solid color-mix(in srgb, var(--obsidian) 28%, transparent);
-  outline-offset: 5px;
+  outline-offset: 2px;
   color: var(--obsidian);
   text-align: center;
 }

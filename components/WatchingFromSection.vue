@@ -8,7 +8,7 @@ const props = defineProps({
   },
   title: {
     type: String,
-    default: 'Around the World',
+    default: '',
   },
   intro: {
     type: String,
@@ -77,6 +77,13 @@ const activeReflection = computed(() =>
 )
 
 const canStepReflections = computed(() => markerReflections.value.length > 1)
+
+const resolvedTitle = computed(() => props.title.trim())
+const resolvedIntro = computed(() => props.intro.trim())
+const hasHeading = computed(() =>
+  Boolean(resolvedTitle.value || resolvedIntro.value || props.viewAllPath),
+)
+const hasHeader = computed(() => hasHeading.value || !props.compact)
 
 watch(
   () => activeReflection.value?._id,
@@ -397,23 +404,29 @@ onBeforeUnmount(() => {
   <section
     class="watching-from-section"
     :class="{ 'watching-from-section--compact': compact }"
-    :aria-labelledby="'watching-from-heading'"
-    :aria-label="compact ? undefined : 'Around the world map'"
+    :aria-labelledby="resolvedTitle ? 'watching-from-heading' : undefined"
+    :aria-label="resolvedTitle ? undefined : (compact ? 'Reflections map' : 'Around the world map')"
   >
-    <div class="watching-from-section__header">
-      <div class="watching-from-section__heading">
+    <div
+      v-if="hasHeader"
+      class="watching-from-section__header"
+    >
+      <div
+        v-if="hasHeading"
+        class="watching-from-section__heading"
+      >
         <h3
+          v-if="resolvedTitle"
           id="watching-from-heading"
-          class="watching-from-section__title"
-          :class="compact ? 'heading-condensed' : 'h3 serif light'"
+          class="watching-from-section__title h3 serif light"
         >
-          {{ title }}
+          {{ resolvedTitle }}
         </h3>
         <p
-          v-if="intro || viewAllPath"
+          v-if="resolvedIntro || viewAllPath"
           class="watching-from-section__byline light"
         >
-          <template v-if="intro">{{ intro }}</template><template v-if="intro && viewAllPath">&nbsp;</template><NuxtLink
+          <template v-if="resolvedIntro">{{ resolvedIntro }}</template><template v-if="resolvedIntro && viewAllPath">&nbsp;</template><NuxtLink
             v-if="viewAllPath"
             :to="viewAllPath"
             class="watching-from-section__view-all"

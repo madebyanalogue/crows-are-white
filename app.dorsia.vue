@@ -10,10 +10,7 @@
       <LayoutGrid />
     </ClientOnly>
 
-    <div
-      id="app"
-      :class="{ 'is--hidden': !preloaderReady }"
-    >
+    <div id="app">
       <Header />
 
       <main class="page-wrapper">
@@ -62,7 +59,6 @@ const { nuxtPageTransition, pageTransitionWipeColor } = usePageTransition()
 const transitionWrapStyle = computed(() => ({
   '--page-transition-wipe': pageBackgroundVar(pageTransitionWipeColor.value),
 }))
-const preloaderReady = ref(false)
 const headerCanReveal = useState('crows_headerCanReveal', () => false)
 
 usePageHeaderPadding()
@@ -221,7 +217,6 @@ function onPreloaderReady() {
 }
 
 function onPreloaderComplete() {
-  preloaderReady.value = true
   headerCanReveal.value = true
   if (process.client) {
     document.body.classList.add('preloader-complete')
@@ -230,22 +225,12 @@ function onPreloaderComplete() {
 
 onMounted(() => {
   if (!shouldRunPreloader.value) {
-    preloaderReady.value = true
     headerCanReveal.value = true
   }
 })
 </script>
 
 <style>
-#app.is--hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-#app:not(.is--hidden) {
-  visibility: visible;
-}
-
 .page-transition-outer,
 .page-transition-inner,
 .page-transition-content {

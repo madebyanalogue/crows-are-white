@@ -101,6 +101,13 @@ function loadMore() {
           @update:model-value="onCountryUpdate"
         />
       </div>
+
+      <div
+        v-if="$slots['toolbar-end']"
+        class="reflection-grid-explorer__toolbar-end"
+      >
+        <slot name="toolbar-end" />
+      </div>
     </div>
 
     <ReflectionWall
@@ -136,7 +143,7 @@ function loadMore() {
 .reflection-grid-explorer {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.85rem, 2vw, 1.25rem);
+  gap: clamp(1rem, 4vw, 3rem);
   min-width: 0;
 }
 
@@ -144,7 +151,15 @@ function loadMore() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: clamp(0.65rem, 1.5vw, 1rem);
+  overflow: visible;
+}
+
+.reflection-grid-explorer__toolbar-end {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 .reflection-grid-explorer__filter-group {

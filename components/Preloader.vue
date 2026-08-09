@@ -133,11 +133,20 @@ function markPreloaderReady() {
   document.body.classList.add('preloader-ready')
 }
 
+function popOutPreloader() {
+  if (preloaderEl.value) {
+    preloaderEl.value.style.pointerEvents = 'none'
+    preloaderEl.value.style.transform = 'scaleY(0)'
+    preloaderEl.value.style.transformOrigin = 'top center'
+  }
+
+  signalPreloaderComplete()
+  finishPreloader()
+}
+
 function initPreloaderAnimation(gsap) {
   const textFadeInDuration = 1.8
   const textHoldDuration = preloaderHoldSeconds.value
-  const textFadeOutDuration = 0.45
-  const wipeDuration = 0.4
 
   gsap.set(preloaderEl.value, {
     scaleY: 1,
@@ -151,9 +160,7 @@ function initPreloaderAnimation(gsap) {
     gsap.set(textBoxEl.value, { opacity: 0 })
   }
 
-  animationTimeline = gsap.timeline({
-    onComplete: finishPreloader,
-  })
+  animationTimeline = gsap.timeline()
 
   let cursor = 0
 
@@ -166,32 +173,12 @@ function initPreloaderAnimation(gsap) {
     }, cursor)
 
     cursor += textFadeInDuration + textHoldDuration
-
-    animationTimeline.to(textBoxEl.value, {
-      opacity: 0,
-      duration: textFadeOutDuration,
-      ease: 'power2.inOut',
-    }, cursor)
-
-    cursor += textFadeOutDuration
   } else {
     markPreloaderReady()
     cursor += textHoldDuration
   }
 
-  animationTimeline.to(preloaderEl.value, {
-    scaleY: 0,
-    scaleX: 1,
-    transformOrigin: 'top center',
-    duration: wipeDuration,
-    ease: 'none',
-    onStart: () => {
-      if (preloaderEl.value) {
-        preloaderEl.value.style.pointerEvents = 'none'
-      }
-      signalPreloaderComplete()
-    },
-  }, cursor)
+  animationTimeline.call(popOutPreloader, null, cursor)
 }
 
 async function waitForGsap() {

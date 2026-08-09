@@ -82,6 +82,7 @@ function pageSectionProjection() {
     ${colorField('newsletterTextColor')},
     newsletterMediaType,
     newsletterOverlayOpacity,
+    newsletterLayout,
     newsletterImage ${imageProjection},
     newsletterVideo {
       asset-> {
@@ -544,6 +545,7 @@ function pageSectionProjection() {
     letterboxLoopCloudflare1080,
     letterboxOverlayImage ${imageProjection},
     letterboxLinkText,
+    letterboxLinkStyle,
     letterboxLink {
       type,
       linkTitle,
@@ -595,6 +597,9 @@ function pageSectionProjection() {
       mediaType,
       alt,
       image ${imageProjection},
+      hoverImage ${imageProjection},
+      hoverAlt,
+      isGallerySlot,
       videoSource,
       loopCloudflare720,
       loopCloudflare1080,
@@ -614,6 +619,7 @@ function pageSectionProjection() {
     reflectionsWatchingFromIntro,
     reflectionsIntro,
     reflectionsLayout,
+    reflectionsHideHeader,
     reflectionsMaxItems,
     reflectionsHideCardBorder,
     reflectionsBackgroundMediaType,

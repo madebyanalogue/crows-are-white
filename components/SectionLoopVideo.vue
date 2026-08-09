@@ -193,6 +193,9 @@ onBeforeUnmount(() => {
   width: 100%;
   background: #000;
 }
+.page-section-letterbox-video__video {
+  height: 100%;
+}
 
 .section-loop-video__poster {
   position: absolute;

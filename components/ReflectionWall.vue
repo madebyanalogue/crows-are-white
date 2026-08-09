@@ -73,6 +73,7 @@ onUnmounted(() => {
         :open="openId === item._id"
         click-only
         show-folded-location
+        disable-paper-tilt
         @open="openCard"
         @close="closeCard"
       />
@@ -90,9 +91,10 @@ onUnmounted(() => {
 <style scoped>
 .reflection-wall {
   --reflection-cell-aspect: 1;
+  /* --reflection-card-border: 1px solid var(--light-border); */
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.35rem, 1vw, 0.6rem) clamp(0.75rem, 1.8vw, 1.15rem);
+  gap: 1rem;
 }
 
 .reflection-wall__cell {

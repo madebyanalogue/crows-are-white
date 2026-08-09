@@ -17,6 +17,11 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  layout: {
+    type: String,
+    default: 'overlay',
+    validator: (value) => ['overlay', 'split'].includes(value),
+  },
 })
 
 const {mailchimpAction} = useSiteSettings()
@@ -26,6 +31,8 @@ const email = ref('')
 const hasMedia = computed(() =>
   Boolean(props.background?.imageUrl || props.background?.videoUrl || props.background?.loop),
 )
+
+const isSplitLayout = computed(() => props.layout === 'split' && hasMedia.value)
 
 const introParagraphs = computed(() => {
   const text = props.intro?.trim() || ''
@@ -45,14 +52,122 @@ function onSubmit() {
   <section
     class="newsletter-block"
     :class="{
-      'has-background': hasMedia,
-      'is-light': background?.textColor === 'light',
+      'has-background': hasMedia && !isSplitLayout,
+      'is-light': !isSplitLayout && background?.textColor === 'light',
+      'newsletter-block--split': isSplitLayout,
     }"
-    :style="hasMedia ? {'--newsletter-overlay': background.overlayOpacity} : null"
+    :style="hasMedia && !isSplitLayout ? {'--newsletter-overlay': background.overlayOpacity} : null"
     :aria-label="title"
   >
     <div
-      v-if="hasMedia"
+      v-if="isSplitLayout"
+      class="newsletter-block__split"
+    >
+      <div class="newsletter-block__content">
+        <h2 class="newsletter-block__title serif">
+          {{ title }}
+        </h2>
+
+        <div
+          v-if="introParagraphs.length"
+          class="newsletter-block__intro"
+        >
+          <p
+            v-for="(paragraph, index) in introParagraphs"
+            :key="index"
+            class="newsletter-block__intro-paragraph serif"
+          >
+            {{ paragraph }}
+          </p>
+        </div>
+
+        <form
+          v-if="!submitted"
+          class="newsletter-block__form"
+          :action="mailchimpAction || undefined"
+          method="post"
+          target="_blank"
+          @submit="onSubmit"
+        >
+          <div class="newsletter-block__field">
+            <label
+              class="newsletter-block__label serif"
+              for="newsletter-block-email-split"
+            >
+              Email address
+            </label>
+            <input
+              id="newsletter-block-email-split"
+              v-model="email"
+              class="newsletter-block__input serif"
+              type="email"
+              name="EMAIL"
+              required
+              autocomplete="email"
+            >
+          </div>
+          <button
+            type="submit"
+            class="newsletter-block__submit serif"
+            :disabled="!mailchimpAction"
+          >
+            {{ submitLabel }}
+          </button>
+        </form>
+
+        <p
+          v-else
+          class="newsletter-block__thanks serif"
+        >
+          Thanks — check your inbox to confirm.
+        </p>
+      </div>
+
+      <div class="newsletter-block__media-col">
+        <video
+          v-if="background?.loop"
+          class="newsletter-block__media"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source
+            v-if="background.loop.url1080 && background.loop.url1080 !== background.loop.url720"
+            media="(min-width: 1000px)"
+            :src="background.loop.url1080"
+            type="video/mp4"
+          >
+          <source
+            :src="background.loop.url720 || background.loop.url"
+            type="video/mp4"
+          >
+        </video>
+        <video
+          v-else-if="background?.videoUrl"
+          class="newsletter-block__media"
+          :src="background.videoUrl"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-hidden="true"
+        />
+        <img
+          v-else-if="background?.imageUrl"
+          class="newsletter-block__media"
+          :src="background.imageUrl"
+          :alt="background.alt"
+          draggable="false"
+        >
+      </div>
+    </div>
+
+    <div
+      v-else-if="hasMedia"
       class="newsletter-block__media-wrap"
     >
       <video
@@ -232,8 +347,41 @@ function onSubmit() {
   color: var(--newsletter-ink);
 }
 
-.newsletter-block:not(.has-background) {
+.newsletter-block:not(.has-background):not(.newsletter-block--split) {
   padding: clamp(3.5rem, 10vw, 7rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 12vw, 8rem);
+}
+
+.newsletter-block--split {
+  width: 100%;
+}
+
+.newsletter-block__split {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  width: 100%;
+}
+
+.newsletter-block__content {
+  width: 100%;
+  max-width: 500px;
+  justify-self: start;
+}
+
+.newsletter-block__media-col {
+  position: relative;
+  width: 100%;
+  min-height: clamp(280px, 42vw, 560px);
+  overflow: hidden;
+}
+
+.newsletter-block__media-col .newsletter-block__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .newsletter-block.is-light {
@@ -411,6 +559,14 @@ function onSubmit() {
 }
 
 @media (max-width: 699px) {
+  .newsletter-block__split {
+    grid-template-columns: 1fr;
+  }
+
+  .newsletter-block__content {
+    max-width: none;
+  }
+
   .newsletter-block__form {
     grid-template-columns: 1fr;
     gap: 1.25rem;

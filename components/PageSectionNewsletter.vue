@@ -102,7 +102,13 @@ const sectionStyle = computed(() => {
   return style
 })
 
-const useWrapper = computed(() => props.section?.newsletterUseWrapper === true)
+const layout = computed(() =>
+  props.section?.newsletterLayout === 'split' ? 'split' : 'overlay',
+)
+
+const useWrapper = computed(() =>
+  props.section?.newsletterUseWrapper === true || layout.value === 'split',
+)
 
 const innerClass = computed(() => ({
   wrapper: useWrapper.value,
@@ -124,6 +130,7 @@ const innerClass = computed(() => ({
         :intro="intro"
         :submit-label="submitLabel"
         :background="background"
+        :layout="layout"
       />
     </div>
   </div>

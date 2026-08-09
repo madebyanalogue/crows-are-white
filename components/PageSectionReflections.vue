@@ -59,6 +59,9 @@ const layoutMode = computed(() => {
 
 const isCompactLayout = computed(() => layoutMode.value === 'compact')
 const isFullLayout = computed(() => layoutMode.value === 'full')
+const hideFullHeader = computed(() =>
+  isFullLayout.value && props.section?.reflectionsHideHeader === true,
+)
 
 const resolvedTitle = computed(() =>
   props.section?.reflectionsTitle?.trim() || props.title,
@@ -75,12 +78,11 @@ const introParagraphs = computed(() => {
 const bylineParagraph = computed(() => introParagraphs.value[0] || '')
 
 const watchingFromTitle = computed(() =>
-  props.section?.reflectionsWatchingFromTitle?.trim() || 'Around the World',
+  props.section?.reflectionsWatchingFromTitle?.trim() || '',
 )
 
 const watchingFromIntro = computed(() =>
-  props.section?.reflectionsWatchingFromIntro?.trim()
-  || 'A quiet collection of reflections from viewers around the world. Click anywhere to discover a reflection.',
+  props.section?.reflectionsWatchingFromIntro?.trim() || '',
 )
 
 const fullGridPageSize = computed(() => {
@@ -93,19 +95,26 @@ const hasBackgroundVideo = computed(() =>
   props.section?.reflectionsBackgroundMediaType === 'video',
 )
 
-const sectionStyle = computed(() => ({
-  paddingTop: props.isFirstSection
-    ? 'var(--page-top-offset)'
-    : SECTION_PADDING_VALUES[resolveSectionPadding(
-      props.section?.reflectionsPaddingTop ?? props.paddingTop,
+const sectionStyle = computed(() => {
+  const style = {
+    paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(
+      props.section?.reflectionsPaddingBottom ?? props.paddingBottom,
     )],
-  paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(
-    props.section?.reflectionsPaddingBottom ?? props.paddingBottom,
-  )],
-  '--reflection-card-border': props.section?.reflectionsHideCardBorder === true
-    ? 'none'
-    : '1px solid var(--mid-border)',
-}))
+    '--reflection-card-border': props.section?.reflectionsHideCardBorder === true
+      ? 'none'
+      : '1px solid var(--mid-border)',
+  }
+
+  if (!isFullLayout.value) {
+    style.paddingTop = props.isFirstSection
+      ? 'var(--page-top-offset)'
+      : SECTION_PADDING_VALUES[resolveSectionPadding(
+        props.section?.reflectionsPaddingTop ?? props.paddingTop,
+      )]
+  }
+
+  return style
+})
 
 const fullViewTab = ref('list')
 const { items, pending } = useReflections(500)
@@ -122,6 +131,7 @@ function selectFullViewTab(tab) {
       'page-section-reflections--full-page': isFullLayout,
       'page-section-reflections--embedded': isCompactLayout,
       'page-section-reflections--has-background': hasBackgroundVideo,
+      'page-section-reflections--header-hidden': hideFullHeader,
     }"
     aria-label="Reflections"
     :style="sectionStyle"
@@ -137,7 +147,10 @@ function selectFullViewTab(tab) {
       v-if="isFullLayout"
       class="page-section-reflections__content page-section-reflections__content--full"
     >
-      <header class="page-section-reflections__full-header wrapper">
+      <header
+        v-if="!hideFullHeader"
+        class="page-section-reflections__full-header wrapper"
+      >
         <h3 class="page-section-reflections__title h3 serif light">
           {{ resolvedTitle }}
         </h3>
@@ -148,56 +161,10 @@ function selectFullViewTab(tab) {
           {{ bylineParagraph }}
         </p>
 
-        <div
-          class="page-section-reflections__tabs"
-          role="tablist"
-          aria-label="Reflection views"
-        >
-          <button
-            id="reflections-tab-list"
-            type="button"
-            role="tab"
-            class="page-section-reflections__tab serif"
-            :class="{ 'page-section-reflections__tab--active': fullViewTab === 'list' }"
-            :aria-selected="fullViewTab === 'list'"
-            aria-controls="reflections-panel-list"
-            @click="selectFullViewTab('list')"
-          >
-            List
-          </button>
-          <span
-            class="page-section-reflections__tab-divider"
-            aria-hidden="true"
-          >|</span>
-          <button
-            id="reflections-tab-grid"
-            type="button"
-            role="tab"
-            class="page-section-reflections__tab serif"
-            :class="{ 'page-section-reflections__tab--active': fullViewTab === 'grid' }"
-            :aria-selected="fullViewTab === 'grid'"
-            aria-controls="reflections-panel-grid"
-            @click="selectFullViewTab('grid')"
-          >
-            Grid
-          </button>
-          <span
-            class="page-section-reflections__tab-divider"
-            aria-hidden="true"
-          >|</span>
-          <button
-            id="reflections-tab-map"
-            type="button"
-            role="tab"
-            class="page-section-reflections__tab serif"
-            :class="{ 'page-section-reflections__tab--active': fullViewTab === 'map' }"
-            :aria-selected="fullViewTab === 'map'"
-            aria-controls="reflections-panel-map"
-            @click="selectFullViewTab('map')"
-          >
-            Map
-          </button>
-        </div>
+        <ReflectionViewTabs
+          :active-tab="fullViewTab"
+          @select="selectFullViewTab"
+        />
       </header>
 
       <div class="page-section-reflections__views wrapper">
@@ -213,7 +180,18 @@ function selectFullViewTab(tab) {
             :items="items"
             :pending="pending"
             :page-size="fullGridPageSize"
-          />
+          >
+            <template
+              v-if="hideFullHeader"
+              #toolbar-end
+            >
+              <ReflectionViewTabs
+                inline
+                :active-tab="fullViewTab"
+                @select="selectFullViewTab"
+              />
+            </template>
+          </ReflectionGridExplorer>
         </div>
 
         <div
@@ -228,7 +206,18 @@ function selectFullViewTab(tab) {
             :items="items"
             :pending="pending"
             :page-size="fullGridPageSize"
-          />
+          >
+            <template
+              v-if="hideFullHeader"
+              #toolbar-end
+            >
+              <ReflectionViewTabs
+                inline
+                :active-tab="fullViewTab"
+                @select="selectFullViewTab"
+              />
+            </template>
+          </ReflectionGridExplorer>
         </div>
 
         <div
@@ -238,6 +227,17 @@ function selectFullViewTab(tab) {
           aria-labelledby="reflections-tab-map"
           class="page-section-reflections__view-panel"
         >
+          <div
+            v-if="hideFullHeader"
+            class="page-section-reflections__toolbar"
+          >
+            <ReflectionViewTabs
+              inline
+              :active-tab="fullViewTab"
+              @select="selectFullViewTab"
+            />
+          </div>
+
           <WatchingFromSection
             compact
             :items="items"
@@ -292,7 +292,7 @@ function selectFullViewTab(tab) {
 
 <style scoped>
 .page-section-reflections {
-  --serif: var(--sans);
+  /* --serif: var(--sans); */
   position: relative;
   isolation: isolate;
   color: inherit;
@@ -300,6 +300,7 @@ function selectFullViewTab(tab) {
 
 .page-section-reflections--full-page {
   min-height: 100dvh;
+  padding-top: var(--wrapper-padding);
 }
 
 .page-section-reflections--has-background {
@@ -332,6 +333,16 @@ function selectFullViewTab(tab) {
   text-align: center;
 }
 
+.page-section-reflections--header-hidden .page-section-reflections__content--full {
+  gap: clamp(1rem, 2.5vw, 2rem);
+}
+
+.page-section-reflections__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
 .page-section-reflections__title {
   margin: 0;
   text-align: center;
@@ -351,49 +362,6 @@ function selectFullViewTab(tab) {
   flex-direction: column;
   gap: clamp(0.85rem, 2vw, 1.25rem);
   min-width: 0;
-}
-
-.page-section-reflections__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.65rem, 1.5vw, 1rem);
-  padding-top: clamp(0.25rem, 0.75vw, 0.5rem);
-}
-
-.page-section-reflections__tab {
-  border: 0;
-  padding: 0;
-  background: none;
-  color: inherit;
-  font-size: clamp(0.95rem, 1.35vw, 1.05rem);
-  font-weight: 300;
-  letter-spacing: 0.04em;
-  opacity: 0.55;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.page-section-reflections__tab--active {
-  opacity: 1;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-}
-
-.page-section-reflections__tab:hover {
-  opacity: 0.85;
-}
-
-.page-section-reflections__tab:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
-.page-section-reflections__tab-divider {
-  opacity: 0.35;
-  font-weight: 300;
 }
 
 .page-section-reflections__view-panel {

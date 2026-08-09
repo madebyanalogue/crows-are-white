@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
   /* min-height: 100dvh; */
   padding:
     calc(var(--header-height, 112) * 1px + 1.5rem)
-    clamp(1rem, 3vw, 2rem);
+    var(--wrapper-padding);
   background: #fff;
   color: var(--screenings-ink);
   max-width: 1600px;

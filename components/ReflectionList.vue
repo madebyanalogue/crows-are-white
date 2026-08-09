@@ -68,9 +68,9 @@ const listItems = computed(() =>
 .reflection-list {
   display: flex;
   flex-direction: column;
-  gap: clamp(2rem, 5vw, 6.5rem);
+  gap: 0;
   margin: 0;
-  padding: clamp(2rem, 5vw, 3.5rem) 0;
+  padding: 0;
   list-style: none;
 }
 
@@ -83,13 +83,16 @@ const listItems = computed(() =>
   background: none;
   border: 0;
   text-align: center;
+    padding: 3rem 2rem;
+    border: 1px solid var(--light-border);
+    margin-bottom: -1px;
 }
 
 .reflection-list__quote {
   margin: 0;
   font-weight: 300;
   line-height: 1.25;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .reflection-list__cite {

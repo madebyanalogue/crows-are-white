@@ -38,6 +38,8 @@ function resolveMediaLoop(item) {
 function resolveQuarterItem(item, index) {
   if (!item) return null
 
+  const isGallerySlot = item.isGallerySlot === true
+
   if (item.mediaType === 'video') {
     const loop = resolveMediaLoop(item)
     if (!loop) return null
@@ -46,17 +48,23 @@ function resolveQuarterItem(item, index) {
       kind: 'video',
       loop,
       alt: item.alt?.trim() || 'Video',
+      isGallerySlot,
     }
   }
 
   const imageUrl = resolveSanityAssetUrl(item?.image?.asset) || ''
   if (!imageUrl) return null
 
+  const hoverImageUrl = resolveSanityAssetUrl(item?.hoverImage?.asset) || ''
+
   return {
     _key: item._key || `quarters-item-${index}`,
     kind: 'image',
     imageUrl,
+    hoverImageUrl,
     alt: item.alt?.trim() || '',
+    hoverAlt: item.hoverAlt?.trim() || item.alt?.trim() || '',
+    isGallerySlot,
   }
 }
 
@@ -68,6 +76,8 @@ const items = computed(() =>
     .filter(Boolean),
 )
 
+const gallerySlot = computed(() => items.value.find((item) => item.isGallerySlot) || null)
+
 const hasContent = computed(() => items.value.length > 0)
 
 const useWrapper = computed(() => props.section?.quartersUseWrapper === true)
@@ -76,6 +86,45 @@ const sectionStyle = computed(() => ({
   paddingTop: SECTION_PADDING_VALUES[resolveSectionPadding(props.section?.quartersPaddingTop)],
   paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(props.section?.quartersPaddingBottom)],
 }))
+
+const hoveredItemKey = ref(null)
+
+const hoveredItem = computed(() =>
+  items.value.find((item) => item._key === hoveredItemKey.value) || null,
+)
+
+const galleryDisplay = computed(() => {
+  const slot = gallerySlot.value
+  if (!slot) return null
+
+  const hovered = hoveredItem.value
+  if (hovered && !hovered.isGallerySlot && hovered.hoverImageUrl) {
+    return {
+      kind: 'image',
+      imageUrl: hovered.hoverImageUrl,
+      alt: hovered.hoverAlt,
+    }
+  }
+
+  if (slot.kind === 'video') {
+    return {
+      kind: 'video',
+      loop: slot.loop,
+      alt: slot.alt,
+    }
+  }
+
+  return {
+    kind: 'image',
+    imageUrl: slot.imageUrl,
+    alt: slot.alt,
+  }
+})
+
+function onItemEnter(item) {
+  if (item.isGallerySlot || !gallerySlot.value || !item.hoverImageUrl) return
+  hoveredItemKey.value = item._key
+}
 
 const sectionRef = ref(null)
 let inViewObserver = null
@@ -136,16 +185,43 @@ onBeforeUnmount(() => {
           v-for="(item, index) in items"
           :key="item._key"
           class="page-section-quarters__item"
+          :class="{
+            'page-section-quarters__item--gallery-slot': item.isGallerySlot,
+            'page-section-quarters__item--is-hovered': hoveredItemKey === item._key,
+          }"
           :style="{ '--item-index': index }"
+          @mouseenter="onItemEnter(item)"
         >
           <div class="page-section-quarters__media">
-            <SectionLoopVideo
-              v-if="item.kind === 'video'"
-              :loop="item.loop"
-              :title="item.alt"
-              aspect-class="page-section-quarters__video"
-              object-fit="cover"
-            />
+            <template v-if="item.isGallerySlot && galleryDisplay">
+              <SectionLoopVideo
+                v-if="galleryDisplay.kind === 'video'"
+                :key="`${item._key}-video`"
+                :loop="galleryDisplay.loop"
+                :title="galleryDisplay.alt"
+                aspect-class="page-section-quarters__video"
+                object-fit="cover"
+              />
+              <img
+                v-else
+                :key="galleryDisplay.imageUrl"
+                class="page-section-quarters__image"
+                :src="galleryDisplay.imageUrl"
+                :alt="galleryDisplay.alt"
+                draggable="false"
+                loading="lazy"
+              >
+            </template>
+
+            <template v-else-if="item.kind === 'video'">
+              <SectionLoopVideo
+                :loop="item.loop"
+                :title="item.alt"
+                aspect-class="page-section-quarters__video"
+                object-fit="cover"
+              />
+            </template>
+
             <img
               v-else
               class="page-section-quarters__image"
@@ -199,6 +275,11 @@ onBeforeUnmount(() => {
 .page-section-quarters__item {
   --item-index: 0;
   min-width: 0;
+}
+
+.page-section-quarters__item--gallery-slot {
+  position: relative;
+  z-index: 1;
 }
 
 .page-section-quarters__media {

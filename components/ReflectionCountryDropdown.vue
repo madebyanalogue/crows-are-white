@@ -21,6 +21,13 @@ const rootRef = ref(null)
 
 const displayLabel = computed(() => props.modelValue || props.placeholder)
 
+const menuColumnsClass = computed(() => {
+  const count = props.options.length
+  if (count > 18) return 'reflection-country-dropdown__menu--3-cols'
+  if (count > 6) return 'reflection-country-dropdown__menu--2-cols'
+  return null
+})
+
 function toggle() {
   open.value = !open.value
 }
@@ -78,8 +85,10 @@ onBeforeUnmount(() => {
     <ul
       v-show="open"
       class="reflection-country-dropdown__menu"
+      :class="menuColumnsClass"
       role="listbox"
       aria-label="Country"
+      @wheel.stop
     >
       <li
         v-for="country in options"
@@ -169,7 +178,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: calc(100% + 0.45rem);
   left: 0;
-  z-index: 20;
+  z-index: 100;
   min-width: max(100%, 10rem);
   margin: 0;
   padding: 0.35rem 0;
@@ -177,8 +186,25 @@ onBeforeUnmount(() => {
   background: var(--page-bg, #fff);
   border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  max-height: 220px;
-  overflow: auto;
+  max-height: min(70vh, 28rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reflection-country-dropdown__menu--2-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: max(100%, 18rem);
+  padding-inline: 0;
+}
+
+.reflection-country-dropdown__menu--3-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: max(100%, 26rem);
+  padding-inline: 0;
 }
 
 .reflection-country-dropdown__option {
@@ -189,6 +215,11 @@ onBeforeUnmount(() => {
   line-height: 1.3;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.reflection-country-dropdown__menu--2-cols .reflection-country-dropdown__option,
+.reflection-country-dropdown__menu--3-cols .reflection-country-dropdown__option {
+  white-space: normal;
 }
 
 .reflection-country-dropdown__option:hover,
