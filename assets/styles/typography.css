@@ -35,6 +35,14 @@
 }
 
 @font-face {
+  font-family: 'Aktiv Grotesk Condensed';
+  src: url('/fonts/aktiv-grotesk-condensed-black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Biro Script';
   src: url('/fonts/biro-script-plus-sloppy-us.ttf') format('truetype');
   font-weight: 400;
@@ -47,6 +55,7 @@
   --serif: "Sirca Display", ui-serif, Georgia, serif;
   --serif-body: "athelas", ui-serif, Georgia, serif;
   --quote: 'Aktiv Grotesk', system-ui, sans-serif;
+  --condensed: 'Aktiv Grotesk Condensed', system-ui, sans-serif;
   --handwritten: 'Biro Script', 'Segoe Print', 'Comic Sans MS', cursive;
 
   --goudy: 'Goudy Bookletter 1911', serif;

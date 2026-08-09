@@ -429,8 +429,10 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   }
 
   .page-section-hero__byline.is-centered-wide {
+    grid-column: 1;
     width: min(100%, 680px);
     margin-bottom: 0;
+    justify-self: center;
   }
 
   .page-section-hero__bottom.is-buttons-hidden .page-section-hero__byline {

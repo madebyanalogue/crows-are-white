@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 0;
   background-color: var(--menu-background-color, var(--crema));
-  border: 2px double var(--menu-border-color, #999);
+  border: 3px double var(--menu-border-color, #999);
   pointer-events: none;
   transition: inset 0.32s ease;
 }

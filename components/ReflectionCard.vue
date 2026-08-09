@@ -1,5 +1,5 @@
 <script setup>
-import { getReflectionPaperStyle, formatReflectionNameCity } from '~/utils/reflections'
+import { getReflectionPaperStyle, formatReflectionNameCity, normalizeReflectionField } from '~/utils/reflections'
 
 const props = defineProps({
   item: {
@@ -15,6 +15,14 @@ const props = defineProps({
     default: 0,
   },
   readonly: {
+    type: Boolean,
+    default: false,
+  },
+  clickOnly: {
+    type: Boolean,
+    default: false,
+  },
+  showFoldedLocation: {
     type: Boolean,
     default: false,
   },
@@ -36,7 +44,11 @@ const attributionLabel = computed(() =>
     country: props.item?.country,
   }),
 )
+const foldedLocationLabel = computed(() =>
+  normalizeReflectionField(props.item?.city),
+)
 const isOpen = computed(() => props.readonly || props.open)
+const allowsHoverOpen = computed(() => !props.readonly && !props.clickOnly)
 
 const paperTilt = computed(() => {
   const seed = String(props.item?._id ?? props.index)
@@ -91,19 +103,19 @@ function handleHoverOpenMediaChange(event) {
 }
 
 function openOnHover() {
-  if (props.readonly || !canHoverOpen.value || props.open) return
+  if (!allowsHoverOpen.value || !canHoverOpen.value || props.open) return
   openCard()
 }
 
 function closeOnHover() {
-  if (props.readonly || !canHoverOpen.value || !props.open) return
+  if (!allowsHoverOpen.value || !canHoverOpen.value || !props.open) return
   closeCard()
 }
 
 function handleClick(event) {
   if (props.readonly) return
 
-  if (canHoverOpen.value && event.detail !== 0) return
+  if (!props.clickOnly && canHoverOpen.value && event.detail !== 0) return
 
   if (props.open) {
     closeCard()
@@ -134,7 +146,7 @@ onBeforeUnmount(() => {
         'reflection-card--open': isOpen,
         'reflection-card--pending': isPending,
         'reflection-card--readonly': readonly,
-        'reflection-card--hover-open': canHoverOpen,
+        'reflection-card--hover-open': canHoverOpen && allowsHoverOpen,
       },
     ]"
     :style="paperStyle"
@@ -166,6 +178,12 @@ onBeforeUnmount(() => {
             class="reflection-card__flap reflection-card__flap--top"
             aria-hidden="true"
           />
+          <p
+            v-if="showFoldedLocation && foldedLocationLabel"
+            class="reflection-card__folded-location serif"
+          >
+            {{ foldedLocationLabel }}
+          </p>
         </div>
 
         <div
@@ -270,7 +288,6 @@ onBeforeUnmount(() => {
   z-index: 0;
   border-top: 0.035em dashed color-mix(in srgb, var(--reflection-paper-text) 40%, transparent);
   pointer-events: none;
-  opacity: 0;
 }
 
 .reflection-card__paper--open::before {
@@ -307,6 +324,23 @@ onBeforeUnmount(() => {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   border-bottom: 1px solid color-mix(in srgb, var(--reflection-paper-text) 18%, transparent);
   box-shadow: none;
+}
+
+.reflection-card__folded-location {
+  position: absolute;
+  inset: 50% 0 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 10%;
+  font-size: 7.8cqmin;
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-align: center;
+  pointer-events: none;
 }
 
 /*
