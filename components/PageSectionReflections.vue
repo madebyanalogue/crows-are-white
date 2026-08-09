@@ -100,6 +100,10 @@ const mapBackgroundImage = computed(() => {
 
 const mapLightStyle = computed(() => props.section?.reflectionsMapLightStyle === true)
 
+const mapPostsLayout = computed(() =>
+  props.section?.reflectionsMapPostsLayout === 'below' ? 'below' : 'sidebar',
+)
+
 const fullGridPageSize = computed(() => {
   const value = Number(props.section?.reflectionsMaxItems)
   if (!Number.isFinite(value) || value <= 0) return FULL_GRID_DEFAULT
@@ -260,6 +264,7 @@ function selectFullViewTab(tab) {
             :intro="watchingFromIntro"
             :map-background-image="mapBackgroundImage"
             :map-light-style="mapLightStyle"
+            :map-posts-layout="mapPostsLayout"
           />
         </div>
       </div>
@@ -301,6 +306,7 @@ function selectFullViewTab(tab) {
           :intro="watchingFromIntro"
           :map-background-image="mapBackgroundImage"
           :map-light-style="mapLightStyle"
+          :map-posts-layout="mapPostsLayout"
           :view-all-path="VIEW_ALL_REFLECTIONS_PATH"
           show-leave-reflection-button
         />

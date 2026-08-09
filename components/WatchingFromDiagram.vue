@@ -55,17 +55,20 @@ function markerOpacity() {
   return 1
 }
 
-const MARKER_RADIUS = 1.4
-const SELECTED_MARKER_RADIUS = 3.4
-const MARKER_HIT_RADIUS = 5
-const SELECTED_MARKER_HIT_RADIUS = 8
-
 function markerRadius(marker) {
-  return isSelected(marker) ? SELECTED_MARKER_RADIUS : MARKER_RADIUS
+  if (marker.isCluster) {
+    if (isSelected(marker)) return 3.6
+    if (isActive(marker)) return 3.2
+    return 2.6
+  }
+
+  if (isSelected(marker)) return 3.2
+  if (isActive(marker)) return 2.8
+  return 1.8
 }
 
 function markerHitRadius(marker) {
-  return isSelected(marker) ? SELECTED_MARKER_HIT_RADIUS : MARKER_HIT_RADIUS
+  return marker.isCluster ? 8 : 6
 }
 
 function selectMarker(marker) {
@@ -188,7 +191,7 @@ watch(
             v-if="marker.isCluster"
             :cx="marker.x"
             :cy="marker.y"
-            :r="markerRadius(marker) + 1.4"
+            :r="markerRadius(marker) + 1.8"
             class="watching-from-diagram__marker-ring"
             :opacity="isSelected(marker) || isActive(marker) ? 0.55 : 0.35"
           />
@@ -197,7 +200,7 @@ watch(
             v-else-if="isActive(marker) || isSelected(marker)"
             :cx="marker.x"
             :cy="marker.y"
-            :r="markerRadius(marker) + 2"
+            r="5.5"
             class="watching-from-diagram__marker-ring"
             :opacity="0.35"
           />

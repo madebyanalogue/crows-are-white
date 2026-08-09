@@ -1,5 +1,6 @@
 <script setup>
-import { filterReflectionsByMapMarker, getReflectionCountries } from '~/utils/reflections'
+import { filterReflectionsByMapMarker, getReflectionCountries, normalizeReflectionField } from '~/utils/reflections'
+import { formatWatchingFromMapMarkerSelectionLabel } from '~/utils/watchingFrom'
 
 const props = defineProps({
   items: {
@@ -46,6 +47,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  mapPostsLayout: {
+    type: String,
+    default: 'sidebar',
+    validator: (value) => ['sidebar', 'below'].includes(value),
+  },
 })
 
 const emit = defineEmits(['select-marker', 'submitted'])
@@ -63,6 +69,10 @@ const activeReflectionIndex = ref(0)
 const carouselCardOpen = ref(false)
 const mapStageRef = ref(null)
 const viewerHeight = ref(null)
+const belowViewportRef = ref(null)
+const belowAtStart = ref(true)
+const belowAtEnd = ref(false)
+const openBelowReflectionId = ref(null)
 let geocodeTimer = null
 let geocodeRequestId = 0
 let mapStageObserver = null
@@ -87,13 +97,52 @@ const displayLocations = computed(() =>
   mergeWatchingFromLocations(reflectionLocations.value, userLocation.value),
 )
 
-const markerReflections = computed(() =>
-  filterReflectionsByMapMarker(props.items, selectedMarker.value),
-)
+const markerReflections = computed(() => {
+  if (!selectedMarker.value) return []
+
+  return filterReflectionsByMapMarker(props.items, selectedMarker.value)
+})
 
 const activeReflection = computed(() =>
   markerReflections.value[activeReflectionIndex.value] || null,
 )
+
+const isBelowCarouselLayout = computed(() => props.mapPostsLayout === 'below')
+
+const showSidebarViewer = computed(() =>
+  !isBelowCarouselLayout.value
+  && Boolean(selectedMarker.value && activeReflection.value),
+)
+
+const showBelowCarousel = computed(() =>
+  isBelowCarouselLayout.value
+  && Boolean(selectedMarker.value && markerReflections.value.length),
+)
+
+const selectedCountryLabel = computed(() => {
+  const marker = selectedMarker.value
+  if (!marker) return ''
+
+  if (!marker.isCluster) {
+    return normalizeReflectionField(marker.country || marker.locations?.[0]?.country)
+      || formatWatchingFromMapMarkerSelectionLabel(marker)
+  }
+
+  const countries = [...new Set(
+    marker.locations
+      .map((location) => normalizeReflectionField(location.country))
+      .filter(Boolean),
+  )]
+
+  if (countries.length === 1) return countries[0]
+  if (countries.length > 1) return countries.join(' · ')
+  return formatWatchingFromMapMarkerSelectionLabel(marker)
+})
+
+const belowCarouselCanScroll = computed(() => markerReflections.value.length > 1)
+
+const belowCarouselCanGoPrev = computed(() => !belowAtStart.value)
+const belowCarouselCanGoNext = computed(() => !belowAtEnd.value)
 
 const canStepReflections = computed(() => markerReflections.value.length > 1)
 
@@ -129,6 +178,56 @@ function onCarouselCardOpen() {
 
 function onCarouselCardClose() {
   carouselCardOpen.value = false
+}
+
+function updateBelowScrollState() {
+  const viewport = belowViewportRef.value
+  if (!viewport) return
+
+  const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
+  belowAtStart.value = viewport.scrollLeft <= 1
+  belowAtEnd.value = viewport.scrollLeft >= maxScroll - 1
+}
+
+function scrollBelowCarousel(direction) {
+  const viewport = belowViewportRef.value
+  if (!viewport) return
+
+  viewport.scrollBy({
+    left: direction * viewport.clientWidth * 0.92,
+    behavior: 'smooth',
+  })
+}
+
+function bindBelowViewport(el) {
+  if (belowViewportRef.value) {
+    belowViewportRef.value.removeEventListener('scroll', updateBelowScrollState)
+  }
+
+  belowViewportRef.value = el
+
+  if (!el) return
+
+  el.addEventListener('scroll', updateBelowScrollState, { passive: true })
+  nextTick(updateBelowScrollState)
+}
+
+function resetBelowCarousel() {
+  openBelowReflectionId.value = null
+
+  if (belowViewportRef.value) {
+    belowViewportRef.value.scrollLeft = 0
+  }
+
+  nextTick(updateBelowScrollState)
+}
+
+function onBelowCardOpen(reflectionId) {
+  openBelowReflectionId.value = reflectionId
+}
+
+function onBelowCardClose() {
+  openBelowReflectionId.value = null
 }
 
 function syncViewerHeight() {
@@ -400,9 +499,19 @@ watch(mapStageRef, (el, _, onCleanup) => {
 })
 
 watch(
+  () => selectedMarker.value?.id,
+  () => {
+    resetBelowCarousel()
+  },
+)
+
+watch(
   () => markerReflections.value.length,
   () => {
-    nextTick(syncViewerHeight)
+    nextTick(() => {
+      syncViewerHeight()
+      updateBelowScrollState()
+    })
   },
 )
 
@@ -428,13 +537,17 @@ onBeforeUnmount(() => {
   layoutMediaQuery?.removeEventListener('change', handleLayoutMediaChange)
   layoutMediaQuery = null
   document.removeEventListener('keydown', handleKeydown)
+  belowViewportRef.value?.removeEventListener('scroll', updateBelowScrollState)
 })
 </script>
 
 <template>
   <section
     class="watching-from-section"
-    :class="{ 'watching-from-section--compact': compact }"
+    :class="{
+      'watching-from-section--compact': compact,
+      'watching-from-section--below-carousel': isBelowCarouselLayout,
+    }"
     :aria-labelledby="resolvedTitle ? 'watching-from-heading' : undefined"
     :aria-label="resolvedTitle ? undefined : (compact ? 'Reflections map' : 'Around the world map')"
   >
@@ -569,7 +682,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      v-if="activeReflection"
+      v-if="showSidebarViewer"
       class="watching-from-section__viewer-wrap"
       :style="viewerHeight ? { height: `${viewerHeight}px` } : undefined"
     >
@@ -660,6 +773,105 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <div
+      v-if="showBelowCarousel"
+      class="watching-from-section__below-carousel"
+    >
+      <h4
+        v-if="selectedCountryLabel"
+        class="watching-from-section__below-title h4 serif"
+      >
+        {{ selectedCountryLabel }}
+      </h4>
+
+      <div class="watching-from-section__below-stage">
+        <button
+          v-if="belowCarouselCanScroll"
+          type="button"
+          class="watching-from-section__below-nav"
+          :disabled="!belowCarouselCanGoPrev"
+          aria-label="Previous reflections"
+          @click="scrollBelowCarousel(-1)"
+        >
+          <span
+            class="watching-from-section__nav-arrow"
+            aria-hidden="true"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 12"
+            >
+              <path
+                d="M13 6H1M1 6l5-5M1 6l5 5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
+
+        <div
+          :ref="bindBelowViewport"
+          class="watching-from-section__below-viewport"
+          :aria-label="`${selectedCountryLabel} reflections`"
+        >
+          <div class="watching-from-section__below-track">
+            <div
+              v-for="(reflection, index) in markerReflections"
+              :key="reflection._id"
+              class="watching-from-section__below-slide"
+            >
+              <div
+                class="watching-from-section__below-card"
+                :class="{ 'watching-from-section__below-card--longform': reflection.longform }"
+              >
+                <ReflectionCard
+                  :item="reflection"
+                  :index="index"
+                  :open="openBelowReflectionId === reflection._id"
+                  :paper-tilt-max="reflection.longform ? 0 : 2"
+                  :disable-paper-tilt="Boolean(reflection.longform)"
+                  click-only
+                  show-folded-location
+                  @open="onBelowCardOpen(reflection._id)"
+                  @close="onBelowCardClose"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          v-if="belowCarouselCanScroll"
+          type="button"
+          class="watching-from-section__below-nav"
+          :disabled="!belowCarouselCanGoNext"
+          aria-label="Next reflections"
+          @click="scrollBelowCarousel(1)"
+        >
+          <span
+            class="watching-from-section__nav-arrow watching-from-section__nav-arrow--next"
+            aria-hidden="true"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 12"
+            >
+              <path
+                d="M13 6H1M1 6l5-5M1 6l5 5"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
     <p
       v-if="statusMessage && !compact"
       class="watching-from-section__status serif"
@@ -682,6 +894,10 @@ onBeforeUnmount(() => {
     align-items: start;
   }
 
+  .watching-from-section--below-carousel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .watching-from-section__header,
   .watching-from-section__status {
     grid-column: 1 / -1;
@@ -694,6 +910,11 @@ onBeforeUnmount(() => {
     gap: clamp(0.65rem, 1.5vw, 0.85rem);
     min-width: 0;
     align-self: start;
+  }
+
+  .watching-from-section--below-carousel .watching-from-section__map-column,
+  .watching-from-section--below-carousel .watching-from-section__below-carousel {
+    grid-column: 1 / -1;
   }
 
   .watching-from-section__map-stage {
@@ -1060,5 +1281,106 @@ onBeforeUnmount(() => {
   font-weight: 300;
   letter-spacing: 0.03em;
   opacity: 0.72;
+}
+
+.watching-from-section__below-carousel {
+  --below-carousel-slides-visible: 1.35;
+  --below-carousel-visible-gaps: 1;
+  --below-carousel-gap: clamp(0.65rem, 1.5vw, 1rem);
+  display: grid;
+  gap: clamp(0.85rem, 2vw, 1.35rem);
+  min-width: 0;
+}
+
+.watching-from-section__below-title {
+  margin: 0;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.watching-from-section__below-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  min-width: 0;
+}
+
+.watching-from-section__below-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.watching-from-section__below-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.watching-from-section__below-track {
+  display: flex;
+  gap: var(--below-carousel-gap);
+  min-width: min-content;
+}
+
+.watching-from-section__below-slide {
+  flex: 0 0 calc(
+    (100% - (var(--below-carousel-gap) * var(--below-carousel-visible-gaps)))
+    / var(--below-carousel-slides-visible)
+  );
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.watching-from-section__below-card {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.watching-from-section__below-card :deep(.reflection-card) {
+  width: 100%;
+  height: 100%;
+}
+
+.watching-from-section__below-card--longform {
+  aspect-ratio: 2 / 3;
+}
+
+.watching-from-section__below-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 0.2s ease;
+}
+
+.watching-from-section__below-nav:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.watching-from-section__below-nav:disabled {
+  opacity: 0;
+  cursor: default;
+}
+
+@media (min-width: 520px) {
+  .watching-from-section__below-carousel {
+    --below-carousel-slides-visible: 2.5;
+    --below-carousel-visible-gaps: 2;
+  }
+}
+
+@media (min-width: 900px) {
+  .watching-from-section__below-carousel {
+    --below-carousel-slides-visible: 4;
+    --below-carousel-visible-gaps: 3;
+  }
 }
 </style>

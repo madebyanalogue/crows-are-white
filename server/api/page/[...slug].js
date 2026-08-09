@@ -619,6 +619,7 @@ function pageSectionProjection() {
     reflectionsWatchingFromIntro,
     reflectionsMapBackgroundImage ${imageProjection},
     reflectionsMapLightStyle,
+    reflectionsMapPostsLayout,
     reflectionsIntro,
     reflectionsLayout,
     reflectionsHideHeader,
