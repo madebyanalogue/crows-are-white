@@ -424,19 +424,20 @@ onBeforeUnmount(() => {
 .reflection-card__quote {
   margin: 0;
   font-size: 8cqmin;
+  font-family: var(--serif);
   font-weight: 300;
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
   text-align: center;
-  font-family: var(--serif-body);
 }
 
 .reflection-card__quote--longform {
-  font-family: var(--serif-body);
+  font-family: var(--serif);
   font-size: clamp(0.875rem, 5.2cqmin, 1.125rem);
   line-height: 1.35;
   text-align: left;
-  font-weight: 400;
+  font-weight: 300;
+  letter-spacing: 0.02em;
   max-width: 800px;
 }
 
