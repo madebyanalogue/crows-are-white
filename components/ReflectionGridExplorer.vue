@@ -3,7 +3,6 @@ import {
   applyReflectionFilters,
   getReflectionCountries,
 } from '~/utils/reflections'
-import { formatWatchingFromMapMarkerSelectionLabel } from '~/utils/watchingFrom'
 
 const props = defineProps({
   items: {
@@ -18,18 +17,15 @@ const props = defineProps({
     type: Number,
     default: 24,
   },
-  selectedMapMarker: {
-    type: Object,
-    default: null,
+  displayMode: {
+    type: String,
+    default: 'grid',
+    validator: (value) => value === 'grid' || value === 'list',
   },
 })
 
-const emit = defineEmits(['clear-map-marker'])
-
 const filterMode = ref('all')
 const selectedCountry = ref('')
-const sortMode = ref('newest')
-const randomSeed = ref(0)
 const visibleCount = ref(props.pageSize)
 
 const countryOptions = computed(() => getReflectionCountries(props.items))
@@ -38,10 +34,7 @@ const filteredItems = computed(() => {
   const country = filterMode.value === 'country' ? selectedCountry.value : ''
 
   return applyReflectionFilters(props.items, {
-    mapMarker: props.selectedMapMarker,
     country,
-    sort: sortMode.value,
-    randomSeed: randomSeed.value,
   })
 })
 
@@ -51,64 +44,30 @@ const visibleItems = computed(() =>
 
 const hasMore = computed(() => visibleCount.value < filteredItems.value.length)
 
-const countryLabel = computed(() => {
-  if (filterMode.value !== 'country' || !selectedCountry.value) {
-    return 'Country'
-  }
-
-  return selectedCountry.value
-})
-
-const mapSelectionLabel = computed(() =>
-  formatWatchingFromMapMarkerSelectionLabel(props.selectedMapMarker),
-)
-
 watch(
-  () => [props.items.length, props.selectedMapMarker, filterMode.value, selectedCountry.value, sortMode.value, randomSeed.value],
+  () => [props.items.length, filterMode.value, selectedCountry.value],
   () => {
     visibleCount.value = props.pageSize
-  },
-)
-
-watch(
-  () => props.selectedMapMarker,
-  (marker) => {
-    if (!marker) return
-    filterMode.value = 'all'
-    selectedCountry.value = ''
   },
 )
 
 function selectAll() {
   filterMode.value = 'all'
   selectedCountry.value = ''
-  emit('clear-map-marker')
 }
 
 function selectCountry(country) {
   filterMode.value = 'country'
   selectedCountry.value = country
-  emit('clear-map-marker')
 }
 
-function onCountryChange(event) {
-  const value = event.target.value
-
-  if (!value) {
+function onCountryUpdate(country) {
+  if (!country) {
     selectAll()
     return
   }
 
-  selectCountry(value)
-}
-
-function selectNewest() {
-  sortMode.value = 'newest'
-}
-
-function selectRandom() {
-  sortMode.value = 'random'
-  randomSeed.value += 1
+  selectCountry(country)
 }
 
 function loadMore() {
@@ -130,82 +89,30 @@ function loadMore() {
         <button
           type="button"
           class="reflection-grid-explorer__filter serif"
-          :class="{ 'reflection-grid-explorer__filter--active': filterMode === 'all' && !selectedMapMarker }"
+          :class="{ 'reflection-grid-explorer__filter--active': filterMode === 'all' }"
           @click="selectAll"
         >
           All
         </button>
 
-        <label class="reflection-grid-explorer__country-filter">
-          <span class="reflection-grid-explorer__filter serif reflection-grid-explorer__filter--country">
-            {{ countryLabel }}
-            <span aria-hidden="true">›</span>
-          </span>
-          <select
-            class="reflection-grid-explorer__country-select"
-            :value="filterMode === 'country' ? selectedCountry : ''"
-            @change="onCountryChange"
-          >
-            <option value="">
-              All countries
-            </option>
-            <option
-              v-for="country in countryOptions"
-              :key="country"
-              :value="country"
-            >
-              {{ country }}
-            </option>
-          </select>
-        </label>
-      </div>
-
-      <span
-        class="reflection-grid-explorer__divider"
-        aria-hidden="true"
-      >|</span>
-
-      <div class="reflection-grid-explorer__filter-group">
-        <button
-          type="button"
-          class="reflection-grid-explorer__filter serif"
-          :class="{ 'reflection-grid-explorer__filter--active': sortMode === 'newest' }"
-          @click="selectNewest"
-        >
-          Newest
-        </button>
-        <button
-          type="button"
-          class="reflection-grid-explorer__filter serif"
-          :class="{ 'reflection-grid-explorer__filter--active': sortMode === 'random' }"
-          @click="selectRandom"
-        >
-          Random
-        </button>
+        <ReflectionCountryDropdown
+          :model-value="selectedCountry"
+          :options="countryOptions"
+          @update:model-value="onCountryUpdate"
+        />
       </div>
     </div>
 
-    <p
-      v-if="selectedMapMarker"
-      class="reflection-grid-explorer__location serif light"
-    >
-      <template v-if="selectedMapMarker.isCluster">
-        Showing reflections near {{ mapSelectionLabel }}
-      </template>
-      <template v-else>
-        Showing reflections from {{ mapSelectionLabel }}
-      </template>
-      <button
-        type="button"
-        class="reflection-grid-explorer__clear-location serif"
-        @click="selectAll"
-      >
-        Clear
-      </button>
-    </p>
-
     <ReflectionWall
+      v-if="displayMode === 'grid'"
       class="reflection-grid-explorer__wall"
+      :items="visibleItems"
+      :pending="pending"
+    />
+
+    <ReflectionList
+      v-else
+      class="reflection-grid-explorer__list"
       :items="visibleItems"
       :pending="pending"
     />
@@ -274,45 +181,6 @@ function loadMore() {
 
 .reflection-grid-explorer__filter:hover {
   opacity: 0.85;
-}
-
-.reflection-grid-explorer__country-filter {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.reflection-grid-explorer__filter--country {
-  pointer-events: none;
-}
-
-.reflection-grid-explorer__country-select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.reflection-grid-explorer__location {
-  margin: 0;
-  font-size: clamp(0.92rem, 1.25vw, 1rem);
-  letter-spacing: 0.02em;
-  opacity: 0.72;
-}
-
-.reflection-grid-explorer__clear-location {
-  margin-left: 0.65rem;
-  border: 0;
-  padding: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-  cursor: pointer;
-  opacity: 0.72;
 }
 
 .reflection-grid-explorer__wall :deep(.reflection-wall) {

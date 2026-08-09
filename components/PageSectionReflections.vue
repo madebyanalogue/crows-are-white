@@ -107,19 +107,8 @@ const sectionStyle = computed(() => ({
     : '1px solid var(--mid-border)',
 }))
 
-const mapSelectedMarker = ref(null)
-const fullViewTab = ref('grid')
+const fullViewTab = ref('list')
 const { items, pending } = useReflections(500)
-
-const mapSelectedMarkerId = computed(() => mapSelectedMarker.value?.id || '')
-
-function onMapSelectMarker(marker) {
-  mapSelectedMarker.value = marker
-}
-
-function clearMapMarker() {
-  mapSelectedMarker.value = null
-}
 
 function selectFullViewTab(tab) {
   fullViewTab.value = tab
@@ -165,6 +154,22 @@ function selectFullViewTab(tab) {
           aria-label="Reflection views"
         >
           <button
+            id="reflections-tab-list"
+            type="button"
+            role="tab"
+            class="page-section-reflections__tab serif"
+            :class="{ 'page-section-reflections__tab--active': fullViewTab === 'list' }"
+            :aria-selected="fullViewTab === 'list'"
+            aria-controls="reflections-panel-list"
+            @click="selectFullViewTab('list')"
+          >
+            List
+          </button>
+          <span
+            class="page-section-reflections__tab-divider"
+            aria-hidden="true"
+          >|</span>
+          <button
             id="reflections-tab-grid"
             type="button"
             role="tab"
@@ -197,6 +202,21 @@ function selectFullViewTab(tab) {
 
       <div class="page-section-reflections__views wrapper">
         <div
+          v-show="fullViewTab === 'list'"
+          id="reflections-panel-list"
+          role="tabpanel"
+          aria-labelledby="reflections-tab-list"
+          class="page-section-reflections__view-panel"
+        >
+          <ReflectionGridExplorer
+            display-mode="list"
+            :items="items"
+            :pending="pending"
+            :page-size="fullGridPageSize"
+          />
+        </div>
+
+        <div
           v-show="fullViewTab === 'grid'"
           id="reflections-panel-grid"
           role="tabpanel"
@@ -204,11 +224,10 @@ function selectFullViewTab(tab) {
           class="page-section-reflections__view-panel"
         >
           <ReflectionGridExplorer
+            display-mode="grid"
             :items="items"
             :pending="pending"
             :page-size="fullGridPageSize"
-            :selected-map-marker="mapSelectedMarker"
-            @clear-map-marker="clearMapMarker"
           />
         </div>
 
@@ -224,8 +243,6 @@ function selectFullViewTab(tab) {
             :items="items"
             :title="watchingFromTitle"
             :intro="watchingFromIntro"
-            :selected-marker-id="mapSelectedMarkerId"
-            @select-marker="onMapSelectMarker"
           />
         </div>
       </div>
