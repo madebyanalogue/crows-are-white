@@ -41,7 +41,7 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
           <div class="shop-products-section__header">
             <h2
               v-if="title"
-              class="shop-products-section__title serif"
+              class="shop-products-section__title heading-condensed"
             >
               {{ title }}
             </h2>
@@ -72,14 +72,6 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-}
-
-.shop-products-section__title {
-  margin: 0;
-  padding: 0;
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 300;
-  letter-spacing: 0.04em;
 }
 
 .shop-products-section__view-all {

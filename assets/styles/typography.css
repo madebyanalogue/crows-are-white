@@ -124,6 +124,16 @@ body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.000em; }
 
 .large-title { font-size: clamp(30px, 3vw, 70px); line-height: 1.1; letter-spacing: -0.000em; font-weight: 300; font-style: normal; font-family: var(--serif); }
 
+.heading-condensed {
+  margin: 0;
+  padding: 0;
+  font-size: 50px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  font-family: var(--condensed);
+  text-transform: uppercase;
+}
+
 .goudy {
   font-family: var(--goudy);
 }

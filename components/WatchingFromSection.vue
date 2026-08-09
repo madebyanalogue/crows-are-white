@@ -404,7 +404,8 @@ onBeforeUnmount(() => {
       <div class="watching-from-section__heading">
         <h3
           id="watching-from-heading"
-          class="watching-from-section__title h3 serif light"
+          class="watching-from-section__title"
+          :class="compact ? 'heading-condensed' : 'h3 serif light'"
         >
           {{ title }}
         </h3>
