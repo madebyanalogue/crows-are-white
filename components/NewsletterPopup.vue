@@ -16,9 +16,9 @@
             class="newsletter-popup__hit"
             @click="expand"
           >
-            <p class="newsletter-popup__title">Newsletter</p>
+            <p class="newsletter-popup__title">Stay with the Story</p>
             <p class="newsletter-popup__subtitle">
-              Get updates · No spam
+              Occasional letters from the filmmakers
             </p>
           </button>
         </div>
@@ -32,11 +32,17 @@
             class="newsletter-popup__hit newsletter-popup__hit--expanded"
             @click="collapse"
           >
-            <h3 class="newsletter-popup__title">Newsletter</h3>
-            <p class="newsletter-popup__copy">
-              Sign up for updates, guides and more resources. No spam.
-            </p>
+            <h3 class="newsletter-popup__title">Stay with the Story</h3>
           </button>
+
+          <div class="newsletter-popup__copy">
+            <p class="newsletter-popup__copy-line">
+              If this film resonated with you, we'd love to keep in touch.
+            </p>
+            <p class="newsletter-popup__copy-line">
+              Receive occasional letters from the filmmakers, screening news, and updates as the journey continues.
+            </p>
+          </div>
 
           <form
             v-if="!submitted"
@@ -47,24 +53,32 @@
             novalidate
             @submit="onSubmit"
           >
-            <input
-              v-model="email"
-              class="newsletter-popup__input"
-              type="email"
-              name="EMAIL"
-              required
-              autocomplete="email"
-              autocapitalize="off"
-              placeholder="E-MAIL"
-              aria-label="Email address"
+            <label
+              class="newsletter-popup__label"
+              for="newsletter-popup-email"
             >
-            <button
-              type="submit"
-              class="newsletter-popup__submit"
-              :disabled="!mailchimpAction"
-            >
-              Subscribe
-            </button>
+              Email address
+            </label>
+            <div class="newsletter-popup__field-row">
+              <input
+                id="newsletter-popup-email"
+                v-model="email"
+                class="newsletter-popup__input"
+                type="email"
+                name="EMAIL"
+                required
+                autocomplete="email"
+                autocapitalize="off"
+                aria-label="Email address"
+              >
+              <button
+                type="submit"
+                class="newsletter-popup__submit"
+                :disabled="!mailchimpAction"
+              >
+                Stay in Touch
+              </button>
+            </div>
           </form>
 
           <p
@@ -189,7 +203,7 @@ onMounted(() => {
 }
 
 .newsletter-popup.is-expanded {
-  max-height: 280px;
+  max-height: 26rem;
 }
 
 .newsletter-popup__inner {
@@ -236,7 +250,7 @@ onMounted(() => {
 }
 
 .newsletter-popup__hit--expanded {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .newsletter-popup__title {
@@ -265,6 +279,12 @@ onMounted(() => {
 }
 
 .newsletter-popup__copy {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}
+
+.newsletter-popup__copy-line {
   margin: 0;
   font-family: var(--sans);
   font-size: 0.9rem;
@@ -275,24 +295,42 @@ onMounted(() => {
 }
 
 .newsletter-popup__form {
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.newsletter-popup__label {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.newsletter-popup__field-row {
   display: flex;
   align-items: stretch;
+  gap: 0.75rem;
   width: 100%;
-  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
 }
 
 .newsletter-popup__input {
   flex: 1;
   min-width: 0;
   margin: 0;
-  padding: 0.85rem 0;
+  padding: 0.65rem 0;
   border: 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
   background: transparent;
   font-family: var(--sans);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: inherit;
   outline: none;
 }
@@ -304,8 +342,9 @@ onMounted(() => {
 
 .newsletter-popup__submit {
   flex-shrink: 0;
+  align-self: end;
   margin: 0;
-  padding: 0.85rem 0 0.85rem 0.75rem;
+  padding: 0.65rem 0;
   border: 0;
   background: transparent;
   font-family: var(--sans);
@@ -317,6 +356,7 @@ onMounted(() => {
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
+  white-space: nowrap;
 }
 
 .newsletter-popup__submit:hover:not(:disabled) {

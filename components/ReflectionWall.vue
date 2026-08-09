@@ -87,7 +87,7 @@ onUnmounted(() => {
 
 <style scoped>
 .reflection-wall {
-  --reflection-cell-aspect: 1.55;
+  --reflection-cell-aspect: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(0.35rem, 1vw, 0.6rem) clamp(0.75rem, 1.8vw, 1.15rem);
@@ -96,12 +96,16 @@ onUnmounted(() => {
 .reflection-wall__cell {
   position: relative;
   z-index: 0;
-  aspect-ratio: var(--reflection-cell-aspect, 1.4);
+  aspect-ratio: var(--reflection-cell-aspect, 1);
   min-width: 0;
   min-height: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
+}
+
+.reflection-wall__cell :deep(.reflection-card) {
+  height: 100%;
 }
 
 .reflection-wall__cell--open {

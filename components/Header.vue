@@ -348,6 +348,13 @@ function closeMenu() {
 
   nextTick(() => {
     const active = document.activeElement
+    const coarsePointer = window.matchMedia('(hover: none)').matches
+
+    if (coarsePointer) {
+      if (active instanceof HTMLElement) active.blur()
+      return
+    }
+
     if (active && navInnerRef.value?.contains(active)) {
       menuToggleRef.value?.focus()
     }
@@ -683,13 +690,15 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 0;
   background-color: var(--menu-background-color, var(--crema));
-  border: 3px double var(--menu-border-color, #999);
+  border: 2px double var(--menu-border-color, #999);
   pointer-events: none;
   transition: inset 0.32s ease;
 }
 
-.site-header:not(.is-open) .site-header__panel:hover::before {
-  inset: calc(var(--site-header-panel-hover-expand) * -1);
+@media (hover: hover) {
+  .site-header:not(.is-open) .site-header__panel:hover::before {
+    inset: calc(var(--site-header-panel-hover-expand) * -1);
+  }
 }
 
 .site-header.is-open .site-header__panel {
@@ -841,21 +850,23 @@ onBeforeUnmount(() => {
   width: calc(var(--hamburger-width) * 0.8);
 }
 
-.site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open),
-.site-header__toggle:hover .site-header__toggle-icon:not(.is-open) {
-  height: calc(var(--hamburger-line) * 2 + var(--hamburger-gap-hover));
-}
+@media (hover: hover) {
+  .site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open),
+  .site-header__toggle:hover .site-header__toggle-icon:not(.is-open) {
+    height: calc(var(--hamburger-line) * 2 + var(--hamburger-gap-hover));
+  }
 
-.site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::before,
-.site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::after,
-.site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::before,
-.site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::after {
-  width: var(--hamburger-width);
-}
+  .site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::before,
+  .site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::after,
+  .site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::before,
+  .site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::after {
+    width: var(--hamburger-width);
+  }
 
-.site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::after,
-.site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::after {
-  top: calc(var(--hamburger-line) + var(--hamburger-gap-hover));
+  .site-header:not(.is-open) .site-header__panel:hover .site-header__toggle-icon:not(.is-open)::after,
+  .site-header__toggle:hover .site-header__toggle-icon:not(.is-open)::after {
+    top: calc(var(--hamburger-line) + var(--hamburger-gap-hover));
+  }
 }
 
 .site-header__toggle-icon.is-open::before,

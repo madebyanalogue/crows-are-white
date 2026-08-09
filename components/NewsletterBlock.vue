@@ -2,11 +2,15 @@
 const props = defineProps({
   title: {
     type: String,
-    default: 'Newsletter',
+    default: 'Stay with the Story',
   },
   intro: {
     type: String,
     default: '',
+  },
+  submitLabel: {
+    type: String,
+    default: 'Stay in Touch',
   },
   // { imageUrl, videoUrl, alt, textColor: 'dark' | 'light', overlayOpacity }
   background: {
@@ -22,6 +26,15 @@ const email = ref('')
 const hasMedia = computed(() =>
   Boolean(props.background?.imageUrl || props.background?.videoUrl || props.background?.loop),
 )
+
+const introParagraphs = computed(() => {
+  const text = props.intro?.trim() || ''
+  if (!text) return []
+  return text
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+})
 
 function onSubmit() {
   submitted.value = true
@@ -92,12 +105,18 @@ function onSubmit() {
           {{ title }}
         </h2>
 
-        <p
-          v-if="intro"
-          class="newsletter-block__intro serif"
+        <div
+          v-if="introParagraphs.length"
+          class="newsletter-block__intro"
         >
-          {{ intro }}
-        </p>
+          <p
+            v-for="(paragraph, index) in introParagraphs"
+            :key="index"
+            class="newsletter-block__intro-paragraph serif"
+          >
+            {{ paragraph }}
+          </p>
+        </div>
 
         <form
           v-if="!submitted"
@@ -108,28 +127,28 @@ function onSubmit() {
           @submit="onSubmit"
         >
           <div class="newsletter-block__field">
-            <span
+            <label
               class="newsletter-block__label serif"
-              :class="{ 'is-hidden': email }"
-              aria-hidden="true"
+              for="newsletter-block-email-overlay"
             >
               Email address
-            </span>
+            </label>
             <input
+              id="newsletter-block-email-overlay"
               v-model="email"
               class="newsletter-block__input serif"
               type="email"
               name="EMAIL"
               required
               autocomplete="email"
-              aria-label="Email address"
             >
           </div>
           <button
             type="submit"
             class="newsletter-block__submit serif"
+            :disabled="!mailchimpAction"
           >
-            submit
+            {{ submitLabel }}
           </button>
         </form>
 
@@ -143,9 +162,22 @@ function onSubmit() {
     </div>
 
     <template v-else>
-      <h2 class="newsletter-block__title handwritten">
+      <h2 class="newsletter-block__title serif">
         {{ title }}
       </h2>
+
+      <div
+        v-if="introParagraphs.length"
+        class="newsletter-block__intro"
+      >
+        <p
+          v-for="(paragraph, index) in introParagraphs"
+          :key="index"
+          class="newsletter-block__intro-paragraph serif"
+        >
+          {{ paragraph }}
+        </p>
+      </div>
 
       <form
         v-if="!submitted"
@@ -156,28 +188,28 @@ function onSubmit() {
         @submit="onSubmit"
       >
         <div class="newsletter-block__field">
-          <span
+          <label
             class="newsletter-block__label serif"
-            :class="{ 'is-hidden': email }"
-            aria-hidden="true"
+            for="newsletter-block-email"
           >
             Email address
-          </span>
+          </label>
           <input
+            id="newsletter-block-email"
             v-model="email"
             class="newsletter-block__input serif"
             type="email"
             name="EMAIL"
             required
             autocomplete="email"
-            aria-label="Email address"
           >
         </div>
         <button
           type="submit"
-          class="newsletter-block__submit handwritten"
+          class="newsletter-block__submit serif"
+          :disabled="!mailchimpAction"
         >
-          submit
+          {{ submitLabel }}
         </button>
       </form>
 
@@ -252,23 +284,34 @@ function onSubmit() {
 }
 
 .newsletter-block__panel-title {
-  margin: 0 0 clamp(0.65rem, 1.5vw, 0.85rem);
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  margin: 0 0 clamp(0.85rem, 2vw, 1.25rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .newsletter-block__intro {
+  display: grid;
+  gap: 0.85em;
   margin: 0 0 clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.newsletter-block__panel .newsletter-block__intro-paragraph {
+  font-size: clamp(0.875rem, 1.35vw, 1rem);
+  line-height: 1.45;
+}
+
+.newsletter-block__intro-paragraph {
+  margin: 0;
   font-size: clamp(0.875rem, 1.35vw, 1rem);
   line-height: 1.45;
 }
 
 .newsletter-block__title {
-  margin: 0 0 clamp(1.5rem, 4vw, 2.5rem);
-  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  margin: 0 0 clamp(1rem, 2.5vw, 1.5rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
   font-weight: 400;
-  line-height: 0.9;
+  line-height: 1.15;
 }
 
 .newsletter-block__form {
@@ -286,34 +329,30 @@ function onSubmit() {
 .newsletter-block__field {
   position: relative;
   min-width: 0;
-  border-bottom: 1px solid var(--newsletter-ink);
 }
 
 .newsletter-block__label {
   display: block;
-  padding-bottom: 0.85rem;
-  font-size: clamp(1rem, 2.2vw, 1.35rem);
-  line-height: 1;
-  transition: opacity 0.15s ease;
-  pointer-events: none;
-}
-
-.newsletter-block__form--overlay .newsletter-block__label {
-  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
   font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.newsletter-block__label.is-hidden {
-  opacity: 0;
+.newsletter-block__form:not(.newsletter-block__form--overlay) .newsletter-block__label {
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .newsletter-block__input {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
   margin: 0;
   padding: 0 0 0.85rem;
   border: 0;
+  border-bottom: 1px solid var(--newsletter-ink);
   background: transparent;
   color: var(--newsletter-ink);
   font-size: clamp(1rem, 2.2vw, 1.35rem);
@@ -321,9 +360,22 @@ function onSubmit() {
   outline: none;
 }
 
+.newsletter-block__form--overlay .newsletter-block__label {
+  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .newsletter-block__form--overlay .newsletter-block__input {
   padding-bottom: 0.65rem;
-  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.newsletter-block__form--overlay .newsletter-block__submit {
+  padding-bottom: 0.55rem;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
 }
 
 .newsletter-block__submit {
@@ -332,17 +384,17 @@ function onSubmit() {
   border: 0;
   background: transparent;
   color: inherit;
-  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
   font-weight: 400;
   line-height: 1;
+  letter-spacing: 0.04em;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.newsletter-block__form--overlay .newsletter-block__submit {
-  padding-bottom: 0.45rem;
-  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
+.newsletter-block__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
 }
 
 .newsletter-block__submit:hover {

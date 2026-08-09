@@ -2,6 +2,7 @@ import { getSanityWriteClient } from '~/server/utils/sanityWrite'
 import {
   mapReflectionDocument,
   normalizeReflectionField,
+  resolveReflectionPaperColor,
   validateReflectionSubmission,
 } from '~/utils/reflections'
 
@@ -30,7 +31,10 @@ export default defineEventHandler(async (event) => {
   const city = normalizeReflectionField(body?.city)
   const country = normalizeReflectionField(body?.country)
   const reflection = normalizeReflectionField(body?.reflection)
-  const paperColor = String(body?.paperColor ?? '').trim()
+  const paperColor = resolveReflectionPaperColor(
+    body?.paperColor,
+    `${reflection}:${name}:${city}:${country}`,
+  )
   const submittedAt = new Date().toISOString()
 
   const doc = await client.create({

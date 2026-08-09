@@ -307,3 +307,169 @@ export function mergeWatchingFromLocations(reflectionLocations, userLocation) {
 
   return attachCountryCounts([userLocation, ...reflectionLocations])
 }
+
+export const MAP_MARKER_CLUSTER_THRESHOLD_PX = 21
+export const MAP_VIEWBOX_WIDTH = 360
+export const MAP_VIEWBOX_HEIGHT = 180
+
+function markerCityLabel(location) {
+  return normalizeReflectionField(location?.city)
+    || normalizeReflectionField(location?.country)
+    || location?.label
+    || ''
+}
+
+export function buildWatchingFromMapMarker(locations = []) {
+  if (!locations.length) return null
+
+  const count = locations.reduce((sum, location) => sum + (location.count || 0), 0)
+  const x = locations.reduce((sum, location) => sum + location.x, 0) / locations.length
+  const y = locations.reduce((sum, location) => sum + location.y, 0) / locations.length
+  const isCluster = locations.length > 1
+  const cities = [...new Set(locations.map(markerCityLabel).filter(Boolean))]
+
+  return {
+    id: isCluster
+      ? `cluster-${locations.map((location) => location.id).sort().join('--')}`
+      : locations[0].id,
+    isCluster,
+    isUser: locations.some((location) => location.isUser),
+    x,
+    y,
+    locations,
+    count,
+    cities,
+    city: isCluster ? '' : locations[0].city,
+    country: isCluster ? '' : locations[0].country,
+    label: isCluster ? '' : locations[0].label,
+  }
+}
+
+export function clusterWatchingFromMarkers(
+  locations = [],
+  {
+    width = 0,
+    height = 0,
+    thresholdPx = MAP_MARKER_CLUSTER_THRESHOLD_PX,
+    viewBoxWidth = MAP_VIEWBOX_WIDTH,
+    viewBoxHeight = MAP_VIEWBOX_HEIGHT,
+  } = {},
+) {
+  if (!locations.length) return []
+  if (!width || !height) {
+    return locations.map((location) => buildWatchingFromMapMarker([location]))
+  }
+
+  const toPixel = (location) => ({
+    px: (location.x / viewBoxWidth) * width,
+    py: (location.y / viewBoxHeight) * height,
+  })
+
+  const parent = locations.map((_, index) => index)
+
+  function find(index) {
+    if (parent[index] !== index) {
+      parent[index] = find(parent[index])
+    }
+    return parent[index]
+  }
+
+  function union(leftIndex, rightIndex) {
+    parent[find(leftIndex)] = find(rightIndex)
+  }
+
+  for (let leftIndex = 0; leftIndex < locations.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < locations.length; rightIndex += 1) {
+      const left = toPixel(locations[leftIndex])
+      const right = toPixel(locations[rightIndex])
+      const distance = Math.hypot(left.px - right.px, left.py - right.py)
+
+      if (distance <= thresholdPx) {
+        union(leftIndex, rightIndex)
+      }
+    }
+  }
+
+  const groups = new Map()
+
+  for (let index = 0; index < locations.length; index += 1) {
+    const root = find(index)
+    const group = groups.get(root) || []
+    group.push(locations[index])
+    groups.set(root, group)
+  }
+
+  return [...groups.values()]
+    .map((group) => buildWatchingFromMapMarker(group))
+    .filter(Boolean)
+    .sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count
+      return String(left.id).localeCompare(String(right.id))
+    })
+}
+
+export function buildWatchingFromMapMarkers(
+  locations = [],
+  dimensions = {},
+) {
+  const reflectionLocations = locations.filter((location) => !location.isUser)
+  const userLocation = locations.find((location) => location.isUser)
+  const clustered = clusterWatchingFromMarkers(reflectionLocations, dimensions)
+  const markers = [...clustered]
+
+  if (userLocation) {
+    markers.push(buildWatchingFromMapMarker([userLocation]))
+  }
+
+  return markers
+}
+
+export function formatWatchingFromMapMarkerTooltip(marker) {
+  if (!marker) {
+    return { primary: '', secondary: '' }
+  }
+
+  if (!marker.isCluster) {
+    const location = marker.locations[0]
+    const count = marker.count || location?.count || 0
+    const suffix = count === 1 ? 'reflection' : 'reflections'
+
+    return {
+      primary: location?.label || formatReflectionLocation({
+        city: location?.city,
+        country: location?.country,
+      }),
+      secondary: `${count} ${suffix}`,
+    }
+  }
+
+  const cities = marker.cities || []
+  let secondary = ''
+
+  if (cities.length <= 3) {
+    secondary = cities.join(' · ')
+  } else {
+    secondary = `${cities.slice(0, 2).join(' · ')} · +${cities.length - 2} more`
+  }
+
+  return {
+    primary: `${marker.count} reflections nearby`,
+    secondary,
+  }
+}
+
+export function formatWatchingFromMapMarkerSelectionLabel(marker) {
+  if (!marker) return ''
+
+  if (!marker.isCluster) {
+    return marker.label || marker.locations?.[0]?.label || ''
+  }
+
+  const cities = marker.cities || []
+
+  if (cities.length <= 3) {
+    return cities.join(' · ')
+  }
+
+  return `${cities.slice(0, 2).join(' · ')} · +${cities.length - 2} more`
+}

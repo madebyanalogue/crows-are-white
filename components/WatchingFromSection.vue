@@ -1,4 +1,6 @@
 <script setup>
+import { filterReflectionsByMapMarker } from '~/utils/reflections'
+
 const props = defineProps({
   items: {
     type: Array,
@@ -6,20 +8,50 @@ const props = defineProps({
   },
   title: {
     type: String,
-    default: 'Watching From',
+    default: 'Around the World',
+  },
+  intro: {
+    type: String,
+    default: '',
   },
   placeholder: {
     type: String,
     default: 'Enter your city',
   },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
+  selectedMarkerId: {
+    type: String,
+    default: '',
+  },
+  showLeaveReflectionButton: {
+    type: Boolean,
+    default: false,
+  },
+  viewAllPath: {
+    type: String,
+    default: '',
+  },
+  viewAllLabel: {
+    type: String,
+    default: 'View all reflections →',
+  },
 })
+
+const emit = defineEmits(['select-marker', 'submitted'])
 
 const STORAGE_KEY = 'caw-watching-from-city'
 
 const cityQuery = ref('')
 const userLocation = ref(null)
+const selectedMarker = ref(null)
+const activeReflectionIndex = ref(0)
 const geocoding = ref(false)
 const geocodeError = ref('')
+const reflectionFormOpen = ref(false)
+const reflectionFormRef = ref(null)
 let geocodeTimer = null
 let geocodeRequestId = 0
 
@@ -31,6 +63,16 @@ const displayLocations = computed(() =>
   mergeWatchingFromLocations(reflectionLocations.value, userLocation.value),
 )
 
+const markerReflections = computed(() =>
+  filterReflectionsByMapMarker(props.items, selectedMarker.value),
+)
+
+const activeReflection = computed(() =>
+  markerReflections.value[activeReflectionIndex.value] || null,
+)
+
+const canStepReflections = computed(() => markerReflections.value.length > 1)
+
 const statsMessage = computed(() => {
   if (!mapStats.value.cityCount) {
     return 'Enter your city to place it on the map.'
@@ -40,6 +82,21 @@ const statsMessage = computed(() => {
 })
 
 const statusMessage = computed(() => {
+  if (selectedMarker.value && activeReflection.value) {
+    const total = markerReflections.value.length
+    const position = activeReflectionIndex.value + 1
+    const suffix = total === 1 ? '1 reflection' : `${position} of ${total} reflections`
+
+    if (selectedMarker.value.isCluster) {
+      return `${selectedMarker.value.count} reflections nearby · ${suffix}`
+    }
+
+    const label = selectedMarker.value.label
+      || selectedMarker.value.locations?.[0]?.label
+      || ''
+    return `${label} · ${suffix}`
+  }
+
   const query = cityQuery.value.trim()
 
   if (geocoding.value) {
@@ -64,6 +121,56 @@ const statusMessage = computed(() => {
 
   return statsMessage.value
 })
+
+function selectMarker(marker) {
+  if (!marker || marker.isUser) return
+
+  selectedMarker.value = marker
+  activeReflectionIndex.value = 0
+  emit('select-marker', marker)
+}
+
+function stepReflection(direction) {
+  const total = markerReflections.value.length
+  if (total <= 1) return
+
+  activeReflectionIndex.value = (
+    activeReflectionIndex.value + direction + total
+  ) % total
+}
+
+function openReflectionForm() {
+  reflectionFormOpen.value = true
+}
+
+function closeReflectionForm() {
+  reflectionFormOpen.value = false
+  reflectionFormRef.value?.resetAll()
+}
+
+function onReflectionSubmitted(item) {
+  emit('submitted', item)
+}
+
+function handleKeydown(event) {
+  if (reflectionFormOpen.value && event.key === 'Escape') {
+    event.preventDefault()
+    closeReflectionForm()
+    return
+  }
+
+  if (!selectedMarker.value) return
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    stepReflection(-1)
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    stepReflection(1)
+  }
+}
 
 function hydrateSavedCity() {
   if (!import.meta.client) return
@@ -181,30 +288,63 @@ watch(cityQuery, (value) => {
   scheduleGeocode(value)
 })
 
+watch(
+  () => props.selectedMarkerId,
+  (markerId) => {
+    if (markerId) return
+    selectedMarker.value = null
+    activeReflectionIndex.value = 0
+  },
+)
+
 onMounted(() => {
   hydrateSavedCity()
   if (cityQuery.value.trim()) {
     scheduleGeocode(cityQuery.value)
   }
+
+  document.addEventListener('keydown', handleKeydown)
 })
 
-onBeforeUnmount(clearGeocodeTimer)
+onBeforeUnmount(() => {
+  clearGeocodeTimer()
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
   <section
     class="watching-from-section"
-    aria-labelledby="watching-from-heading"
+    :class="{ 'watching-from-section--compact': compact }"
+    :aria-labelledby="'watching-from-heading'"
+    :aria-label="compact ? undefined : 'Around the world map'"
   >
     <div class="watching-from-section__header">
-      <h4
-        id="watching-from-heading"
-        class="watching-from-section__title serif"
-      >
-        {{ title }}
-      </h4>
+      <div class="watching-from-section__heading">
+        <h3
+          id="watching-from-heading"
+          class="watching-from-section__title h3 serif light"
+        >
+          {{ title }}
+        </h3>
+        <p
+          v-if="intro || viewAllPath"
+          class="watching-from-section__byline light"
+        >
+          <template v-if="intro">{{ intro }}</template><template v-if="intro && viewAllPath">&nbsp;</template><NuxtLink
+            v-if="viewAllPath"
+            :to="viewAllPath"
+            class="watching-from-section__view-all"
+          >
+            {{ viewAllLabel }}
+          </NuxtLink>
+        </p>
+      </div>
 
-      <label class="watching-from-section__field">
+      <label
+        v-if="!compact"
+        class="watching-from-section__field"
+      >
         <span class="watching-from-section__label">City</span>
         <input
           v-model="cityQuery"
@@ -216,13 +356,121 @@ onBeforeUnmount(clearGeocodeTimer)
       </label>
     </div>
 
-    <WatchingFromDiagram
-      :locations="displayLocations"
-      :active-location-id="userLocation?.id || ''"
-    />
+    <div class="watching-from-section__map-stage">
+      <WatchingFromDiagram
+        :locations="displayLocations"
+        :active-location-id="userLocation?.id || ''"
+        :selected-marker-id="selectedMarker?.id || props.selectedMarkerId || ''"
+        @select-marker="selectMarker"
+      />
+
+      <div
+        v-if="reflectionFormOpen"
+        class="watching-from-section__map-form-overlay"
+        @click.self="closeReflectionForm"
+      >
+        <div
+          class="watching-from-section__map-form-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reflection-map-title"
+          @click.stop
+        >
+          <button
+            type="button"
+            class="watching-from-section__map-form-close"
+            aria-label="Close reflection form"
+            @click="closeReflectionForm"
+          >
+            ×
+          </button>
+
+          <ReflectionSubmitForm
+            ref="reflectionFormRef"
+            id-prefix="reflection-map"
+            variant="modal"
+            :show-cancel="false"
+            @submitted="onReflectionSubmitted"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="activeReflection"
+      class="watching-from-section__viewer-wrap"
+    >
+      <div class="watching-from-section__viewer-stack">
+        <div class="watching-from-section__viewer">
+          <button
+            type="button"
+            class="watching-from-section__nav serif"
+            :disabled="!canStepReflections"
+            aria-label="Previous reflection"
+            @click="stepReflection(-1)"
+          >
+            ←
+          </button>
+
+          <div class="watching-from-section__viewer-card">
+          <ReflectionCard
+            :key="activeReflection._id"
+            :item="activeReflection"
+            :index="activeReflectionIndex"
+            :open="true"
+            :paper-tilt-max="2"
+            readonly
+          />
+          </div>
+
+          <button
+            type="button"
+            class="watching-from-section__nav serif"
+            :disabled="!canStepReflections"
+            aria-label="Next reflection"
+            @click="stepReflection(1)"
+          >
+            →
+          </button>
+        </div>
+
+        <p
+          v-if="canStepReflections"
+          class="watching-from-section__counter handwritten"
+          aria-live="polite"
+          :aria-label="`${activeReflectionIndex + 1} of ${markerReflections.length}`"
+        >
+          {{ activeReflectionIndex + 1 }}/{{ markerReflections.length }}
+        </p>
+      </div>
+
+      <div
+        v-if="showLeaveReflectionButton && !reflectionFormOpen"
+        class="watching-from-section__viewer-actions"
+      >
+        <button
+          type="button"
+          class="watching-from-section__leave-reflection"
+          @click="openReflectionForm"
+        >
+          <span class="watching-from-section__leave-reflection-paper">
+            <span
+              class="watching-from-section__leave-reflection-folded"
+              aria-hidden="true"
+            >
+              <span class="watching-from-section__leave-reflection-flap watching-from-section__leave-reflection-flap--bottom" />
+              <span class="watching-from-section__leave-reflection-flap watching-from-section__leave-reflection-flap--top" />
+            </span>
+            <span class="watching-from-section__leave-reflection-label serif">
+              Leave a Reflection
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
 
     <p
-      v-if="statusMessage"
+      v-if="statusMessage && !compact"
       class="watching-from-section__status serif"
       aria-live="polite"
     >
@@ -237,6 +485,64 @@ onBeforeUnmount(clearGeocodeTimer)
   gap: clamp(0.85rem, 2vw, 1.25rem);
 }
 
+@media (min-width: 700px) {
+  .watching-from-section {
+    grid-template-columns: 3fr 1fr;
+    align-items: start;
+  }
+
+  .watching-from-section__header,
+  .watching-from-section__status {
+    grid-column: 1 / -1;
+  }
+
+  .watching-from-section__map-stage {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .watching-from-section:not(:has(.watching-from-section__viewer-wrap)) .watching-from-section__map-stage {
+    grid-column: 1 / -1;
+  }
+
+  .watching-from-section__viewer-wrap {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .watching-from-section--compact:has(.watching-from-section__viewer-wrap) {
+    align-items: stretch;
+  }
+}
+
+.watching-from-section--compact .watching-from-section__header {
+  gap: clamp(0.55rem, 1.2vw, 0.75rem);
+}
+
+.watching-from-section--compact .watching-from-section__byline {
+  margin: 0;
+  max-width: none;
+  font-family: var(--serif-body);
+  font-size: clamp(0.92rem, 1.25vw, 1rem);
+  opacity: 0.62;
+}
+
+.watching-from-section__view-all {
+  display: inline;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: opacity 0.2s ease;
+}
+
+.watching-from-section__view-all:hover {
+  opacity: 0.72;
+}
+
 .watching-from-section__header {
   display: grid;
   gap: clamp(0.75rem, 2vw, 1rem);
@@ -244,17 +550,30 @@ onBeforeUnmount(clearGeocodeTimer)
 
 @media (min-width: 700px) {
   .watching-from-section__header {
-    grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
+    grid-template-columns: 3fr 1fr;
     align-items: end;
     gap: clamp(1rem, 3vw, 2rem);
   }
 }
 
+.watching-from-section__heading {
+  display: grid;
+  gap: clamp(0.65rem, 1.5vw, 0.85rem);
+}
+
 .watching-from-section__title {
   margin: 0;
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 300;
-  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.watching-from-section__byline {
+  margin: 0;
+  max-width: 36rem;
+  font-family: var(--serif-body);
+  font-size: clamp(0.95rem, 1.35vw, 1.05rem);
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  opacity: 0.72;
 }
 
 .watching-from-section__field {
@@ -289,6 +608,198 @@ onBeforeUnmount(clearGeocodeTimer)
 
 .watching-from-section__input:focus-visible {
   border-bottom-color: currentColor;
+}
+
+.watching-from-section__map-stage {
+  position: relative;
+  min-width: 0;
+  border: 1px dashed color-mix(in srgb, currentColor 24%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.watching-from-section__map-stage :deep(.watching-from-diagram) {
+  border: 0;
+  background: transparent;
+}
+
+.watching-from-section__map-form-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.watching-from-section__map-form-panel {
+  position: relative;
+  width: min(100%, 30rem);
+  max-height: 100%;
+  overflow: auto;
+}
+
+.watching-from-section__map-form-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--reflection-paper-text, #4a4844) 8%, transparent);
+  color: var(--reflection-paper-text, #4a4844);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.watching-from-section__viewer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(0.65rem, 1.5vw, 1rem);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.watching-from-section__viewer-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: clamp(0.65rem, 1.5vw, 1rem);
+  flex: 0 0 auto;
+}
+
+.watching-from-section__viewer-actions {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(3rem, 8vw, 5rem);
+  padding-bottom: clamp(0.25rem, 1vw, 0.75rem);
+}
+
+.watching-from-section__leave-reflection {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  width: min(100%, 22rem);
+  margin: 0 auto;
+}
+
+.watching-from-section__leave-reflection:hover {
+  opacity: 0.65;
+}
+
+.watching-from-section__leave-reflection:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+.watching-from-section__leave-reflection-paper {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--reflection-paper-bg, #f7f6f4);
+  color: var(--reflection-paper-text, #4a4844);
+  border: var(--reflection-card-border, 1px solid var(--mid-border));
+  overflow: hidden;
+}
+
+.watching-from-section__leave-reflection-folded {
+  position: absolute;
+  inset: 0;
+}
+
+.watching-from-section__leave-reflection-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--reflection-paper-bg, #f7f6f4);
+  pointer-events: none;
+}
+
+.watching-from-section__leave-reflection-flap--bottom {
+  inset: 50% 0 0;
+  z-index: 0;
+}
+
+.watching-from-section__leave-reflection-flap--top {
+  inset: 0 0 50%;
+  z-index: 1;
+  border-bottom: 1px solid color-mix(in srgb, var(--reflection-paper-text, #4a4844) 18%, transparent);
+}
+
+.watching-from-section__leave-reflection-label {
+  position: absolute;
+  inset: 50% 0 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10%;
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  pointer-events: none;
+}
+
+.watching-from-section__viewer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1rem);
+  width: 100%;
+}
+
+.watching-from-section__viewer-card {
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+}
+
+.watching-from-section__counter {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.watching-from-section__nav {
+  border: 0;
+  padding: 0.35rem 0.5rem;
+  background: none;
+  color: inherit;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.watching-from-section__nav:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.watching-from-section__nav:disabled {
+  opacity: 0;
+  cursor: default;
 }
 
 .watching-from-section__status {

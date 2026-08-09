@@ -14,26 +14,31 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  readonly: {
+    type: Boolean,
+    default: false,
+  },
+  paperTiltMax: {
+    type: Number,
+    default: 0,
+  },
 })
 
 const emit = defineEmits(['open', 'close'])
 
-const paperColor = computed(() => props.item?.paperColor || 'peach')
+const paperColor = computed(() => props.item?.paperColor || 'paleRicePaper')
 const paperStyle = computed(() => getReflectionPaperStyle(paperColor.value))
 const reflectionText = computed(() => props.item?.reflection || '')
 const attributionLabel = computed(() =>
   formatReflectionNameCity({
     name: props.item?.name,
     city: props.item?.city,
+    country: props.item?.country,
   }),
 )
-const countryLabel = computed(() => props.item?.country?.trim() || '')
-const isPending = computed(() => props.item?.isPending === true)
+const isOpen = computed(() => props.readonly || props.open)
 
 const paperTilt = computed(() => {
-  const position = props.index + 1
-  if (position % 4 !== 0 && position % 5 !== 0) return null
-
   const seed = String(props.item?._id ?? props.index)
   let hash = 0
 
@@ -41,6 +46,23 @@ const paperTilt = computed(() => {
     hash = ((hash << 5) - hash) + seed.charCodeAt(i)
     hash |= 0
   }
+
+  if (props.paperTiltMax > 0) {
+    const tiltSeed = `${seed}:${props.index}`
+    let tiltHash = 0
+
+    for (let i = 0; i < tiltSeed.length; i += 1) {
+      tiltHash = ((tiltHash << 5) - tiltHash) + tiltSeed.charCodeAt(i)
+      tiltHash |= 0
+    }
+
+    const normalized = (Math.abs(tiltHash) % 1000) / 1000
+    const degrees = (normalized * 2 * props.paperTiltMax) - props.paperTiltMax
+    return `${degrees.toFixed(2)}deg`
+  }
+
+  const position = props.index + 1
+  if (position % 4 !== 0 && position % 5 !== 0) return null
 
   const magnitude = 1 + (Math.abs(hash) % 3)
   const sign = hash % 2 === 0 ? 1 : -1
@@ -59,49 +81,91 @@ function closeCard() {
   emit('close', props.item._id)
 }
 
-function handleClick() {
+const isPending = computed(() => props.item?.isPending === true)
+
+const canHoverOpen = ref(false)
+let hoverOpenMediaQuery = null
+
+function handleHoverOpenMediaChange(event) {
+  canHoverOpen.value = event.matches
+}
+
+function openOnHover() {
+  if (props.readonly || !canHoverOpen.value || props.open) return
+  openCard()
+}
+
+function closeOnHover() {
+  if (props.readonly || !canHoverOpen.value || !props.open) return
+  closeCard()
+}
+
+function handleClick(event) {
+  if (props.readonly) return
+
+  if (canHoverOpen.value && event.detail !== 0) return
+
   if (props.open) {
     closeCard()
   } else {
     openCard()
   }
 }
+
+onMounted(() => {
+  if (!import.meta.client) return
+
+  hoverOpenMediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+  canHoverOpen.value = hoverOpenMediaQuery.matches
+  hoverOpenMediaQuery.addEventListener('change', handleHoverOpenMediaChange)
+})
+
+onBeforeUnmount(() => {
+  hoverOpenMediaQuery?.removeEventListener('change', handleHoverOpenMediaChange)
+  hoverOpenMediaQuery = null
+})
 </script>
 
 <template>
   <article
     class="reflection-card"
     :class="[
-      { 'reflection-card--open': open, 'reflection-card--pending': isPending },
+      {
+        'reflection-card--open': isOpen,
+        'reflection-card--pending': isPending,
+        'reflection-card--readonly': readonly,
+        'reflection-card--hover-open': canHoverOpen,
+      },
     ]"
     :style="paperStyle"
+    @mouseenter="openOnHover"
+    @mouseleave="closeOnHover"
   >
-    <button
-      type="button"
+    <component
+      :is="readonly ? 'div' : 'button'"
       class="reflection-card__toggle"
-      :aria-expanded="open"
-      :aria-label="open ? 'Fold reflection' : 'Unfold reflection'"
+      :type="readonly ? undefined : 'button'"
+      :aria-expanded="readonly ? undefined : isOpen"
+      :aria-label="readonly ? undefined : (isOpen ? 'Fold reflection' : 'Unfold reflection')"
       @click="handleClick"
     >
       <div
         class="reflection-card__paper"
-        :class="{ 'reflection-card__paper--open': open }"
+        :class="{ 'reflection-card__paper--open': isOpen }"
         :style="paperSurfaceStyle"
       >
         <div
-          v-if="!open"
+          v-if="!isOpen"
           class="reflection-card__folded"
         >
-          <span
-            class="reflection-card__fold-crease"
+          <div
+            class="reflection-card__flap reflection-card__flap--bottom"
             aria-hidden="true"
           />
-          <p
-            v-if="countryLabel"
-            class="reflection-card__country"
-          >
-            {{ countryLabel }}
-          </p>
+          <div
+            class="reflection-card__flap reflection-card__flap--top"
+            aria-hidden="true"
+          />
         </div>
 
         <div
@@ -111,12 +175,12 @@ function handleClick() {
           <p class="reflection-card__quote serif">
             {{ reflectionText }}
           </p>
-          <footer
+          <cite
             v-if="attributionLabel"
             class="reflection-card__attribution"
           >
             {{ attributionLabel }}
-          </footer>
+          </cite>
           <p
             v-if="isPending"
             class="reflection-card__pending-note"
@@ -125,42 +189,47 @@ function handleClick() {
           </p>
         </div>
       </div>
-    </button>
+    </component>
   </article>
 </template>
 
 <style scoped>
 .reflection-card {
-  --reflection-paper-bg: #f1c1ae;
-  --reflection-paper-text: #3a2a22;
+  --reflection-paper-bg: #f7f6f4;
+  --reflection-paper-text: #4a4844;
   position: relative;
   z-index: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   width: 100%;
-  height: auto;
+  height: 100%;
   min-height: 0;
-  --reflection-paper-bg: #f7f6f4 !important;
+  /* --reflection-paper-bg: #f7f6f4 !important; */
 }
 
 .reflection-card--open {
   z-index: 1;
   align-items: center;
-  height: 100%;
 }
 
 .reflection-card--open .reflection-card__toggle {
   align-items: center;
+  justify-content: center;
   height: 100%;
+}
+
+.reflection-card--readonly .reflection-card__toggle {
+  cursor: default;
 }
 
 .reflection-card__toggle {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: 0;
   padding: 0;
   border: 0;
   background: none;
@@ -180,11 +249,16 @@ function handleClick() {
   overflow: hidden;
   container-type: size;
   border: var(--reflection-card-border, 1px solid var(--mid-border));
+  /* --reflection-flap-crease-shift: 7%; */
+  /* --reflection-flap-edge: color-mix(in srgb, var(--reflection-paper-text) 22%, transparent); */
 }
 
 .reflection-card__paper--open {
+  width: min(96%, 100%);
+  max-height: 100%;
   aspect-ratio: 1 / 1;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .reflection-card__paper--open::before,
@@ -196,6 +270,7 @@ function handleClick() {
   z-index: 0;
   border-top: 0.035em dashed color-mix(in srgb, var(--reflection-paper-text) 40%, transparent);
   pointer-events: none;
+  opacity: 0;
 }
 
 .reflection-card__paper--open::before {
@@ -207,36 +282,50 @@ function handleClick() {
 }
 
 .reflection-card__folded {
-  position: relative;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   color: var(--reflection-paper-text);
 }
 
-.reflection-card__fold-crease {
+.reflection-card__flap {
   position: absolute;
-  inset: 0 0 50%;
-  border-bottom: 1px solid color-mix(in srgb, var(--reflection-paper-text) 18%, transparent);
-  /* border-radius: 0 0 18px 18px;
-  corner-shape: bevel; */
+  left: 0;
+  right: 0;
+  background: var(--reflection-paper-bg);
   pointer-events: none;
 }
 
-.reflection-card__country {
-  position: absolute;
-  z-index: 1;
+.reflection-card__flap--bottom {
   inset: 50% 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0 8%;
-  font-size: 14cqmin;
-  font-family: var(--serif);
-  font-weight: 300;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-align: center;
+  z-index: 0;
 }
+
+.reflection-card__flap--top {
+  inset: 0 0 50%;
+  z-index: 1;
+  background: var(--reflection-paper-bg);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--reflection-paper-text) 18%, transparent);
+  box-shadow: none;
+}
+
+/*
+.reflection-card:not(.reflection-card--open):not(.reflection-card--readonly)
+  .reflection-card__paper:hover
+  .reflection-card__flap--top,
+.reflection-card:not(.reflection-card--open):not(.reflection-card--readonly)
+  .reflection-card__toggle:focus-visible
+  .reflection-card__flap--top {
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    var(--reflection-flap-crease-shift) 100%
+  );
+  box-shadow: -1px 0 0 0 var(--reflection-flap-edge);
+  filter: drop-shadow(0 0.35rem 0.45rem color-mix(in srgb, var(--reflection-paper-text) 12%, transparent));
+}
+*/
 
 .reflection-card__inside {
   position: relative;
@@ -268,6 +357,7 @@ function handleClick() {
   margin: 0;
   font-size: 5cqmin;
   font-family: var(--serif-body);
+  font-style: normal;
   line-height: 1.2;
   letter-spacing: 0.01em;
   text-transform: none;

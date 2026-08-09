@@ -10,8 +10,44 @@ const props = defineProps({
   },
 })
 
-const title = computed(() => props.section?.newsletterTitle?.trim() || 'Newsletter')
-const intro = computed(() => props.section?.newsletterIntro?.trim() || '')
+const DEFAULT_NEWSLETTER_TITLE = 'Stay with the Story'
+const DEFAULT_NEWSLETTER_INTRO = `If this film resonated with you, we'd love to keep in touch.
+
+Receive occasional letters from the filmmakers, screening news, and updates as the journey continues.`
+const DEFAULT_NEWSLETTER_SUBMIT_LABEL = 'Stay in Touch'
+
+function isPlaceholderNewsletterTitle(value) {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return true
+  return /^newsletter$/i.test(normalized)
+}
+
+function isPlaceholderNewsletterIntro(value) {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return true
+  return /^\[(?:work in progress|wip)\]$/i.test(normalized)
+}
+
+function resolveNewsletterTitle(section) {
+  const cms = section?.newsletterTitle?.trim()
+  if (isPlaceholderNewsletterTitle(cms)) return DEFAULT_NEWSLETTER_TITLE
+  return cms
+}
+
+function resolveNewsletterIntro(section) {
+  const cms = section?.newsletterIntro?.trim()
+  if (isPlaceholderNewsletterIntro(cms)) return DEFAULT_NEWSLETTER_INTRO
+  return cms
+}
+
+function resolveNewsletterSubmitLabel(section) {
+  const cms = section?.newsletterSubmitLabel?.trim()
+  return cms || DEFAULT_NEWSLETTER_SUBMIT_LABEL
+}
+
+const title = computed(() => resolveNewsletterTitle(props.section))
+const intro = computed(() => resolveNewsletterIntro(props.section))
+const submitLabel = computed(() => resolveNewsletterSubmitLabel(props.section))
 
 const resolvedTextColor = computed(() => {
   const { newsletterTextColor, newsletterBackgroundColor } = props.section || {}
@@ -86,6 +122,7 @@ const innerClass = computed(() => ({
       <NewsletterBlock
         :title="title"
         :intro="intro"
+        :submit-label="submitLabel"
         :background="background"
       />
     </div>
