@@ -109,6 +109,26 @@ const title = computed(
   () => props.section?.watchTitle?.trim() || film.value?.title || defaultFilm.title,
 )
 
+const filmYear = computed(() => {
+  const year = props.section?.watchYear
+  if (year == null || year === '') return null
+
+  const parsed = Number(year)
+  return Number.isFinite(parsed) ? parsed : null
+})
+
+const filmRuntimeMinutes = computed(() => {
+  const runtime = props.section?.watchRuntimeMinutes
+  if (runtime == null || runtime === '') return null
+
+  const parsed = Number(runtime)
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : null
+})
+
+const showFilmMeta = computed(() =>
+  Boolean(filmYear.value || filmRuntimeMinutes.value),
+)
+
 const ctaLabel = computed(() => props.section?.watchCtaLabel?.trim() || 'Watch Now – £7.99')
 const ctaHref = computed(() => {
   const link = props.section?.watchCtaLink
@@ -223,6 +243,20 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
           <h1 class="page-section-watch__title serif">
             {{ title }}
           </h1>
+
+          <div
+            v-if="showFilmMeta"
+            class="page-section-watch__meta serif"
+          >
+            <span v-if="filmYear">{{ filmYear }}</span>
+            <span
+              v-if="filmYear && filmRuntimeMinutes"
+              class="page-section-watch__meta-divider"
+              aria-hidden="true"
+            >|</span>
+            <span v-if="filmRuntimeMinutes">{{ filmRuntimeMinutes }}min</span>
+          </div>
+
           <component
             :is="ctaHref ? 'a' : 'button'"
             :href="ctaHref || undefined"
@@ -275,9 +309,9 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
 .page-section-watch {
   --watch-accent: #ff555f;
   --watch-accent-text: #000;
-  --watch-ink: #ffffff;
-  --watch-muted: rgba(255, 255, 255, 0.7);
-  --watch-line: rgba(255, 255, 255, 0.22);
+  --watch-ink: #222;
+  --watch-muted: rgba(0,0,0, 0.75);
+  --watch-line: rgba(0,0,0, 0.22);
   --watch-gutter: clamp(1.25rem, 3.5vw, 2.75rem);
   --watch-nav-clearance: calc(2rem + 50px + 1.25rem);
   --watch-content: min(100%, 1280px);
@@ -286,8 +320,6 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
     var(--watch-nav-clearance)
     var(--watch-gutter)
     clamp(3rem, 8vw, 6rem);
-  color: var(--watch-ink);
-  background: #000;
   --watch-gap: 6rem;
 }
 
@@ -328,6 +360,7 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
 .page-section-watch__hero-media {
   position: absolute;
   inset: 0;
+  background:black;
 }
 
 .page-section-watch__hero-overlay {
@@ -354,7 +387,7 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
   object-position: center;
   opacity: 0;
   transition: opacity 0.5s ease;
-  background: #000;
+  background:black;
 }
 
 .page-section-watch__video.is-ready {
@@ -428,6 +461,7 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
   transform: translateX(-50%);
 }
 
+
 .page-section-watch__title {
   margin: 0;
   font-size: clamp(30px, 2.5vw, 3rem);
@@ -435,6 +469,26 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
   letter-spacing: 0.04em;
   line-height: 1.15;
   text-transform: uppercase;
+  color:white;
+}
+
+.page-section-watch__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.45rem, 1vw, 0.65rem);
+  margin: 0;
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.page-section-watch__meta-divider {
+  opacity: 0.45;
 }
 
 .page-section-watch__cta {
@@ -563,5 +617,25 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
   margin-left: calc(-1 * var(--watch-gutter));
   margin-right: calc(-1 * var(--watch-gutter));
   border-radius: 0;
+}
+
+
+
+@media (min-width: 1000px) {
+  .page-section-watch__hero-copy {
+    flex-direction: row;
+    gap:40px;
+  }
+  .page-section-watch__title {
+  flex: 1;
+    text-align: left;
+  }
+  .page-section-watch__play {
+    display: block;
+  }
+  .page-section-watch__title span,
+  .page-section-watch__cta span {
+    display:none;
+  }
 }
 </style>
