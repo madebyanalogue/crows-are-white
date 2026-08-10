@@ -10,7 +10,7 @@ const WATCH_PAGE_COLORS_FALLBACK = {
   pageTextColor: '#ffffff',
   menuBackgroundColor: '#0b0d0c',
   menuTextColor: '#ff555f',
-  menuHighlightColor: '#ff555f',
+  featureColor: '#ff555f',
   basketIconColor: '#ff555f',
 }
 

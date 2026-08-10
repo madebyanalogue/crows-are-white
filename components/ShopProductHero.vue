@@ -53,10 +53,8 @@ const hasMultipleImages = computed(() => carouselImages.value.length > 1)
 const activeImageIndex = ref(0)
 const displayImageIndex = ref(0)
 
-const canShowPreviousImage = computed(() => activeImageIndex.value > 0)
-const canShowNextImage = computed(
-  () => activeImageIndex.value < carouselImages.value.length - 1,
-)
+const CAROUSEL_DRAG_ATTRACTION = 0.022
+const CAROUSEL_ARROW_ATTRACTION = 0.01
 
 let carouselInstance: {
   off: (event: string, handler: () => void) => void
@@ -65,6 +63,10 @@ let carouselInstance: {
   previous: (isWrap?: boolean, isInstant?: boolean) => void
   next: (isWrap?: boolean, isInstant?: boolean) => void
   select: (index: number, isWrapped?: boolean, isInstant?: boolean) => void
+  isAnimating?: boolean
+  options: {
+    selectedAttraction: number
+  }
 } | null = null
 let carouselSelectHandler: (() => void) | null = null
 
@@ -96,32 +98,64 @@ const { flickity, reload } = useFlickity(carouselRef, () => ({
   contain: true,
   draggable: hasMultipleImages.value,
   freeScroll: false,
-  friction: 0.45,
-  selectedAttraction: 0.07,
+  friction: 0.28,
+  selectedAttraction: CAROUSEL_DRAG_ATTRACTION,
   pageDots: false,
   prevNextButtons: false,
-  wrapAround: false,
+  wrapAround: hasMultipleImages.value,
   onReady: bindCarousel,
 }))
 
+function restoreCarouselDragPhysics() {
+  if (!carouselInstance) return
+  carouselInstance.options.selectedAttraction = CAROUSEL_DRAG_ATTRACTION
+}
+
+function runCarouselStep(direction: 'previous' | 'next') {
+  const instance = flickity.value as NonNullable<typeof carouselInstance> | null
+  if (!instance) return
+
+  instance.options.selectedAttraction = CAROUSEL_ARROW_ATTRACTION
+
+  const onSettle = () => {
+    if (instance.isAnimating) return
+    restoreCarouselDragPhysics()
+    instance.off('settle', onSettle)
+  }
+
+  instance.on('settle', onSettle)
+
+  if (direction === 'previous') {
+    instance.previous(true, false)
+  } else {
+    instance.next(true, false)
+  }
+}
+
 function selectCarouselIndex(index: number, isInstant = true) {
-  if (index < 0 || index >= carouselImages.value.length) return
+  if (!carouselImages.value.length) return
+
+  const normalizedIndex = hasMultipleImages.value
+    ? ((index % carouselImages.value.length) + carouselImages.value.length) % carouselImages.value.length
+    : index
+
+  if (normalizedIndex < 0 || normalizedIndex >= carouselImages.value.length) return
 
   if (flickity.value) {
-    flickity.value.select(index, true, isInstant)
+    flickity.value.select(normalizedIndex, true, isInstant)
     return
   }
 
-  activeImageIndex.value = index
-  displayImageIndex.value = index
+  activeImageIndex.value = normalizedIndex
+  displayImageIndex.value = normalizedIndex
 }
 
 function showPreviousImage() {
-  flickity.value?.previous(false, true)
+  runCarouselStep('previous')
 }
 
 function showNextImage() {
-  flickity.value?.next(false, true)
+  runCarouselStep('next')
 }
 
 function onCarouselKeydown(event: KeyboardEvent) {
@@ -322,7 +356,6 @@ function incrementQty() {
                 type="button"
                 class="shop-product-hero__carousel-btn shop-product-hero__carousel-btn--prev"
                 aria-label="Previous image"
-                :disabled="!canShowPreviousImage"
                 @click="showPreviousImage"
               >
                 <span
@@ -347,7 +380,6 @@ function incrementQty() {
                 type="button"
                 class="shop-product-hero__carousel-btn shop-product-hero__carousel-btn--next"
                 aria-label="Next image"
-                :disabled="!canShowNextImage"
                 @click="showNextImage"
               >
                 <span
@@ -703,17 +735,21 @@ function incrementQty() {
   top: 50%;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 36px;
+  height: 36px;
   margin: 0;
   padding: 0;
-  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
-  background: color-mix(in srgb, var(--shop-bg) 82%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 100%, transparent);
+  background: color-mix(in srgb, var(--shop-bg) 100%, transparent);
   color: inherit;
   cursor: pointer;
   pointer-events: auto;
   transform: translateY(-50%);
   transition: opacity 0.18s ease, filter 0.18s ease;
+  opacity: 0.4;
+}
+.shop-product-hero__carousel-btn:hover {
+  opacity: 1;
 }
 
 .shop-product-hero__carousel-arrow {
@@ -1040,7 +1076,7 @@ function incrementQty() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   min-height: 0;
   padding:
     clamp(1rem, 2vw, 1.5rem)
@@ -1050,25 +1086,25 @@ function incrementQty() {
 .shop-product-hero__thumbnail {
   display: block;
   flex-shrink: 0;
-  width: clamp(2.75rem, 4vw, 3.25rem);
+  width: clamp(2.75rem, 6vw, 100px);
   aspect-ratio: 1;
   margin: 0;
   padding: 0;
-  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
-  background: color-mix(in srgb, currentColor 4%, transparent);
+  border: none;
+  background: transparent;
   cursor: pointer;
   overflow: hidden;
-  transition:
-    border-color 0.2s ease,
-    opacity 0.2s ease;
+  transition: none;
+  opacity: 0.2;
+  transition: opacity 0.3s ease;
 }
 
 .shop-product-hero__thumbnail:hover {
-  border-color: color-mix(in srgb, currentColor 45%, transparent);
+  opacity: 1;
 }
 
 .shop-product-hero__thumbnail.is-active {
-  border-color: var(--shop-text);
+  opacity: 1;
 }
 
 .shop-product-hero__thumbnail-image {

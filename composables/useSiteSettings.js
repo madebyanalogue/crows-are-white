@@ -1,5 +1,5 @@
 import { resolveSanityAssetUrl } from '~/utils/sanity'
-import { extractPageChromeColors, extractSiteMenuColors } from '~/utils/pageColors'
+import { extractPageChromeColors, extractSiteChromeColors } from '~/utils/pageColors'
 import {
   defaultFooterMenus,
   defaultMainMenu,
@@ -105,7 +105,7 @@ export function useSiteSettings() {
   const cartDisplayMode = computed(() =>
     settings.value?.cartDisplayMode === 'drawer' ? 'drawer' : 'dropdown',
   )
-  const menuColors = computed(() => extractSiteMenuColors(settings.value || {}))
+  const menuColors = computed(() => extractSiteChromeColors(settings.value || {}))
   const shopColors = computed(() => extractPageChromeColors(settings.value?.shopColors || {}))
   const shopNewsletterBackground = computed(() => {
     const background = settings.value?.shopNewsletterBackground

@@ -354,7 +354,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   font-family: var(--sans);
   font-weight: 400;
-  color: var(--text-color, #111010);
+  color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
 
 .cart-panel :is(strong, b) {
@@ -363,13 +363,13 @@ onBeforeUnmount(() => {
 
 .cart-panel--drawer {
   height: 100%;
-  background: #fff;
+  background: var(--cart-background-color, var(--menu-background-color, #fff));
 }
 
 .cart-panel--dropdown {
   min-height: 0;
-  background: transparent;
-  color: var(--menu-text-color, var(--obsidian));
+  background: var(--cart-background-color, var(--menu-background-color, transparent));
+  color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
 
 .cart-panel--dropdown.cart-panel--content-hidden :is(
@@ -610,16 +610,14 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 0;
   padding: 14px 20px;
-  background: var(--menu-text-color, #111010);
-  color: var(--menu-background-color, #fff);
-  font-size: 14px;
+  background: var(--cart-feature-color, var(--menu-highlight-color, #111010));
+  color: var(--cart-background-color, var(--menu-background-color, #fff));
+  font-family: var(--serif);
+  font-size: 17px;
   font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
-}
-
-.cart-panel--drawer .cart-panel__checkout {
-  background: #111010;
-  color: #fff;
 }
 
 .cart-panel__checkout:disabled {

@@ -423,6 +423,8 @@ function pageSectionProjection() {
       }
     },
     watchPlatformsLabel,
+    watchAccentColor,
+    watchPlatformsLabelColor,
     watchPlatformLinks[] {
       _key,
       label,
@@ -676,6 +678,7 @@ export default defineEventHandler(async (event) => {
       slug,
       ${colorField('pageColor')},
       ${colorField('pageTextColor')},
+      ${colorField('featureColor')},
       showNewsletterPopup,
       showFooter,
       seoTitle,

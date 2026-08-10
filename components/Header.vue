@@ -4,6 +4,8 @@
     :class="{
       'is-open': menuOpen,
       'is-cart-open': cartOpen && cartDisplayMode === 'dropdown',
+      'is-switching-from-cart': switchingFromCartToMenu,
+      'is-switching-to-cart': switchingFromMenuToCart,
       'is-over-hero': heroMenuActive,
       'is-over-hero-frosted': heroMenuFrosted,
     }"
@@ -22,7 +24,11 @@
       @click="closeCart"
     />
 
-    <div class="site-header__panel">
+    <div
+      ref="panelRef"
+      class="site-header__panel"
+      :class="{ 'is-panel-height-morphing': panelHeightMorphing }"
+    >
       <div
         class="site-header__bar"
         :class="{ 'site-header__bar--interactive': !menuOpen }"
@@ -172,6 +178,7 @@ const pageTitle = useState('pageTitle', () => '')
 const awaitingPageTitle = ref(false)
 const { getMenuItemUrl } = useMenuLinks()
 const navInnerRef = ref(null)
+const panelRef = ref(null)
 const pageNameWrapRef = ref(null)
 const menuToggleRef = ref(null)
 const displayedPageName = ref('')
@@ -182,6 +189,11 @@ let titleSettleTimer = null
 let pageNameHidden = false
 let suppressPageNameIn = false
 let openingCartFromMenu = false
+const switchingFromCartToMenu = useState('crows_switchingFromCartToMenu', () => false)
+const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
+const panelHeightMorphing = useState('crows_panelHeightMorphing', () => false)
+let panelSwitchTimer = null
+let panelHeightTimer = null
 const MENU_OPEN_MS = 320
 const TITLE_SETTLE_MS = 60
 
@@ -292,10 +304,77 @@ function setDisplayedPageName(name) {
   })
 }
 
+function clearPanelHeightLock() {
+  const panel = panelRef.value
+  if (panel) {
+    panel.style.height = ''
+    panel.style.overflow = ''
+    panel.style.transition = ''
+  }
+  panelHeightMorphing.value = false
+  if (panelHeightTimer != null) {
+    clearTimeout(panelHeightTimer)
+    panelHeightTimer = null
+  }
+}
+
+function runPanelSwitch(direction, applyState) {
+  if (!import.meta.client) {
+    applyState()
+    return
+  }
+
+  clearPanelHeightLock()
+
+  if (panelSwitchTimer != null) {
+    clearTimeout(panelSwitchTimer)
+    panelSwitchTimer = null
+  }
+
+  switchingFromCartToMenu.value = direction === 'to-menu'
+  switchingFromMenuToCart.value = direction === 'to-cart'
+
+  panelSwitchTimer = setTimeout(() => {
+    switchingFromCartToMenu.value = false
+    switchingFromMenuToCart.value = false
+    panelSwitchTimer = null
+  }, MENU_OPEN_MS)
+
+  const panel = panelRef.value
+  if (!panel) {
+    applyState()
+    return
+  }
+
+  const startHeight = panel.offsetHeight
+  panel.style.overflow = 'hidden'
+  panel.style.height = `${startHeight}px`
+  panelHeightMorphing.value = true
+
+  applyState()
+
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      panel.style.height = 'auto'
+      const endHeight = panel.offsetHeight
+      panel.style.height = `${startHeight}px`
+      panel.style.transition = `height ${MENU_OPEN_MS}ms ease`
+      void panel.offsetHeight
+      panel.style.height = `${endHeight}px`
+
+      panelHeightTimer = setTimeout(() => {
+        clearPanelHeightLock()
+      }, MENU_OPEN_MS)
+    })
+  })
+}
+
 function toggleMenu() {
   if (!menuOpen.value && cartOpen.value) {
-    menuOpen.value = true
-    closeCart()
+    runPanelSwitch('to-menu', () => {
+      closeCart()
+      menuOpen.value = true
+    })
     return
   }
   menuOpen.value = !menuOpen.value
@@ -326,6 +405,11 @@ function onCartClick() {
   if (menuOpen.value && !cartOpen.value) {
     openingCartFromMenu = true
     suppressPageNameIn = true
+    runPanelSwitch('to-cart', () => {
+      closeMenu()
+      toggleCart()
+    })
+    return
   }
 
   closeMenu()
@@ -615,6 +699,8 @@ onBeforeUnmount(() => {
   killMenuItemsTween()
   killPageNameTween()
   if (titleSettleTimer != null) clearTimeout(titleSettleTimer)
+  if (panelSwitchTimer != null) clearTimeout(panelSwitchTimer)
+  clearPanelHeightLock()
   document.documentElement.classList.remove('is-nav-open')
   document.body.style.overflow = ''
   if (keyHandler) window.removeEventListener('keydown', keyHandler)
@@ -652,10 +738,19 @@ onBeforeUnmount(() => {
 .site-header.is-cart-open .site-header__panel {
   width: min(100%, var(--site-header-panel-width-open));
   overflow: hidden;
+  color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
 
 .site-header.is-cart-open .site-header__panel::before {
   inset: 0;
+  background-color: var(--cart-background-color, var(--menu-background-color, var(--crema)));
+  border: var(--menu-border, 3px double var(--menu-border-color, #999));
+}
+
+.site-header.is-cart-open.is-over-hero-frosted .site-header__panel::before {
+  background-color: var(--cart-background-color, var(--menu-background-color, var(--crema)));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .site-header.is-cart-open .site-header__bar {
@@ -665,6 +760,43 @@ onBeforeUnmount(() => {
 
 .site-header.is-cart-open .site-header__nav {
   padding-top: 0;
+}
+
+.site-header.is-cart-open .site-header__cart-count {
+  background: var(--cart-basket-icon-color, var(--basket-icon-color, var(--menu-text-color)));
+  color: var(--cart-background-color, var(--menu-background-color));
+}
+
+.site-header.is-cart-open .site-header__page-name--link:hover {
+  color: var(--cart-feature-color, var(--menu-highlight-color, var(--arancio)));
+}
+
+.site-header.is-cart-open :deep(.cart-panel--dropdown) {
+  background: transparent;
+}
+
+.site-header.is-switching-from-cart :deep(.site-header__cart-wrap) {
+  pointer-events: none;
+}
+
+.site-header.is-switching-from-cart :deep(.site-header__cart-inner),
+.site-header.is-switching-from-cart :deep(.cart-panel--dropdown) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.site-header.is-switching-to-cart .site-header__nav {
+  pointer-events: none;
+}
+
+.site-header.is-switching-to-cart .site-header__nav-inner {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.site-header__panel.is-panel-height-morphing .site-header__nav,
+.site-header__panel.is-panel-height-morphing :deep(.site-header__cart-wrap) {
+  transition: none !important;
 }
 
 .site-header__panel {
@@ -902,7 +1034,7 @@ onBeforeUnmount(() => {
   place-items: center;
   border: 0;
   background: transparent;
-  color: var(--basket-icon-color, currentColor);
+  color: currentColor;
   cursor: pointer;
   padding: 14px;
   margin: 0;
@@ -924,7 +1056,7 @@ onBeforeUnmount(() => {
   line-height: 9px;
   padding: 0 0.1rem;
   /* border-radius: 30px; */
-  background: var(--menu-text-color);
+  background: var(--basket-icon-color, var(--menu-text-color));
   color: var(--menu-background-color);
   font-size: 9px;
   line-height: 0.85rem;
@@ -936,8 +1068,7 @@ onBeforeUnmount(() => {
 }
 
 .site-header.is-over-hero-frosted :deep(.cart-panel__checkout) {
- 
-  color: #111010;
+  color: var(--cart-background-color, var(--menu-background-color));
 }
 
 .site-header__nav {
@@ -973,7 +1104,7 @@ onBeforeUnmount(() => {
 .site-header__list {
   list-style: none;
   margin: 0;
-  padding: 0.35rem 0 0.35rem;
+  padding: 0;
 }
 
 .site-header__item,
@@ -985,16 +1116,16 @@ onBeforeUnmount(() => {
 .site-header__item :deep(.menu-link) {
   display: flex;
   align-items: center;
-  min-height: 3.5rem;
+  /* min-height: 3.5rem; */
   padding: 0;
   font-family: var(--serif);
-  font-size: clamp(28px, 7.2vw, 36px);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: clamp(28px, 7.2vw, 42px);
+  font-weight: 300;
+  letter-spacing: 0.035em;
+  /* text-transform: uppercase; */
   color: inherit;
   text-decoration: none;
-  line-height: 1;
+  line-height: 1.3;
   transition: color 0.2s ease;
 }
 
@@ -1011,7 +1142,7 @@ onBeforeUnmount(() => {
 .site-header__sublist {
   list-style: none;
   margin: 0;
-  padding: 1.65rem 0 0;
+  padding: 2.5rem 0 0.5em;
 }
 
 .site-header__subitem :deep(.site-header__sublink),
@@ -1019,16 +1150,16 @@ onBeforeUnmount(() => {
 .site-header__subitem .site-header__sublink {
   display: flex;
   align-items: center;
-  min-height: 2rem;
+
   padding: 0;
   font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: inherit;
   text-decoration: none;
-  line-height: 1.2;
+  line-height: 2.5;
   transition: color 0.2s ease;
 }
 

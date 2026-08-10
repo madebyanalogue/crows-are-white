@@ -11,7 +11,8 @@ export default defineEventHandler(async (event) => {
       `*[${pageDocumentFilter()}][0] {
         showFooter,
         ${colorField('pageColor')},
-        ${colorField('pageTextColor')}
+        ${colorField('pageTextColor')},
+        ${colorField('featureColor')}
       }`,
       { slug },
       sanityFetchOptions({ timeout: 10000 }),

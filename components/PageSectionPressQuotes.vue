@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
   --press-quotes-frame-width: min(100%, 1420px);
   --press-quotes-frame-ratio: 1420 / 800;
   --press-quotes-layer-scale: 1600 / 1420;
-  --press-quotes-slide-gap: 15px;
+  --press-quotes-slide-gap: 0px;
   position: relative;
   display: flex;
   flex-direction: column;

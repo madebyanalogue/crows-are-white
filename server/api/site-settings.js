@@ -117,6 +117,12 @@ export default defineEventHandler(async () => {
       countries
     },
     cartDisplayMode,
+    cartColors {
+      ${colorField('cartBackgroundColor')},
+      ${colorField('cartTextColor')},
+      ${colorField('cartFeatureColor')},
+      ${colorField('cartBasketIconColor')}
+    },
     menuColors {
       menuBorderDisabled,
       ${colorField('menuBackgroundColor')},

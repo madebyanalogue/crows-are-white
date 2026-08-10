@@ -1,6 +1,6 @@
 import {
   extractPageChromeColors,
-  extractSiteMenuColors,
+  extractSiteChromeColors,
   getPageColorHtmlAttrs,
   mergePageChromeColors,
   pageBackgroundVar,
@@ -28,7 +28,7 @@ function getSiteMenuColors(nuxtApp) {
     ?? nuxtApp?.static?.data?.siteSettings
     ?? null
 
-  return extractSiteMenuColors(settings || {})
+  return extractSiteChromeColors(settings || {})
 }
 
 function getKnownPageColorsForPath(nuxtApp, path) {

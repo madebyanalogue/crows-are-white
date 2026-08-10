@@ -142,7 +142,26 @@ export function extractPageChromeColors(source = {}) {
     menuBorderColor: normalizeColorValue(source?.menuBorderColor),
     menuTextColor: normalizeColorValue(source?.menuTextColor),
     menuHighlightColor: normalizeColorValue(source?.menuHighlightColor),
+    featureColor: normalizeColorValue(source?.featureColor),
     basketIconColor: normalizeColorValue(source?.basketIconColor),
+  }
+}
+
+export function extractSiteCartColors(settings = {}) {
+  const cartColors = settings?.cartColors || {}
+
+  return {
+    cartBackgroundColor: normalizeColorValue(cartColors.cartBackgroundColor),
+    cartTextColor: normalizeColorValue(cartColors.cartTextColor),
+    cartFeatureColor: normalizeColorValue(cartColors.cartFeatureColor),
+    cartBasketIconColor: normalizeColorValue(cartColors.cartBasketIconColor),
+  }
+}
+
+export function extractSiteChromeColors(settings = {}) {
+  return {
+    ...extractSiteMenuColors(settings),
+    ...extractSiteCartColors(settings),
   }
 }
 
@@ -159,6 +178,7 @@ export function extractSiteMenuColors(settings = {}) {
 export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
   const page = extractPageChromeColors(pageSource)
   const siteMenu = extractPageChromeColors(siteMenuSource)
+  const pageFeatureColor = page.featureColor || page.menuHighlightColor
 
   return {
     pageColor: page.pageColor,
@@ -168,8 +188,12 @@ export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
     menuBorderDisabled: siteMenuSource.menuBorderDisabled === true
       || siteMenuSource.menuBorderEnabled === false,
     menuTextColor: siteMenu.menuTextColor,
-    menuHighlightColor: siteMenu.menuHighlightColor,
+    menuHighlightColor: pageFeatureColor || siteMenu.menuHighlightColor,
     basketIconColor: siteMenu.basketIconColor,
+    cartBackgroundColor: siteMenuSource.cartBackgroundColor,
+    cartTextColor: siteMenuSource.cartTextColor,
+    cartFeatureColor: pageFeatureColor || siteMenuSource.cartFeatureColor,
+    cartBasketIconColor: siteMenuSource.cartBasketIconColor,
   }
 }
 
@@ -183,6 +207,10 @@ export function getPageColorVars(colors = {}) {
     menuTextColor,
     menuHighlightColor,
     basketIconColor,
+    cartBackgroundColor,
+    cartTextColor,
+    cartFeatureColor,
+    cartBasketIconColor,
   } = colors
 
   const background = toCssColor(
@@ -206,6 +234,21 @@ export function getPageColorVars(colors = {}) {
   const basketIcon = basketIconColor
     ? toCssColor(basketIconColor, 'obsidian')
     : menuText
+  const cartBackground = cartBackgroundColor
+    ? toCssColor(cartBackgroundColor, DEFAULT_MENU_BACKGROUND_COLOR)
+    : menuBackground
+  const cartText = cartTextColor
+    ? toCssColor(
+      resolvePageTextColor(cartTextColor, cartBackgroundColor || menuBackgroundColor),
+      'obsidian',
+    )
+    : menuText
+  const cartFeature = cartFeatureColor
+    ? toCssColor(cartFeatureColor, DEFAULT_MENU_HIGHLIGHT_COLOR)
+    : menuHighlight
+  const cartBasketIcon = cartBasketIconColor
+    ? toCssColor(cartBasketIconColor, 'obsidian')
+    : basketIcon
 
   return {
     '--background-color': background,
@@ -215,7 +258,12 @@ export function getPageColorVars(colors = {}) {
     '--menu-border': showMenuBorder ? `3px double ${menuBorder}` : 'none',
     '--menu-text-color': menuText,
     '--menu-highlight-color': menuHighlight,
+    '--feature-color': menuHighlight,
     '--basket-icon-color': basketIcon,
+    '--cart-background-color': cartBackground,
+    '--cart-text-color': cartText,
+    '--cart-feature-color': cartFeature,
+    '--cart-basket-icon-color': cartBasketIcon,
   }
 }
 

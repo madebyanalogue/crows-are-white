@@ -52,7 +52,12 @@ html.is-preloader-active body {
   --menu-border-color: #999;
   --menu-text-color: var(--obsidian);
   --menu-highlight-color: var(--arancio);
+  --feature-color: var(--menu-highlight-color);
   --basket-icon-color: var(--menu-text-color);
+  --cart-background-color: var(--menu-background-color);
+  --cart-text-color: var(--menu-text-color);
+  --cart-feature-color: var(--menu-highlight-color);
+  --cart-basket-icon-color: var(--basket-icon-color);
   --video-frame-width: 96%;
 
   --wrapper-padding: 25px;

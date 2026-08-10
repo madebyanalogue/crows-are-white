@@ -10,7 +10,7 @@ const SCREENINGS_PAGE_COLORS_FALLBACK = {
   pageTextColor: '#111010',
   menuBackgroundColor: '#ffffff',
   menuTextColor: '#111010',
-  menuHighlightColor: '#ff9944',
+  featureColor: '#ff9944',
   basketIconColor: '#111010',
 }
 

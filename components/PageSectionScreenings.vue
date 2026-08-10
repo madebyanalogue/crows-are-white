@@ -193,9 +193,7 @@ onBeforeUnmount(() => {
             <span
               class="screenings-book"
               :class="{ 'screenings-book--disabled': s.status === 'coming-soon' }"
-            ><span></span>
-              <span>{{ s.status === 'coming-soon' ? 'Coming soon' : 'Buy tickets' }}</span>
-            </span>
+            >{{ s.status === 'coming-soon' ? 'Coming soon' : 'Buy tickets' }}</span>
           </div>
         </component>
       </li>
@@ -447,19 +445,19 @@ onBeforeUnmount(() => {
   justify-content: center;
   width: 100%;
   min-height: 2.85rem;
-  padding: 0.6rem 0.75rem .5rem;
+  padding: 0.6rem 0.75rem;
   border: 3px double var(--screenings-ink);
-  font-family: var(--sans);
-  font-size: var(--screenings-ui);
-  font-weight: 500;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 300;
   letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
   color: var(--screenings-ink);
-  border-radius: 0px;
-    corner-shape: rounded;
+  border-radius: 0;
+  corner-shape: rounded;
   transition: background-color 0.15s ease, color 0.15s ease;
   pointer-events: none;
 }

@@ -20,6 +20,7 @@ export function useHeroMenuChrome(section) {
   const heroMenuActive = useHeroMenuActive()
   const heroMenuFrosted = useHeroMenuFrosted()
   let observer = null
+  let heroVarsApplied = false
 
   const menuChromeEnabled = computed(() => heroSectionHasMenuChrome(unref(section)))
   const menuChromeVars = computed(() => getHeroMenuChromeVars(unref(section)))
@@ -34,20 +35,27 @@ export function useHeroMenuChrome(section) {
     }
 
     const vars = menuChromeVars.value
-    if (!vars) return
+    if (!vars) {
+      heroVarsApplied = false
+      return
+    }
 
     for (const [name, value] of Object.entries(vars)) {
       root.style.setProperty(name, value)
     }
+
+    heroVarsApplied = true
   }
 
   function clearHeroMenuVars() {
-    if (!import.meta.client) return
+    if (!import.meta.client || !heroVarsApplied) return
 
     const root = document.documentElement
     for (const name of HERO_MENU_CSS_VARS) {
       root.style.removeProperty(name)
     }
+
+    heroVarsApplied = false
   }
 
   function measureHeroIntersection() {
@@ -61,6 +69,7 @@ export function useHeroMenuChrome(section) {
   }
 
   function setHeroActive(active) {
+    const wasActive = heroMenuActive.value
     heroMenuActive.value = active
     heroMenuFrosted.value = active && menuFrosted.value
 
@@ -70,7 +79,10 @@ export function useHeroMenuChrome(section) {
     }
 
     heroMenuFrosted.value = false
-    clearHeroMenuVars()
+
+    if (wasActive || heroVarsApplied) {
+      clearHeroMenuVars()
+    }
   }
 
   function syncHeroMenuState() {

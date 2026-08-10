@@ -1,5 +1,6 @@
 <script setup>
 const { isOpen, closeCart } = useCart()
+const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
 
 const contentVisible = ref(false)
 let revealTimer = null
@@ -17,6 +18,11 @@ watch(isOpen, (open) => {
 
   if (!open) {
     contentVisible.value = false
+    return
+  }
+
+  if (switchingFromMenuToCart.value) {
+    contentVisible.value = true
     return
   }
 

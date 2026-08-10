@@ -1,5 +1,6 @@
 <script setup>
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { toCssColor, isLightColor } from '~/utils/pageColors'
 import { film as defaultFilm } from '~/data/site'
 import { streamingLinks as defaultStreamingLinks } from '~/data/site'
 
@@ -166,12 +167,30 @@ const heroOverlayOpacity = computed(() => {
 const showHeroOverlay = computed(() => heroOverlayOpacity.value > 0)
 
 const fillScreen = computed(() => props.section?.watchFillScreen === true)
+
+const sectionStyle = computed(() => {
+  const style = {}
+  const accent = props.section?.watchAccentColor
+
+  if (accent) {
+    style['--watch-accent'] = toCssColor(accent, '#ff555f')
+    style['--watch-accent-text'] = isLightColor(accent) ? '#000' : '#fff'
+  }
+
+  const labelColor = props.section?.watchPlatformsLabelColor
+  if (labelColor) {
+    style['--watch-platforms-label-color'] = toCssColor(labelColor, '#ff555f')
+  }
+
+  return style
+})
 </script>
 
 <template>
   <div
     class="page-section-watch"
     :class="{ 'page-section-watch--fill-screen': fillScreen }"
+    :style="sectionStyle"
   >
     <section
       class="page-section-watch__hero"
@@ -539,7 +558,7 @@ const fillScreen = computed(() => props.section?.watchFillScreen === true)
   font-size: clamp(1.65rem, 3vw, 2.15rem);
   font-weight: 400;
   line-height: 1;
-  color: var(--watch-accent);
+  color: var(--watch-platforms-label-color, var(--watch-accent));
 }
 
 .page-section-watch__grid {

@@ -3,9 +3,8 @@ import { buildDefaultRelatedProductsSection } from '~/utils/shopProductsSection'
 import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
 import { isVariantPurchasable } from '~/utils/shopVariants'
 
-useShopPageColor()
-
 const { data: shopPage } = await useShopPage()
+useShopPageColor(shopPage)
 
 const route = useRoute()
 const handle = computed(() => route.params.handle as string)

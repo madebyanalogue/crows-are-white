@@ -10,7 +10,7 @@ const VIDEOS_PAGE_COLORS_FALLBACK = {
   pageTextColor: 'obsidian',
   menuBackgroundColor: 'crema',
   menuTextColor: 'obsidian',
-  menuHighlightColor: 'arancio',
+  featureColor: 'arancio',
 }
 
 const { data: page } = await useCmsPage('videos')
