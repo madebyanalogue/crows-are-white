@@ -39,14 +39,17 @@ export function getHeroFeatureColorVar(section = {}) {
 function applyHeroMenuBorderColor(result, heroMenuBorderColor) {
   if (heroMenuBorderColor === 'transparent') {
     result['--menu-border-color'] = 'transparent'
+    result['--menu-border'] = 'none'
     return
   }
 
   if (heroMenuBorderColor) {
-    result['--menu-border-color'] = toCssColor(
+    const borderColor = toCssColor(
       heroMenuBorderColor,
       DEFAULT_MENU_BORDER_COLOR,
     )
+    result['--menu-border-color'] = borderColor
+    result['--menu-border'] = `3px double ${borderColor}`
   }
 }
 
@@ -113,6 +116,7 @@ export const HERO_MENU_CSS_VARS = [
   '--hero-menu-feature-color',
   '--menu-background-color',
   '--menu-border-color',
+  '--menu-border',
   '--menu-text-color',
   '--basket-icon-color',
 ]

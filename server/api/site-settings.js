@@ -118,6 +118,7 @@ export default defineEventHandler(async () => {
     },
     cartDisplayMode,
     menuColors {
+      menuBorderDisabled,
       ${colorField('menuBackgroundColor')},
       ${colorField('menuBorderColor')},
       ${colorField('menuTextColor')},
@@ -126,12 +127,7 @@ export default defineEventHandler(async () => {
     },
     shopColors {
       ${colorField('pageColor')},
-      ${colorField('pageTextColor')},
-      ${colorField('menuBackgroundColor')},
-      ${colorField('menuBorderColor')},
-      ${colorField('menuTextColor')},
-      ${colorField('menuHighlightColor')},
-      ${colorField('basketIconColor')}
+      ${colorField('pageTextColor')}
     },
     shopNewsletterBackground {
       mediaType,

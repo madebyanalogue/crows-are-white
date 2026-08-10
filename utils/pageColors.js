@@ -147,17 +147,13 @@ export function extractPageChromeColors(source = {}) {
 }
 
 export function extractSiteMenuColors(settings = {}) {
-  const fromMenu = settings?.menuColors || {}
-  const legacyShop = settings?.shopColors || {}
+  const menuColors = settings?.menuColors || {}
 
-  return extractPageChromeColors({
-    menuBackgroundColor: legacyShop.menuBackgroundColor,
-    menuBorderColor: legacyShop.menuBorderColor,
-    menuTextColor: legacyShop.menuTextColor,
-    menuHighlightColor: legacyShop.menuHighlightColor,
-    basketIconColor: legacyShop.basketIconColor,
-    ...fromMenu,
-  })
+  return {
+    ...extractPageChromeColors(menuColors),
+    menuBorderDisabled: menuColors.menuBorderDisabled === true
+      || menuColors.menuBorderEnabled === false,
+  }
 }
 
 export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
@@ -169,6 +165,8 @@ export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
     pageTextColor: page.pageTextColor,
     menuBackgroundColor: siteMenu.menuBackgroundColor,
     menuBorderColor: siteMenu.menuBorderColor,
+    menuBorderDisabled: siteMenuSource.menuBorderDisabled === true
+      || siteMenuSource.menuBorderEnabled === false,
     menuTextColor: siteMenu.menuTextColor,
     menuHighlightColor: siteMenu.menuHighlightColor,
     basketIconColor: siteMenu.basketIconColor,
@@ -181,6 +179,7 @@ export function getPageColorVars(colors = {}) {
     pageTextColor,
     menuBackgroundColor,
     menuBorderColor,
+    menuBorderDisabled,
     menuTextColor,
     menuHighlightColor,
     basketIconColor,
@@ -198,6 +197,7 @@ export function getPageColorVars(colors = {}) {
   const menuBorder = menuBorderColor
     ? toCssColor(menuBorderColor, DEFAULT_MENU_BORDER_COLOR)
     : DEFAULT_MENU_BORDER_COLOR
+  const showMenuBorder = menuBorderDisabled !== true
   const menuText = toCssColor(
     resolvePageTextColor(menuTextColor, menuBackgroundColor || DEFAULT_MENU_BACKGROUND_COLOR),
     'obsidian',
@@ -212,6 +212,7 @@ export function getPageColorVars(colors = {}) {
     '--text-color': text,
     '--menu-background-color': menuBackground,
     '--menu-border-color': menuBorder,
+    '--menu-border': showMenuBorder ? `3px double ${menuBorder}` : 'none',
     '--menu-text-color': menuText,
     '--menu-highlight-color': menuHighlight,
     '--basket-icon-color': basketIcon,

@@ -52,69 +52,76 @@ const hasMultipleImages = computed(() => carouselImages.value.length > 1)
 
 const activeImageIndex = ref(0)
 const displayImageIndex = ref(0)
-let displayImageIndexTimer: ReturnType<typeof setTimeout> | null = null
 
 const canShowPreviousImage = computed(() => activeImageIndex.value > 0)
 const canShowNextImage = computed(
   () => activeImageIndex.value < carouselImages.value.length - 1,
 )
 
-function clearDisplayImageIndexTimer() {
-  if (displayImageIndexTimer) {
-    clearTimeout(displayImageIndexTimer)
-    displayImageIndexTimer = null
+let carouselInstance: {
+  off: (event: string, handler: () => void) => void
+  selectedIndex: number
+  on: (event: string, handler: () => void) => void
+  previous: (isWrap?: boolean, isInstant?: boolean) => void
+  next: (isWrap?: boolean, isInstant?: boolean) => void
+  select: (index: number, isWrapped?: boolean, isInstant?: boolean) => void
+} | null = null
+let carouselSelectHandler: (() => void) | null = null
+
+function bindCarousel(instance: NonNullable<typeof carouselInstance>) {
+  if (carouselInstance && carouselSelectHandler) {
+    carouselInstance.off('select', carouselSelectHandler)
   }
+
+  carouselInstance = instance
+  carouselSelectHandler = () => {
+    activeImageIndex.value = instance.selectedIndex
+    displayImageIndex.value = instance.selectedIndex
+  }
+
+  instance.on('select', carouselSelectHandler)
+  carouselSelectHandler()
 }
 
-function syncDisplayImageIndex(delay = 180) {
-  clearDisplayImageIndexTimer()
-  displayImageIndexTimer = setTimeout(() => {
-    const viewport = carouselRef.value
-    if (!viewport?.clientWidth) return
-
-    displayImageIndex.value = Math.min(
-      carouselImages.value.length - 1,
-      Math.max(0, Math.round(viewport.scrollLeft / viewport.clientWidth)),
-    )
-  }, delay)
+function unbindCarousel() {
+  if (carouselInstance && carouselSelectHandler) {
+    carouselInstance.off('select', carouselSelectHandler)
+  }
+  carouselInstance = null
+  carouselSelectHandler = null
 }
 
-function syncActiveImageIndex() {
-  const viewport = carouselRef.value
-  if (!viewport?.clientWidth) return
+const { flickity, reload } = useFlickity(carouselRef, () => ({
+  cellAlign: 'center',
+  contain: true,
+  draggable: hasMultipleImages.value,
+  freeScroll: false,
+  friction: 0.45,
+  selectedAttraction: 0.07,
+  pageDots: false,
+  prevNextButtons: false,
+  wrapAround: false,
+  onReady: bindCarousel,
+}))
 
-  activeImageIndex.value = Math.min(
-    carouselImages.value.length - 1,
-    Math.max(0, Math.round(viewport.scrollLeft / viewport.clientWidth)),
-  )
-  syncDisplayImageIndex()
-}
+function selectCarouselIndex(index: number, isInstant = true) {
+  if (index < 0 || index >= carouselImages.value.length) return
 
-function scrollToIndex(index: number, behavior: ScrollBehavior = 'smooth') {
-  const viewport = carouselRef.value
-  if (!viewport || index < 0 || index >= carouselImages.value.length) return
-
-  const width = viewport.clientWidth
-  if (!width) return
+  if (flickity.value) {
+    flickity.value.select(index, true, isInstant)
+    return
+  }
 
   activeImageIndex.value = index
-  if (behavior === 'instant') {
-    clearDisplayImageIndexTimer()
-    displayImageIndex.value = index
-  }
-
-  viewport.scrollTo({
-    left: index * width,
-    behavior,
-  })
+  displayImageIndex.value = index
 }
 
 function showPreviousImage() {
-  scrollToIndex(activeImageIndex.value - 1)
+  flickity.value?.previous(false, true)
 }
 
 function showNextImage() {
-  scrollToIndex(activeImageIndex.value + 1)
+  flickity.value?.next(false, true)
 }
 
 function onCarouselKeydown(event: KeyboardEvent) {
@@ -131,26 +138,18 @@ function onCarouselKeydown(event: KeyboardEvent) {
   }
 }
 
-function syncScrollAfterResize() {
-  const viewport = carouselRef.value
-  if (!viewport?.clientWidth) return
-
-  const index = Math.min(
-    carouselImages.value.length - 1,
-    Math.max(0, Math.round(viewport.scrollLeft / viewport.clientWidth)),
-  )
-
-  scrollToIndex(index, 'instant')
-}
-
 watch(
   () => carouselImages.value.length,
-  () => nextTick(() => scrollToIndex(0, 'instant')),
+  async () => {
+    await nextTick()
+    reload()
+    selectCarouselIndex(0, true)
+  },
 )
 
 watch(
   () => props.product.id,
-  () => nextTick(() => scrollToIndex(0, 'instant')),
+  () => nextTick(() => selectCarouselIndex(0, true)),
 )
 
 watch(
@@ -160,22 +159,12 @@ watch(
     if (!variant?.imageUrl) return
 
     const index = carouselImages.value.findIndex((image) => image.url === variant.imageUrl)
-    if (index >= 0) scrollToIndex(index)
+    if (index >= 0) selectCarouselIndex(index)
   },
 )
 
-onMounted(() => {
-  window.addEventListener('resize', syncScrollAfterResize, {passive: true})
-  nextTick(() => scrollToIndex(0, 'instant'))
-})
-
-useAfterPageTransition(() => {
-  nextTick(() => syncScrollAfterResize())
-})
-
 onBeforeUnmount(() => {
-  clearDisplayImageIndexTimer()
-  window.removeEventListener('resize', syncScrollAfterResize)
+  unbindCarousel()
 })
 
 const addToCartLabel = computed(() => {
@@ -280,25 +269,41 @@ function incrementQty() {
           <ShopSaleBadge :on-sale="selectedVariant?.onSale" />
           <div class="shop-product-hero__carousel-shell">
             <div
+              v-if="hasMultipleImages"
               ref="carouselRef"
-              class="shop-product-hero__carousel"
-              :class="{ 'shop-product-hero__carousel--scrollable': hasMultipleImages }"
+              class="shop-product-hero__carousel shop-product-hero__carousel--scrollable"
               tabindex="0"
               role="region"
               :aria-label="`${product.title} images`"
-              @scroll.passive="syncActiveImageIndex"
               @keydown="onCarouselKeydown"
             >
+              <div
+                v-for="(image, index) in carouselImages"
+                :key="`${image.url}-${index}`"
+                class="shop-product-hero__slide"
+              >
+                <div class="shop-product-hero__frame">
+                  <img
+                    :src="image.url"
+                    :alt="image.altText || product.title"
+                    class="shop-product-hero__image"
+                    draggable="false"
+                    loading="lazy"
+                    @dragstart.prevent
+                  >
+                </div>
+              </div>
+            </div>
+            <div
+              v-else-if="carouselImages.length"
+              class="shop-product-hero__carousel"
+            >
               <div class="shop-product-hero__track">
-                <div
-                  v-for="(image, index) in carouselImages"
-                  :key="`${image.url}-${index}`"
-                  class="shop-product-hero__slide"
-                >
+                <div class="shop-product-hero__slide">
                   <div class="shop-product-hero__frame">
                     <img
-                      :src="image.url"
-                      :alt="image.altText || product.title"
+                      :src="carouselImages[0].url"
+                      :alt="carouselImages[0].altText || product.title"
                       class="shop-product-hero__image"
                       draggable="false"
                       loading="lazy"
@@ -374,59 +379,56 @@ function incrementQty() {
 
         <div class="shop-product-hero__actions">
           <div
-            class="shop-product-hero__actions-row"
-            :class="{ 'shop-product-hero__actions-row--with-variant': hasVariants }"
+            v-if="hasVariants"
+            class="shop-product-hero__variant-box shop-product-hero__action-box shop-product-hero__action-box--secondary"
           >
-            <div
-              v-if="hasVariants"
-              class="shop-product-hero__variant-box shop-product-hero__action-box shop-product-hero__action-box--secondary"
-            >
-              <div class="shop-product-hero__variant-control">
-                <select
-                  id="shop-product-variant"
-                  :value="selectedVariantId"
-                  class="shop-product-hero__select"
-                  :aria-label="variantOptionLabel"
-                  @change="onVariantChange"
+            <div class="shop-product-hero__variant-control">
+              <select
+                id="shop-product-variant"
+                :value="selectedVariantId"
+                class="shop-product-hero__select"
+                :aria-label="variantOptionLabel"
+                @change="onVariantChange"
+              >
+                <option
+                  v-for="variant in product.variants"
+                  :key="variant.id"
+                  :value="variant.id"
+                  :disabled="!isVariantPurchasable(variant)"
                 >
-                  <option
-                    v-for="variant in product.variants"
-                    :key="variant.id"
-                    :value="variant.id"
-                    :disabled="!isVariantPurchasable(variant)"
-                  >
-                    {{ variant.title }}
-                    <template v-if="!isVariantPurchasable(variant)"> — Sold out</template>
-                  </option>
-                </select>
+                  {{ variant.title }}
+                  <template v-if="!isVariantPurchasable(variant)"> — Sold out</template>
+                </option>
+              </select>
 
-                <div
-                  class="shop-product-hero__variant-display"
-                  aria-hidden="true"
-                >
-                  <span class="shop-product-hero__variant-label">{{ variantOptionLabel }}</span>
-                  <span class="shop-product-hero__variant-value-text serif">
-                    {{ selectedVariant?.title }}
-                  </span>
-                  <span class="shop-product-hero__variant-arrow">
-                    <svg
-                      viewBox="0 0 12 8"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 1.5L6 6.5L11 1.5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </span>
-                </div>
+              <div
+                class="shop-product-hero__variant-display"
+                aria-hidden="true"
+              >
+                <span class="shop-product-hero__variant-label">{{ variantOptionLabel }}</span>
+                <span class="shop-product-hero__variant-value-text serif">
+                  {{ selectedVariant?.title }}
+                </span>
+                <span class="shop-product-hero__variant-arrow">
+                  <svg
+                    viewBox="0 0 12 8"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 1.5L6 6.5L11 1.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
               </div>
             </div>
+          </div>
 
+          <div class="shop-product-hero__actions-row">
             <div class="shop-product-hero__qty-box shop-product-hero__action-box shop-product-hero__action-box--secondary">
               <button
                 type="button"
@@ -462,6 +464,31 @@ function incrementQty() {
             {{ addToCartLabel }}
           </button>
         </div>
+      </div>
+
+      <div
+        v-if="hasMultipleImages"
+        class="shop-product-hero__thumbnails"
+      >
+        <button
+          v-for="(image, index) in carouselImages"
+          :key="`thumb-${image.url}-${index}`"
+          type="button"
+          class="shop-product-hero__thumbnail"
+          :class="{ 'is-active': activeImageIndex === index }"
+          :aria-label="`Show image ${index + 1} of ${carouselImages.length}`"
+          :aria-current="activeImageIndex === index ? 'true' : undefined"
+          @click="selectCarouselIndex(index)"
+        >
+          <img
+            :src="image.url"
+            :alt="image.altText || product.title"
+            class="shop-product-hero__thumbnail-image"
+            draggable="false"
+            loading="lazy"
+            @dragstart.prevent
+          >
+        </button>
       </div>
 
       <div class="shop-product-hero__aside">
@@ -501,8 +528,13 @@ function incrementQty() {
   container-type: size;
   display: grid;
   grid-template-columns: minmax(320px, 1fr) auto minmax(320px, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
+}
+
+.shop-product-hero__center {
+  display: contents;
 }
 
 .shop-product-hero__back-row {
@@ -582,20 +614,24 @@ function incrementQty() {
 .shop-product-hero__info {
   position: relative;
   grid-column: 1;
+  grid-row: 1 / -1;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  align-items: flex-start;
   min-height: 0;
   padding:
-    clamp(1rem, 2vw, 1.5rem)
-    clamp(1rem, 2.5vw, 3rem)
+    calc(var(--site-header-bar-height) + 0.75rem)
+    clamp(1rem, 2.5vw, 2rem)
     calc(var(--shop-product-actions-offset) + 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .shop-product-hero__copy {
   display: grid;
   gap: 1.25rem;
-  max-width: 28rem;
+  width: min(100%, var(--site-header-panel-width-closed));
 }
 
 .shop-product-hero__type {
@@ -626,42 +662,33 @@ function incrementQty() {
 
 .shop-product-hero__description {
   margin: 0;
-  max-width: 32rem;
   font-size: 0.9375rem;
   line-height: 1.5;
   opacity: 0.82;
 }
 
-.shop-product-hero__center {
+.shop-product-hero__carousel-area {
   position: relative;
   grid-column: 2;
+  grid-row: 1;
   justify-self: center;
   align-self: stretch;
-  height: 100%;
-  width: auto;
-  aspect-ratio: 1;
-  max-width: min(100%, max(0px, calc(100cqw - 640px)));
-  min-height: 0;
-}
-
-.shop-product-hero__carousel-area {
-  position: absolute;
-  inset:
-    0
-    0
-    calc(var(--shop-product-actions-offset) + var(--shop-product-actions-stack-height))
-    0;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: min(100%, max(0px, calc(100cqw - 640px)));
   min-height: 0;
+  overflow: hidden;
 }
 
 .shop-product-hero__carousel-shell {
   position: relative;
-  width: 100%;
+  aspect-ratio: 1;
+  width: auto;
   height: 100%;
-  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .shop-product-hero__carousel-nav {
@@ -742,45 +769,42 @@ function incrementQty() {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+.shop-product-hero__carousel:not(.flickity-enabled) {
   overflow: hidden;
 }
 
-.shop-product-hero__carousel--scrollable {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  touch-action: pan-x;
+.shop-product-hero__carousel--scrollable,
+.shop-product-hero__carousel--scrollable.flickity-enabled {
+  overflow: hidden;
 }
 
-.shop-product-hero__carousel--scrollable::-webkit-scrollbar {
-  display: none;
+.shop-product-hero__carousel :deep(.flickity-viewport) {
+  overflow: hidden;
+  height: 100% !important;
 }
 
 .shop-product-hero__track {
   display: flex;
+  align-items: center;
+  gap: 0;
   height: 100%;
 }
 
-.shop-product-hero__slide {
-  flex: 0 0 100%;
+.shop-product-hero__slide,
+.shop-product-hero__carousel :deep(.flickity-cell) {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .shop-product-hero__frame {
   aspect-ratio: 1;
-  height: 100%;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  height: auto;
   max-height: 100%;
   margin: 0 auto;
   overflow: hidden;
@@ -800,26 +824,29 @@ function incrementQty() {
 }
 
 .shop-product-hero__actions {
-  position: absolute;
-  left: 50%;
-  bottom: var(--shop-product-actions-offset);
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 15px;
   width: min(100%, var(--site-header-panel-width-closed));
-  transform: translateX(-50%);
+  padding-bottom: var(--shop-product-actions-offset);
+  box-sizing: border-box;
+}
+
+.shop-product-hero__variant-box,
+.shop-product-hero__actions-row {
+  width: min(100%, var(--site-header-panel-width-closed));
 }
 
 .shop-product-hero__actions-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 15px;
-  width: 100%;
-}
-
-.shop-product-hero__actions-row--with-variant {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .shop-product-hero__variant-box {
@@ -925,6 +952,10 @@ function incrementQty() {
     filter 0.25s ease;
 }
 
+.shop-product-hero__actions > .shop-product-hero__action-box {
+  width: min(100%, var(--site-header-panel-width-closed));
+}
+
 .shop-product-hero__action-box--primary {
   display: flex;
   align-items: center;
@@ -1002,8 +1033,55 @@ function incrementQty() {
   text-align: center;
 }
 
-.shop-product-hero__aside {
+.shop-product-hero__thumbnails {
   grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 0;
+  padding:
+    clamp(1rem, 2vw, 1.5rem)
+    clamp(1rem, 2.5vw, 3rem);
+}
+
+.shop-product-hero__thumbnail {
+  display: block;
+  flex-shrink: 0;
+  width: clamp(2.75rem, 4vw, 3.25rem);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.shop-product-hero__thumbnail:hover {
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.shop-product-hero__thumbnail.is-active {
+  border-color: var(--shop-text);
+}
+
+.shop-product-hero__thumbnail-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-product-hero__aside {
+  position: relative;
+  grid-column: 3;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1018,34 +1096,69 @@ function incrementQty() {
 @media (max-width: 999px) {
   .shop-product-hero__grid {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
   }
 
   .shop-product-hero__info {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     align-self: start;
     justify-content: flex-start;
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
+    overflow-y: visible;
   }
 
   .shop-product-hero__center {
+    display: grid;
     grid-column: 1;
     grid-row: 1;
+    grid-template-rows: auto auto;
+    gap: 15px;
     align-self: center;
     width: min(100%, min(52dvh, 520px));
+    max-width: min(100%, min(52dvh, 520px));
+    height: auto;
+  }
+
+  .shop-product-hero__carousel-area {
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
+  }
+
+  .shop-product-hero__actions {
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: 0;
+  }
+
+  .shop-product-hero__thumbnails {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    gap: 0.45rem;
+    padding: 0.75rem clamp(1rem, 2.5vw, 2rem) 0;
+  }
+
+  .shop-product-hero__thumbnail {
+    width: 2.5rem;
+  }
+
+  .shop-product-hero__carousel-shell {
+    width: 100%;
     height: auto;
     max-height: min(52dvh, 520px);
   }
 
-  .shop-product-hero__carousel-area {
-    inset: 0 0 calc(var(--shop-product-actions-offset) + var(--shop-product-actions-stack-height)) 0;
-  }
-
   .shop-product-hero__aside {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     align-self: stretch;
     justify-content: flex-end;
     align-items: flex-end;

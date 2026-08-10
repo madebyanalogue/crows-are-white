@@ -3,7 +3,6 @@ import { extractPageChromeColors, mergePageChromeColors } from '~/utils/pageColo
 export const SHOP_COLORS_FALLBACK = {
   pageColor: '#ffffff',
   pageTextColor: '#111010',
-  menuBackgroundColor: 'fuji',
 }
 
 export function resolveShopChromeColors(shopPageSource, siteSettingsShopColors) {
@@ -14,17 +13,11 @@ export function resolveShopChromeColors(shopPageSource, siteSettingsShopColors) 
   return {
     pageColor: fromSettings.pageColor ?? fromPage.pageColor ?? fallback.pageColor,
     pageTextColor: fromSettings.pageTextColor ?? fromPage.pageTextColor ?? fallback.pageTextColor,
-    menuBackgroundColor: fallback.menuBackgroundColor,
   }
 }
 
 export function mergeShopChromeColors(shopChrome, siteMenuSource) {
-  const merged = mergePageChromeColors(shopChrome, siteMenuSource)
-
-  return {
-    ...merged,
-    menuBackgroundColor: shopChrome.menuBackgroundColor ?? merged.menuBackgroundColor,
-  }
+  return mergePageChromeColors(shopChrome, siteMenuSource)
 }
 
 export function isShopRoute(path = '') {

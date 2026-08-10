@@ -28,6 +28,17 @@ const relatedProductSections = computed(() => {
   return [buildDefaultRelatedProductsSection(product.value)]
 })
 
+const productBuilderPage = computed(() => {
+  const sections = (shopPage.value?.productPageSections || []).filter(Boolean)
+  if (!sections.length) return null
+
+  return {
+    ...shopPage.value,
+    richText: [],
+    sections,
+  }
+})
+
 const selectedVariantId = ref('')
 const quantity = ref(1)
 const adding = ref(false)
@@ -92,6 +103,11 @@ useHead(() => ({
       v-for="(section, index) in relatedProductSections"
       :key="section._id || `related-${index}`"
       :section="section"
+    />
+
+    <PageContent
+      v-if="productBuilderPage"
+      :page="productBuilderPage"
     />
   </div>
 </template>

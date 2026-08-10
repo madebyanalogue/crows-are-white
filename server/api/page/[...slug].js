@@ -723,7 +723,8 @@ export default defineEventHandler(async (event) => {
           url
         }
       },
-      "sections": sections[0...50]->${sectionFields}
+      "sections": sections[0...50]->${sectionFields},
+      "productPageSections": productPageSections[0...50]->${sectionFields}
     }`
 
     const page = await client.fetch(query, { slug }, sanityFetchOptions())

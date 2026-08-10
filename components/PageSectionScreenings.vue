@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
   text-align: center;
   white-space: nowrap;
   color: var(--screenings-ink);
-  border-radius: 3px;
+  border-radius: 0px;
     corner-shape: rounded;
   transition: background-color 0.15s ease, color 0.15s ease;
   pointer-events: none;
