@@ -39,10 +39,7 @@ const carouselElement = ref(null)
 const prefersReducedMotion = ref(false)
 const currentIndex = ref(0)
 
-const canGoPrev = computed(() => currentIndex.value > 0)
-const canGoNext = computed(() => currentIndex.value < quotes.value.length - 1)
-
-const ARROW_SCROLL_DURATION = 1.75
+const ARROW_SCROLL_DURATION = 0.85
 
 let parallaxInstance = null
 let parallaxUpdate = null
@@ -66,10 +63,28 @@ function quoteKey(quote, index) {
   return quote?._id || `${quote?.pub || 'quote'}-${index}`
 }
 
+function getCellSlide(instance, cell) {
+  return instance.slides.find(slide => slide.cells.includes(cell))
+}
+
+function resetLayersParallax(layers) {
+  layers.forEach((layer) => {
+    gsap.set(layer, { xPercent: -50, force3D: true })
+  })
+}
+
 function setLayersParallax(layers, normalized) {
   if (prefersReducedMotion.value) return
 
-  layers.forEach((layer, layerIndex) => {
+  layers.forEach((layer) => {
+    const layerNumber = Number(layer.dataset.parallaxLayer)
+    if (!layerNumber) {
+      gsap.set(layer, { xPercent: -50, force3D: true })
+      return
+    }
+
+    const layerIndex = layerNumber - 1
+
     if (layerIndex === 2) {
       gsap.set(layer, { xPercent: -50, force3D: true })
       return
@@ -82,29 +97,87 @@ function setLayersParallax(layers, normalized) {
   })
 }
 
+function applyCarouselParallax(instance) {
+  if (prefersReducedMotion.value || !instance?.cells?.length) return
+
+  instance.cells.forEach((cell) => {
+    const cellSlide = getCellSlide(instance, cell)
+    if (!cellSlide) return
+
+    const cellHalfWidth = Math.max(cell.size.outerWidth / 2, 1)
+    const centeredX = -cellSlide.target
+    const normalized = (instance.x - centeredX) / cellHalfWidth
+    const layers = cell.element.querySelectorAll('[data-parallax-layer]')
+
+    if (Math.abs(normalized) > 1.25) {
+      resetLayersParallax(layers)
+      return
+    }
+
+    setLayersParallax(layers, normalized)
+  })
+}
+
 function scrollByArrow(direction) {
   const instance = flickity.value
-  if (!instance?.cells?.length || instance.cells.length < 2) return
+  if (
+    !ready.value
+    || !instance?.isActive
+    || !instance.slides?.length
+    || instance.slides.length < 2
+  ) return
 
-  const nextIndex = instance.selectedIndex + direction
-  if (nextIndex < 0 || nextIndex >= instance.cells.length) return
+  const len = instance.slides.length
+  let nextIndex = instance.selectedIndex + direction
 
-  const targetX = -instance.slides[nextIndex].target
+  if (instance.options.wrapAround) {
+    nextIndex = ((nextIndex % len) + len) % len
+  } else if (nextIndex < 0 || nextIndex >= len) {
+    return
+  }
+
+  const isWrapStep = instance.options.wrapAround
+    && Math.abs(nextIndex - instance.selectedIndex) > 1
+
+  if (isWrapStep) {
+    if (arrowTween) arrowTween.kill()
+
+    instance.isAnimating = true
+
+    const onSettle = () => {
+      instance.off('settle', onSettle)
+      applyCarouselParallax(instance)
+    }
+
+    instance.on('settle', onSettle)
+    instance.select(nextIndex, true, prefersReducedMotion.value)
+    return
+  }
+
+  const targetSlide = instance.slides[nextIndex]
+  if (!targetSlide) return
 
   if (arrowTween) arrowTween.kill()
 
+  const targetX = -targetSlide.target
+
   const finish = () => {
+    instance.isAnimating = false
+    instance.velocity = 0
+    instance.x = targetX
     instance.selectedIndex = nextIndex
     instance.updateSelectedSlide()
-    instance.velocity = 0
     instance.positionSlider()
     applyCarouselParallax(instance)
-    instance.dispatchEvent('select')
-    instance.dispatchEvent('settle')
+    instance.dispatchEvent('select', null, [nextIndex])
+    instance.dispatchEvent('settle', null, [nextIndex])
   }
 
+  instance.isAnimating = true
+  instance.velocity = 0
+  delete instance.isFreeScrolling
+
   if (prefersReducedMotion.value) {
-    instance.x = targetX
     finish()
     return
   }
@@ -113,10 +186,9 @@ function scrollByArrow(direction) {
   arrowTween = gsap.to(motion, {
     x: targetX,
     duration: ARROW_SCROLL_DURATION,
-    ease: 'power4.out',
+    ease: 'power3.out',
     onUpdate: () => {
       instance.x = motion.x
-      instance.velocity = 0
       instance.positionSlider()
       applyCarouselParallax(instance)
     },
@@ -124,22 +196,6 @@ function scrollByArrow(direction) {
       arrowTween = null
       finish()
     },
-  })
-}
-
-function applyCarouselParallax(instance) {
-  if (prefersReducedMotion.value || !instance?.cells?.length) return
-
-  const viewportRect = instance.viewport.getBoundingClientRect()
-  const viewportCenterX = viewportRect.left + viewportRect.width / 2
-
-  instance.cells.forEach((cell) => {
-    const cellRect = cell.element.getBoundingClientRect()
-    const cellCenterX = cellRect.left + cellRect.width / 2
-    const cellHalfWidth = Math.max(cellRect.width / 2, 1)
-    const normalized = (cellCenterX - viewportCenterX) / cellHalfWidth
-    const layers = cell.element.querySelectorAll('[data-parallax-layer]')
-    setLayersParallax(layers, normalized)
   })
 }
 
@@ -157,6 +213,9 @@ function bindParallax(instance) {
   instance.on('settle', parallaxUpdate)
   instance.on('select', indexUpdate)
   indexUpdate()
+  instance.cells.forEach((cell) => {
+    resetLayersParallax(cell.element.querySelectorAll('[data-parallax-layer]'))
+  })
   parallaxUpdate()
 }
 
@@ -183,7 +242,7 @@ const { flickity, ready, reload, destroy: destroyFlickity } = useFlickity(carous
   percentPosition: true,
   pageDots: false,
   prevNextButtons: false,
-  wrapAround: false,
+  wrapAround: true,
   onReady: bindParallax,
 }))
 
@@ -227,18 +286,18 @@ onBeforeUnmount(() => {
     aria-label="Press Quotes"
   >
     <div
-      v-if="showTitle"
-      class="page-section-press-quotes__header"
-    >
-      <h2 class="page-section-press-quotes__title serif">
-        {{ sectionTitle }}
-      </h2>
-    </div>
-
-    <div
       v-if="isStackMode"
       class="page-section-press-quotes__stack"
     >
+      <div
+        v-if="showTitle"
+        class="page-section-press-quotes__header"
+      >
+        <h2 class="page-section-press-quotes__title h1 serif light">
+          {{ sectionTitle }}
+        </h2>
+      </div>
+
       <article
         v-for="(quote, index) in quotes"
         :key="quoteKey(quote, index)"
@@ -269,13 +328,72 @@ onBeforeUnmount(() => {
     <div
       v-else
       class="page-section-press-quotes__stage"
+      :class="{ 'page-section-press-quotes__stage--with-title': showTitle }"
     >
+      <div
+        v-if="showTitle"
+        class="page-section-press-quotes__sidebar"
+      >
+        <div
+          class="page-section-press-quotes__sidebar-spacer"
+          aria-hidden="true"
+        />
+
+        <h2 class="page-section-press-quotes__title h1 serif light">
+          {{ sectionTitle }}
+        </h2>
+
+        <div class="page-section-press-quotes__sidebar-footer">
+          <div
+            v-if="quotes.length > 1"
+            class="page-section-press-quotes__controls"
+          >
+          <button
+            type="button"
+            class="page-section-press-quotes__arrow page-section-press-quotes__arrow--prev"
+            aria-label="Previous press quote"
+            @click="scrollByArrow(-1)"
+          >
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                stroke-width="1"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="page-section-press-quotes__arrow page-section-press-quotes__arrow--next"
+            aria-label="Next press quote"
+            @click="scrollByArrow(1)"
+          >
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                stroke-width="1"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
+        </div>
+        </div>
+      </div>
+
       <button
-        v-if="quotes.length > 1"
+        v-if="!showTitle && quotes.length > 1"
         type="button"
         class="page-section-press-quotes__arrow page-section-press-quotes__arrow--prev"
         aria-label="Previous press quote"
-        :disabled="!canGoPrev"
         @click="scrollByArrow(-1)"
       >
         <svg
@@ -285,6 +403,7 @@ onBeforeUnmount(() => {
         >
           <path
             stroke="currentColor"
+            stroke-width="1"
             d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
           />
         </svg>
@@ -315,7 +434,7 @@ onBeforeUnmount(() => {
                     >
                       <img
                         v-if="hasLayerImage(quote, `layer${layerIndex}`)"
-                        data-parallax-layer
+                        :data-parallax-layer="layerIndex"
                         class="page-section-press-quotes__layer-img"
                         :src="layerImageUrl(quote, `layer${layerIndex}`)"
                         :alt="layerAlt(quote, layerIndex)"
@@ -339,11 +458,10 @@ onBeforeUnmount(() => {
       </div>
 
       <button
-        v-if="quotes.length > 1"
+        v-if="!showTitle && quotes.length > 1"
         type="button"
         class="page-section-press-quotes__arrow page-section-press-quotes__arrow--next"
         aria-label="Next press quote"
-        :disabled="!canGoNext"
         @click="scrollByArrow(1)"
       >
         <svg
@@ -353,6 +471,7 @@ onBeforeUnmount(() => {
         >
           <path
             stroke="currentColor"
+            stroke-width="1"
             d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
           />
         </svg>
@@ -397,9 +516,10 @@ onBeforeUnmount(() => {
 
 .page-section-press-quotes__title {
   margin: 0;
-  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  font-size: clamp(2.5rem, 6.5vw, 100px);
   letter-spacing: 0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
+  font-weight: 300;
 }
 
 .page-section-press-quotes__stack {
@@ -431,6 +551,54 @@ onBeforeUnmount(() => {
   align-items: center;
   width: 100%;
   gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.page-section-press-quotes__stage--with-title {
+  --press-quotes-stage-padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 0.34fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  padding-inline: var(--press-quotes-stage-padding-inline);
+}
+
+.page-section-press-quotes__sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+  padding-left: clamp(0.75rem, 2.5vw, 2rem);
+  min-width: 0;
+}
+
+.page-section-press-quotes__sidebar-spacer {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.page-section-press-quotes__sidebar-footer {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-section-press-quotes__controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.page-section-press-quotes__stage--with-title .page-section-press-quotes__frame {
+  flex: initial;
+  width: 100%;
+  max-width: none;
 }
 
 .page-section-press-quotes.is-align-left .page-section-press-quotes__stage {
@@ -474,11 +642,33 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--text-color);
   cursor: pointer;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-section-press-quotes__controls .page-section-press-quotes__arrow {
+  width: 60px;
+  height: 60px;
+  color: color-mix(in srgb, currentColor 35%, var(--background-color));
+  border: 1px solid currentColor;
+  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.page-section-press-quotes__controls .page-section-press-quotes__arrow--next {
+  margin-left: -1px;
+}
+
+.page-section-press-quotes__controls .page-section-press-quotes__arrow:hover {
+  border-color: currentColor;
+  color: var(--text-color);
+}
+
+.page-section-press-quotes__arrow svg path {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
 .page-section-press-quotes__arrow svg {
-  width: clamp(1rem, 1.4vw, 1.35rem);
+  width: 44%;
   height: auto;
 }
 
@@ -493,12 +683,6 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__arrow:focus-visible {
   outline: 2px solid var(--menu-highlight-color, var(--arancio));
   outline-offset: 4px;
-}
-
-.page-section-press-quotes__arrow:disabled {
-  opacity: 0.25;
-  cursor: default;
-  pointer-events: none;
 }
 
 .page-section-press-quotes__carousel {
@@ -529,23 +713,21 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__card {
   width: 100%;
   height: 100%;
-  border-radius: 15px;
   overflow: hidden;
-  corner-shape: notch;
 }
 
 .page-section-press-quotes__visual {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  overflow: hidden;
   background: color-mix(in srgb, var(--text-color) 8%, var(--background-color));
 }
 
 .page-section-press-quotes__layers {
   position: absolute;
   inset: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .page-section-press-quotes__layer {
@@ -567,12 +749,11 @@ onBeforeUnmount(() => {
   height: 100%;
   max-width: none;
   object-fit: cover;
-  transform: translateX(-50%);
   will-change: transform;
 }
 
 .page-section-press-quotes__carousel :deep(.flickity-viewport) {
-  overflow: visible;
+  overflow: hidden;
   height: 100% !important;
   transition: height 0.2s;
 }
@@ -581,6 +762,35 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   height: 100%;
+  overflow: visible;
+}
+
+@media (min-width: 1000px) {
+  .page-section-press-quotes.is-align-right .page-section-press-quotes__stage {
+    padding-right: 0;
+  }
+
+  .page-section-press-quotes.is-align-right .page-section-press-quotes__frame :deep(.handwritten-scroll-counter.is-bottom-right) {
+    right: var(--press-quotes-stage-padding-inline, clamp(1.25rem, 4vw, 3.5rem));
+  }
+}
+
+@media (max-width: 899px) {
+  .page-section-press-quotes__stage--with-title {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .page-section-press-quotes__sidebar {
+    height: auto;
+    padding-left: 0;
+  }
+
+  .page-section-press-quotes__sidebar-spacer,
+  .page-section-press-quotes__sidebar-footer {
+    flex: initial;
+    min-height: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

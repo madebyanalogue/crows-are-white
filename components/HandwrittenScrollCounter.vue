@@ -188,9 +188,11 @@ onBeforeUnmount(() => {
 }
 
 .handwritten-scroll-counter.is-bottom-right {
-  position: relative;
-  width: 100%;
-  margin-top: 40px;
+  position: absolute;
+  bottom: -80px;
+  right: 0;
+  width: auto;
+  margin-top: 0;
   justify-content: flex-end;
 }
 
