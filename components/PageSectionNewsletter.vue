@@ -102,18 +102,50 @@ const sectionStyle = computed(() => {
   return style
 })
 
-const layout = computed(() =>
-  props.section?.newsletterLayout === 'split' ? 'split' : 'overlay',
-)
+const layout = computed(() => {
+  const value = props.section?.newsletterLayout
+  if (value === 'split') return 'split'
+  if (value === 'map') return 'map'
+  return 'overlay'
+})
+
+const isMapLayout = computed(() => layout.value === 'map')
 
 const useWrapper = computed(() =>
-  props.section?.newsletterUseWrapper === true || layout.value === 'split',
+  props.section?.newsletterUseWrapper === true
+  || layout.value === 'split'
+  || isMapLayout.value,
 )
 
 const innerClass = computed(() => ({
   wrapper: useWrapper.value,
   'page-section-newsletter__inner--contained': useWrapper.value,
 }))
+
+const mapBackgroundImage = computed(() => {
+  const image = props.section?.newsletterMapBackgroundImage
+  const url = resolveSanityAssetUrl(image?.asset)
+  if (!url) return null
+
+  return {
+    url,
+    alt: image?.alt || '',
+  }
+})
+
+const mapTitle = computed(() => props.section?.newsletterMapTitle?.trim() || '')
+
+const mapLightStyle = computed(() => props.section?.newsletterMapLightStyle === true)
+
+const mapZoomControls = computed(() => props.section?.newsletterMapZoomControls === true)
+
+const mapSubscriberCount = computed(() => {
+  const value = Number(props.section?.newsletterMapSubscriberCount)
+  if (Number.isFinite(value) && value >= 0) return value
+  return null
+})
+
+const { items: reflectionItems } = useReflections(500)
 </script>
 
 <template>
@@ -131,7 +163,23 @@ const innerClass = computed(() => ({
         :submit-label="submitLabel"
         :background="background"
         :layout="layout"
-      />
+      >
+        <template
+          v-if="isMapLayout"
+          #map
+        >
+          <WatchingFromSection
+            compact
+            :items="reflectionItems"
+            :title="mapTitle"
+            :subscriber-count="mapSubscriberCount"
+            :map-background-image="mapBackgroundImage"
+            :map-light-style="mapLightStyle"
+            :show-map-zoom-controls="mapZoomControls"
+            map-posts-layout="below"
+          />
+        </template>
+      </NewsletterBlock>
     </div>
   </div>
 </template>

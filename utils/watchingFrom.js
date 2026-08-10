@@ -353,12 +353,16 @@ export function clusterWatchingFromMarkers(
     thresholdPx = MAP_MARKER_CLUSTER_THRESHOLD_PX,
     viewBoxWidth = MAP_VIEWBOX_WIDTH,
     viewBoxHeight = MAP_VIEWBOX_HEIGHT,
+    zoomLevel = 1,
   } = {},
 ) {
   if (!locations.length) return []
   if (!width || !height) {
     return locations.map((location) => buildWatchingFromMapMarker([location]))
   }
+
+  const resolvedZoom = Math.max(Number(zoomLevel) || 1, 1)
+  const effectiveThreshold = thresholdPx / resolvedZoom
 
   const toPixel = (location) => ({
     px: (location.x / viewBoxWidth) * width,
@@ -384,7 +388,7 @@ export function clusterWatchingFromMarkers(
       const right = toPixel(locations[rightIndex])
       const distance = Math.hypot(left.px - right.px, left.py - right.py)
 
-      if (distance <= thresholdPx) {
+      if (distance <= effectiveThreshold) {
         union(leftIndex, rightIndex)
       }
     }

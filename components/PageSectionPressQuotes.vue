@@ -517,7 +517,7 @@ onBeforeUnmount(() => {
 .page-section-press-quotes__title {
   margin: 0;
   font-size: clamp(2.5rem, 6.5vw, 100px);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   line-height: 1.05;
   font-weight: 300;
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { resolveSanityAssetUrl } from '~/utils/sanity'
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { toCssColor } from '~/utils/pageColors'
 
 const props = defineProps({
   section: {
@@ -110,6 +111,8 @@ const links = computed(() => {
         imageUrl: resolveSanityAssetUrl(item?.image?.asset) || '',
         imageAlt: item.imageAlt?.trim() || item.linkTitle?.trim() || '',
         imageCaption: item.imageCaption?.trim() || '',
+        captionTypography: item.captionTypography || 'inherit',
+        captionColor: item.captionColor || '',
         hoverText: item.hoverText?.trim() || '',
         imageAspectRatio: aspectRatioFromValue(item.imageAspectRatio),
       }
@@ -151,6 +154,41 @@ const mediaVerticalAlign = computed(() => {
   if (align === 'top' || align === 'bottom') return align
   return 'center'
 })
+
+const captionTypography = computed(() =>
+  props.section?.pressCaptionTypography === 'bold' ? 'bold' : 'handwritten',
+)
+
+function resolveCaptionTypography(source) {
+  const value = source?.captionTypography
+  if (value === 'bold' || value === 'handwritten') return value
+  return captionTypography.value
+}
+
+function sectionCaptionSettings() {
+  return {
+    captionTypography: props.section?.pressCaptionTypography,
+    captionColor: props.section?.pressCaptionColor,
+  }
+}
+
+function resolveCaptionColorStyle(source) {
+  if (resolveCaptionTypography(source) !== 'bold') return undefined
+  const color = toCssColor(
+    source?.captionColor || props.section?.pressCaptionColor,
+    'var(--text-color)',
+  )
+  return color ? { color } : undefined
+}
+
+function captionClasses(source, extra = {}) {
+  const typography = resolveCaptionTypography(source)
+  return {
+    'page-section-press__caption--handwritten': typography === 'handwritten',
+    'page-section-press__caption--bold': typography === 'bold',
+    ...extra,
+  }
+}
 
 const pressLayoutClasses = computed(() => [
   `is-media-valign-${mediaVerticalAlign.value}`,
@@ -280,11 +318,12 @@ const showDefaultCaption = computed(() => {
               >
               <p
                 v-if="defaultMedia?.caption"
-                class="page-section-press__caption handwritten"
-                :class="{
+                class="page-section-press__caption"
+                :class="captionClasses(sectionCaptionSettings(), {
                   'page-section-press__caption--after-video': defaultMedia?.kind === 'video',
                   'is-visible': showDefaultCaption,
-                }"
+                })"
+                :style="resolveCaptionColorStyle(sectionCaptionSettings())"
               >
                 {{ defaultMedia.caption }}
               </p>
@@ -311,7 +350,9 @@ const showDefaultCaption = computed(() => {
               >
               <p
                 v-if="link.imageCaption"
-                class="page-section-press__caption handwritten"
+                class="page-section-press__caption"
+                :class="captionClasses(link)"
+                :style="resolveCaptionColorStyle(link)"
               >
                 {{ link.imageCaption }}
               </p>
@@ -517,6 +558,7 @@ const showDefaultCaption = computed(() => {
 }
 
 .page-section-press__frame {
+  container-type: inline-size;
   position: relative;
   width: 100%;
   height: 100%;
@@ -524,25 +566,46 @@ const showDefaultCaption = computed(() => {
 }
 
 .page-section-press__caption {
+  margin: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.page-section-press__caption--handwritten {
   position: absolute;
   right: 10px;
   top: calc(100% + .75em);
-  z-index: 2;
-  margin: 0;
   max-width: min(72%, 35rem);
+  font-family: var(--handwritten);
   font-size: clamp(18px, 2.1vw, 40px);
   line-height: 1.05;
   text-align: right;
   color: var(--text-color);
   transform: rotate(-3deg);
   transform-origin: bottom right;
-  pointer-events: none;
 }
 
-.page-section-press.is-media-valign-bottom .page-section-press__caption {
+.page-section-press.is-media-valign-bottom .page-section-press__caption--handwritten {
   top: auto;
   bottom: calc(100% + .75em);
   transform-origin: top right;
+}
+
+.page-section-press__caption--bold {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 10cqi, 3rem);
+  max-width: none;
+  font-size: clamp(1.125rem, 13cqi, 5.25rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: balance;
+  font-family: var(--condensed);
 }
 
 .page-section-press__caption--after-video {

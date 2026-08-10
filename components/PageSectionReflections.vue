@@ -100,6 +100,13 @@ const mapBackgroundImage = computed(() => {
 
 const mapLightStyle = computed(() => props.section?.reflectionsMapLightStyle === true)
 
+const mapZoomControls = computed(() => props.section?.reflectionsMapZoomControls === true)
+
+const mapSubscriberCount = computed(() => {
+  const value = Number(props.section?.reflectionsMapSubscriberCount)
+  return Number.isFinite(value) && value > 0 ? value : null
+})
+
 const mapPostsLayout = computed(() =>
   props.section?.reflectionsMapPostsLayout === 'below' ? 'below' : 'sidebar',
 )
@@ -265,6 +272,8 @@ function selectFullViewTab(tab) {
             :map-background-image="mapBackgroundImage"
             :map-light-style="mapLightStyle"
             :map-posts-layout="mapPostsLayout"
+            :show-map-zoom-controls="mapZoomControls"
+            :subscriber-count="mapSubscriberCount"
           />
         </div>
       </div>
@@ -307,6 +316,8 @@ function selectFullViewTab(tab) {
           :map-background-image="mapBackgroundImage"
           :map-light-style="mapLightStyle"
           :map-posts-layout="mapPostsLayout"
+          :show-map-zoom-controls="mapZoomControls"
+          :subscriber-count="mapSubscriberCount"
           :view-all-path="VIEW_ALL_REFLECTIONS_PATH"
           show-leave-reflection-button
         />

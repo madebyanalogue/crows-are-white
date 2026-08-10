@@ -1,4 +1,6 @@
 <script setup>
+import { REFLECTION_COUNTRIES } from '~/utils/reflections'
+
 const props = defineProps({
   title: {
     type: String,
@@ -20,19 +22,23 @@ const props = defineProps({
   layout: {
     type: String,
     default: 'overlay',
-    validator: (value) => ['overlay', 'split'].includes(value),
+    validator: (value) => ['overlay', 'split', 'map'].includes(value),
   },
 })
 
-const {mailchimpAction} = useSiteSettings()
+const { mailchimpAction } = useSiteSettings()
 const submitted = ref(false)
 const email = ref('')
+const city = ref('')
+const country = ref('')
+const leaveReflection = ref(false)
 
 const hasMedia = computed(() =>
   Boolean(props.background?.imageUrl || props.background?.videoUrl || props.background?.loop),
 )
 
 const isSplitLayout = computed(() => props.layout === 'split' && hasMedia.value)
+const isMapLayout = computed(() => props.layout === 'map')
 
 const introParagraphs = computed(() => {
   const text = props.intro?.trim() || ''
@@ -52,19 +58,152 @@ function onSubmit() {
   <section
     class="newsletter-block"
     :class="{
-      'has-background': hasMedia && !isSplitLayout,
-      'is-light': !isSplitLayout && background?.textColor === 'light',
+      'has-background': hasMedia && !isSplitLayout && !isMapLayout,
+      'is-light': !isSplitLayout && !isMapLayout && background?.textColor === 'light',
       'newsletter-block--split': isSplitLayout,
+      'newsletter-block--map': isMapLayout,
     }"
-    :style="hasMedia && !isSplitLayout ? {'--newsletter-overlay': background.overlayOpacity} : null"
+    :style="hasMedia && !isSplitLayout && !isMapLayout ? {'--newsletter-overlay': background.overlayOpacity} : null"
     :aria-label="title"
   >
     <div
-      v-if="isSplitLayout"
+      v-if="isMapLayout"
+      class="newsletter-block__map"
+    >
+      <div class="newsletter-block__content">
+        <h2 class="newsletter-block__title h3 serif light">
+          {{ title }}
+        </h2>
+
+        <div
+          v-if="introParagraphs.length"
+          class="newsletter-block__intro"
+        >
+          <p
+            v-for="(paragraph, index) in introParagraphs"
+            :key="index"
+            class="newsletter-block__intro-paragraph serif"
+          >
+            {{ paragraph }}
+          </p>
+        </div>
+
+        <form
+          v-if="!submitted"
+          class="newsletter-block__form newsletter-block__form--stacked"
+          :action="mailchimpAction || undefined"
+          method="post"
+          target="_blank"
+          @submit="onSubmit"
+        >
+          <div class="newsletter-block__field">
+            <label
+              class="newsletter-block__label serif"
+              for="newsletter-block-email-map"
+            >
+              Email address
+            </label>
+            <input
+              id="newsletter-block-email-map"
+              v-model="email"
+              class="newsletter-block__input serif"
+              type="email"
+              name="EMAIL"
+              required
+              autocomplete="email"
+            >
+          </div>
+
+          <fieldset class="newsletter-block__fieldset">
+            <legend class="newsletter-block__legend serif">
+              Where are you watching from?
+            </legend>
+
+            <div class="newsletter-block__field">
+              <label
+                class="newsletter-block__label serif"
+                for="newsletter-block-city-map"
+              >
+                City
+              </label>
+              <input
+                id="newsletter-block-city-map"
+                v-model="city"
+                class="newsletter-block__input serif"
+                type="text"
+                maxlength="80"
+                autocomplete="address-level2"
+              >
+            </div>
+
+            <div class="newsletter-block__field">
+              <label
+                class="newsletter-block__label serif"
+                for="newsletter-block-country-map"
+              >
+                Country
+                <span
+                  v-if="city.trim()"
+                  class="newsletter-block__label-note"
+                >(required if city is entered)</span>
+              </label>
+              <select
+                id="newsletter-block-country-map"
+                v-model="country"
+                class="newsletter-block__select serif"
+                :required="Boolean(city.trim())"
+              >
+                <option value="">
+                  Select a country
+                </option>
+                <option
+                  v-for="countryOption in REFLECTION_COUNTRIES"
+                  :key="countryOption"
+                  :value="countryOption"
+                >
+                  {{ countryOption }}
+                </option>
+              </select>
+            </div>
+          </fieldset>
+
+          <label class="newsletter-block__checkbox serif">
+            <input
+              v-model="leaveReflection"
+              class="newsletter-block__checkbox-input"
+              type="checkbox"
+            >
+            <span>Leave a reflection</span>
+          </label>
+
+          <button
+            type="submit"
+            class="newsletter-block__submit newsletter-block__submit--stacked serif"
+            :disabled="!mailchimpAction"
+          >
+            {{ submitLabel }}
+          </button>
+        </form>
+
+        <p
+          v-else
+          class="newsletter-block__thanks serif"
+        >
+          Thanks — check your inbox to confirm.
+        </p>
+      </div>
+
+      <div class="newsletter-block__map-col">
+        <slot name="map" />
+      </div>
+    </div>
+
+    <div
+      v-else-if="isSplitLayout"
       class="newsletter-block__split"
     >
       <div class="newsletter-block__content">
-        <h2 class="newsletter-block__title serif">
+        <h2 class="newsletter-block__title h3 serif light">
           {{ title }}
         </h2>
 
@@ -277,7 +416,7 @@ function onSubmit() {
     </div>
 
     <template v-else>
-      <h2 class="newsletter-block__title serif">
+      <h2 class="newsletter-block__title h3 serif light">
         {{ title }}
       </h2>
 
@@ -347,26 +486,40 @@ function onSubmit() {
   color: var(--newsletter-ink);
 }
 
-.newsletter-block:not(.has-background):not(.newsletter-block--split) {
+.newsletter-block:not(.has-background):not(.newsletter-block--split):not(.newsletter-block--map) {
   padding: clamp(3.5rem, 10vw, 7rem) clamp(1.25rem, 4vw, 3rem) clamp(4rem, 12vw, 8rem);
 }
 
-.newsletter-block--split {
+.newsletter-block--split,
+.newsletter-block--map {
+  width: 100%;
+}
+
+.newsletter-block__split,
+.newsletter-block__map {
+  display: grid;
+  align-items: start;
+  gap: clamp(1.5rem, 4vw, 3rem);
   width: 100%;
 }
 
 .newsletter-block__split {
-  display: grid;
   grid-template-columns: 2fr 3fr;
   align-items: center;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  width: 100%;
+}
+
+.newsletter-block__map {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
 }
 
 .newsletter-block__content {
   width: 100%;
   max-width: 500px;
   justify-self: start;
+}
+
+.newsletter-block__map-col {
+  min-width: 0;
 }
 
 .newsletter-block__media-col {
@@ -457,8 +610,6 @@ function onSubmit() {
 
 .newsletter-block__title {
   margin: 0 0 clamp(1rem, 2.5vw, 1.5rem);
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
-  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -470,8 +621,31 @@ function onSubmit() {
   width: 100%;
 }
 
+.newsletter-block__form--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(1rem, 2.5vw, 1.35rem);
+}
+
 .newsletter-block__form--overlay {
   gap: 0.75rem;
+}
+
+.newsletter-block__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: grid;
+  gap: clamp(0.85rem, 2vw, 1rem);
+}
+
+.newsletter-block__legend {
+  margin: 0 0 clamp(0.15rem, 0.5vw, 0.35rem);
+  padding: 0;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .newsletter-block__field {
@@ -488,13 +662,28 @@ function onSubmit() {
   text-transform: uppercase;
 }
 
-.newsletter-block__form:not(.newsletter-block__form--overlay) .newsletter-block__label {
+.newsletter-block__label-note {
+  margin-left: 0.35em;
+  font-size: 0.85em;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.72;
+}
+
+.newsletter-block__form:not(.newsletter-block__form--overlay):not(.newsletter-block__form--stacked) .newsletter-block__label {
   font-size: clamp(1rem, 2.2vw, 1.35rem);
   text-transform: none;
   letter-spacing: 0;
 }
 
-.newsletter-block__input {
+.newsletter-block__form--stacked .newsletter-block__label {
+  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.newsletter-block__input,
+.newsletter-block__select {
   display: block;
   width: 100%;
   margin: 0;
@@ -506,6 +695,16 @@ function onSubmit() {
   font-size: clamp(1rem, 2.2vw, 1.35rem);
   line-height: 1;
   outline: none;
+}
+
+.newsletter-block__select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 1.1rem) calc(50% + 0.15rem), calc(100% - 0.75rem) calc(50% + 0.15rem);
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+  padding-right: 1.75rem;
 }
 
 .newsletter-block__form--overlay .newsletter-block__label {
@@ -526,6 +725,23 @@ function onSubmit() {
   font-size: clamp(1rem, 2.2vw, 1.35rem);
 }
 
+.newsletter-block__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+}
+
+.newsletter-block__checkbox-input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--newsletter-ink);
+}
+
 .newsletter-block__submit {
   margin: 0;
   padding: 0 0 0.55rem;
@@ -538,6 +754,10 @@ function onSubmit() {
   letter-spacing: 0.04em;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.newsletter-block__submit--stacked {
+  justify-self: start;
 }
 
 .newsletter-block__submit:disabled {
@@ -558,8 +778,9 @@ function onSubmit() {
   font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
 }
 
-@media (max-width: 699px) {
-  .newsletter-block__split {
+@media (max-width: 899px) {
+  .newsletter-block__split,
+  .newsletter-block__map {
     grid-template-columns: 1fr;
   }
 
@@ -567,12 +788,12 @@ function onSubmit() {
     max-width: none;
   }
 
-  .newsletter-block__form {
+  .newsletter-block__split .newsletter-block__form {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
 
-  .newsletter-block__submit {
+  .newsletter-block__split .newsletter-block__submit {
     justify-self: end;
   }
 }

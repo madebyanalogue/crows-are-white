@@ -52,6 +52,14 @@ const props = defineProps({
     default: 'sidebar',
     validator: (value) => ['sidebar', 'below'].includes(value),
   },
+  showMapZoomControls: {
+    type: Boolean,
+    default: false,
+  },
+  subscriberCount: {
+    type: Number,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['select-marker', 'submitted'])
@@ -67,11 +75,8 @@ const reflectionFormOpen = ref(false)
 const reflectionFormRef = ref(null)
 const activeReflectionIndex = ref(0)
 const mapStageRef = ref(null)
+const mapOverlayListRef = ref(null)
 const viewerHeight = ref(null)
-const belowViewportRef = ref(null)
-const belowAtStart = ref(true)
-const belowAtEnd = ref(false)
-const openBelowReflectionId = ref(null)
 let geocodeTimer = null
 let geocodeRequestId = 0
 let mapStageObserver = null
@@ -81,15 +86,32 @@ const reflectionLocations = computed(() => aggregateWatchingFromLocations(props.
 
 const mapStats = computed(() => summarizeWatchingFromStats(reflectionLocations.value))
 
+const DEFAULT_MAP_SUBSCRIBER_COUNT = 120
+
 const mapSummaryLabel = computed(() => {
+  const segments = []
+
+  const subscriberCount = props.subscriberCount ?? DEFAULT_MAP_SUBSCRIBER_COUNT
+  const resolvedSubscriberCount = Number(subscriberCount)
+  if (Number.isFinite(resolvedSubscriberCount) && resolvedSubscriberCount > 0) {
+    const subscribersLabel = resolvedSubscriberCount === 1 ? 'Subscriber' : 'Subscribers'
+    segments.push(`${resolvedSubscriberCount} ${subscribersLabel}`)
+  }
+
   const reflectionCount = props.items.length
-  if (!reflectionCount) return ''
+  if (reflectionCount > 0) {
+    const reflectionsLabel = reflectionCount === 1 ? 'Reflection' : 'Reflections'
+    segments.push(`${reflectionCount} ${reflectionsLabel}`)
 
-  const countryCount = getReflectionCountries(props.items).length
-  const reflectionsLabel = reflectionCount === 1 ? 'Reflection' : 'Reflections'
-  const countriesLabel = countryCount === 1 ? 'country' : 'countries'
+    const countryCount = getReflectionCountries(props.items).length
+    if (countryCount > 0) {
+      const countriesLabel = countryCount === 1 ? 'country' : 'countries'
+      segments.push(`${countryCount} ${countriesLabel}`)
+    }
+  }
 
-  return `${reflectionCount} ${reflectionsLabel}, ${countryCount} ${countriesLabel}`
+  if (!segments.length) return ''
+  return segments.join(', ')
 })
 
 const displayLocations = computed(() =>
@@ -106,17 +128,27 @@ const activeReflection = computed(() =>
   markerReflections.value[activeReflectionIndex.value] || null,
 )
 
-const isBelowCarouselLayout = computed(() => props.mapPostsLayout === 'below')
+const isMapOverlayLayout = computed(() => props.mapPostsLayout === 'below')
 
 const showSidebarViewer = computed(() =>
-  !isBelowCarouselLayout.value
+  !isMapOverlayLayout.value
   && Boolean(selectedMarker.value && activeReflection.value),
 )
 
-const showBelowCarousel = computed(() =>
-  isBelowCarouselLayout.value
+const showMapOverlayList = computed(() =>
+  isMapOverlayLayout.value
   && Boolean(selectedMarker.value && markerReflections.value.length),
 )
+
+const selectedLocationLabel = computed(() => {
+  const marker = selectedMarker.value
+  if (!marker) return ''
+
+  const selectionLabel = formatWatchingFromMapMarkerSelectionLabel(marker)
+  if (selectionLabel) return selectionLabel
+
+  return selectedCountryLabel.value
+})
 
 const selectedCountryLabel = computed(() => {
   const marker = selectedMarker.value
@@ -137,11 +169,6 @@ const selectedCountryLabel = computed(() => {
   if (countries.length > 1) return countries.join(' · ')
   return formatWatchingFromMapMarkerSelectionLabel(marker)
 })
-
-const belowCarouselCanScroll = computed(() => markerReflections.value.length > 1)
-
-const belowCarouselCanGoPrev = computed(() => !belowAtStart.value)
-const belowCarouselCanGoNext = computed(() => !belowAtEnd.value)
 
 const canStepReflections = computed(() => markerReflections.value.length > 1)
 
@@ -164,54 +191,10 @@ const hasHeaderActions = computed(() =>
 
 const hasMapBackgroundImage = computed(() => Boolean(props.mapBackgroundImage?.url))
 
-function updateBelowScrollState() {
-  const viewport = belowViewportRef.value
-  if (!viewport) return
-
-  const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
-  belowAtStart.value = viewport.scrollLeft <= 1
-  belowAtEnd.value = viewport.scrollLeft >= maxScroll - 1
-}
-
-function scrollBelowCarousel(direction) {
-  const viewport = belowViewportRef.value
-  if (!viewport) return
-
-  viewport.scrollBy({
-    left: direction * viewport.clientWidth * 0.92,
-    behavior: 'smooth',
-  })
-}
-
-function bindBelowViewport(el) {
-  if (belowViewportRef.value) {
-    belowViewportRef.value.removeEventListener('scroll', updateBelowScrollState)
+function resetMapOverlayScroll() {
+  if (mapOverlayListRef.value) {
+    mapOverlayListRef.value.scrollTop = 0
   }
-
-  belowViewportRef.value = el
-
-  if (!el) return
-
-  el.addEventListener('scroll', updateBelowScrollState, { passive: true })
-  nextTick(updateBelowScrollState)
-}
-
-function resetBelowCarousel() {
-  openBelowReflectionId.value = null
-
-  if (belowViewportRef.value) {
-    belowViewportRef.value.scrollLeft = 0
-  }
-
-  nextTick(updateBelowScrollState)
-}
-
-function onBelowCardOpen(reflectionId) {
-  openBelowReflectionId.value = reflectionId
-}
-
-function onBelowCardClose() {
-  openBelowReflectionId.value = null
 }
 
 function syncViewerHeight() {
@@ -300,6 +283,11 @@ function selectMarker(marker) {
   emit('select-marker', marker)
 }
 
+function closeMapReflections() {
+  selectedMarker.value = null
+  activeReflectionIndex.value = 0
+}
+
 function stepReflection(direction) {
   const total = markerReflections.value.length
   if (total <= 1) return
@@ -329,7 +317,13 @@ function handleKeydown(event) {
     return
   }
 
-  if (!selectedMarker.value) return
+  if (showMapOverlayList.value && event.key === 'Escape') {
+    event.preventDefault()
+    closeMapReflections()
+    return
+  }
+
+  if (!selectedMarker.value || isMapOverlayLayout.value) return
 
   if (event.key === 'ArrowLeft') {
     event.preventDefault()
@@ -483,17 +477,14 @@ watch(mapStageRef, (el, _, onCleanup) => {
 watch(
   () => selectedMarker.value?.id,
   () => {
-    resetBelowCarousel()
+    nextTick(resetMapOverlayScroll)
   },
 )
 
 watch(
   () => markerReflections.value.length,
   () => {
-    nextTick(() => {
-      syncViewerHeight()
-      updateBelowScrollState()
-    })
+    nextTick(syncViewerHeight)
   },
 )
 
@@ -519,7 +510,6 @@ onBeforeUnmount(() => {
   layoutMediaQuery?.removeEventListener('change', handleLayoutMediaChange)
   layoutMediaQuery = null
   document.removeEventListener('keydown', handleKeydown)
-  belowViewportRef.value?.removeEventListener('scroll', updateBelowScrollState)
 })
 </script>
 
@@ -528,7 +518,7 @@ onBeforeUnmount(() => {
     class="watching-from-section"
     :class="{
       'watching-from-section--compact': compact,
-      'watching-from-section--below-carousel': isBelowCarouselLayout,
+      'watching-from-section--map-overlay': isMapOverlayLayout,
     }"
     :aria-labelledby="resolvedTitle ? 'watching-from-heading' : undefined"
     :aria-label="resolvedTitle ? undefined : (compact ? 'Reflections map' : 'Around the world map')"
@@ -603,7 +593,11 @@ onBeforeUnmount(() => {
       <div
         ref="mapStageRef"
         class="watching-from-section__map-stage"
-        :class="{ 'watching-from-section__map-stage--has-background': hasMapBackgroundImage }"
+        :class="{
+          'watching-from-section__map-stage--has-background': hasMapBackgroundImage,
+          'watching-from-section__map-stage--overlay-open': showMapOverlayList,
+          'watching-from-section__map-stage--form-open': reflectionFormOpen,
+        }"
       >
         <img
           v-if="hasMapBackgroundImage"
@@ -619,8 +613,54 @@ onBeforeUnmount(() => {
           :active-location-id="userLocation?.id || ''"
           :selected-marker-id="selectedMarker?.id || props.selectedMarkerId || ''"
           :light-style="mapLightStyle"
+          :show-zoom-controls="showMapZoomControls"
           @select-marker="selectMarker"
         />
+
+        <div
+          v-if="showMapOverlayList"
+          class="watching-from-section__map-overlay-wrap"
+          @click.self="closeMapReflections"
+        >
+          <div
+            class="watching-from-section__map-overlay"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="selectedLocationLabel ? 'watching-from-overlay-heading' : undefined"
+            @click.stop
+          >
+            <header class="watching-from-section__map-overlay-header">
+              <span
+                class="watching-from-section__map-overlay-header-spacer"
+                aria-hidden="true"
+              />
+
+              <h4
+                v-if="selectedLocationLabel"
+                id="watching-from-overlay-heading"
+                class="watching-from-section__map-overlay-title h4 serif"
+              >
+                {{ selectedLocationLabel }}
+              </h4>
+
+              <button
+                type="button"
+                class="watching-from-section__map-overlay-close serif"
+                @click="closeMapReflections"
+              >
+                Close
+              </button>
+            </header>
+
+            <div
+              ref="mapOverlayListRef"
+              class="watching-from-section__map-overlay-body"
+              @wheel.stop
+            >
+              <ReflectionList :items="markerReflections" />
+            </div>
+          </div>
+        </div>
 
         <div
           v-if="reflectionFormOpen"
@@ -751,105 +791,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div
-      v-if="showBelowCarousel"
-      class="watching-from-section__below-carousel"
-    >
-      <h4
-        v-if="selectedCountryLabel"
-        class="watching-from-section__below-title h4 serif"
-      >
-        {{ selectedCountryLabel }}
-      </h4>
-
-      <div class="watching-from-section__below-stage">
-        <button
-          v-if="belowCarouselCanScroll"
-          type="button"
-          class="watching-from-section__below-nav"
-          :disabled="!belowCarouselCanGoPrev"
-          aria-label="Previous reflections"
-          @click="scrollBelowCarousel(-1)"
-        >
-          <span
-            class="watching-from-section__nav-arrow"
-            aria-hidden="true"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 12"
-            >
-              <path
-                d="M13 6H1M1 6l5-5M1 6l5 5"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
-        </button>
-
-        <div
-          :ref="bindBelowViewport"
-          class="watching-from-section__below-viewport"
-          :aria-label="`${selectedCountryLabel} reflections`"
-        >
-          <div class="watching-from-section__below-track">
-            <div
-              v-for="(reflection, index) in markerReflections"
-              :key="reflection._id"
-              class="watching-from-section__below-slide"
-            >
-              <div
-                class="watching-from-section__below-card"
-                :class="{ 'watching-from-section__below-card--longform': reflection.longform }"
-              >
-                <ReflectionCard
-                  :item="reflection"
-                  :index="index"
-                  :open="openBelowReflectionId === reflection._id"
-                  :paper-tilt-max="reflection.longform ? 0 : 2"
-                  :disable-paper-tilt="Boolean(reflection.longform)"
-                  click-only
-                  show-folded-location
-                  @open="onBelowCardOpen(reflection._id)"
-                  @close="onBelowCardClose"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          v-if="belowCarouselCanScroll"
-          type="button"
-          class="watching-from-section__below-nav"
-          :disabled="!belowCarouselCanGoNext"
-          aria-label="Next reflections"
-          @click="scrollBelowCarousel(1)"
-        >
-          <span
-            class="watching-from-section__nav-arrow watching-from-section__nav-arrow--next"
-            aria-hidden="true"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 12"
-            >
-              <path
-                d="M13 6H1M1 6l5-5M1 6l5 5"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
-        </button>
-      </div>
-    </div>
-
     <p
       v-if="statusMessage && !compact"
       class="watching-from-section__status serif"
@@ -872,7 +813,7 @@ onBeforeUnmount(() => {
     align-items: start;
   }
 
-  .watching-from-section--below-carousel {
+  .watching-from-section--map-overlay {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -890,8 +831,7 @@ onBeforeUnmount(() => {
     align-self: start;
   }
 
-  .watching-from-section--below-carousel .watching-from-section__map-column,
-  .watching-from-section--below-carousel .watching-from-section__below-carousel {
+  .watching-from-section--map-overlay .watching-from-section__map-column {
     grid-column: 1 / -1;
   }
 
@@ -1040,7 +980,7 @@ onBeforeUnmount(() => {
   position: relative;
   min-width: 0;
   overflow: hidden;
-  border: 1px dashed color-mix(in srgb, currentColor 24%, transparent);
+  border: 3px double color-mix(in srgb, currentColor 24%, transparent);
   background: color-mix(in srgb, currentColor 4%, transparent);
 }
 
@@ -1056,6 +996,14 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.watching-from-section__map-stage--has-background:hover .watching-from-section__map-background,
+.watching-from-section__map-stage--has-background.watching-from-section__map-stage--overlay-open .watching-from-section__map-background,
+.watching-from-section__map-stage--has-background.watching-from-section__map-stage--form-open .watching-from-section__map-background {
+  opacity: 0.2;
 }
 
 .watching-from-section__map-stage :deep(.watching-from-diagram) {
@@ -1063,6 +1011,123 @@ onBeforeUnmount(() => {
   z-index: 1;
   border: 0;
   background: transparent;
+}
+
+.watching-from-section__map-overlay-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 6% 5%;
+  overflow: hidden;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.watching-from-section__map-overlay {
+  position: relative;
+  width: 100%;
+  max-width: 940px;
+  height: min(100%, max-content);
+  max-height: 100%;
+  min-height: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  pointer-events: auto;
+  background: var(--background-color);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--mid-border);
+}
+
+.watching-from-section__map-overlay-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  grid-row: 1;
+  flex-shrink: 0;
+  z-index: 1;
+  padding: clamp(0.75rem, 1.5vw, 1rem) clamp(0.85rem, 1.75vw, 1.15rem);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  background: var(--background-color);
+}
+
+.watching-from-section__map-overlay-header-spacer {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.watching-from-section__map-overlay-title {
+  grid-column: 2;
+  margin: 0;
+  min-width: 0;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.watching-from-section__map-overlay-close {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: clamp(0.875rem, 1.2vw, 1rem);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.watching-from-section__map-overlay-close:hover {
+  opacity: 0.72;
+}
+
+.watching-from-section__map-overlay-body {
+  grid-row: 2;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.watching-from-section__map-overlay-body :deep(.reflection-list-wrap) {
+  min-height: 0;
+}
+
+.watching-from-section__map-overlay-body :deep(.reflection-list) {
+  margin: 0;
+}
+
+.watching-from-section__map-overlay-body :deep(.reflection-list__item) {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 1.75vw, 1.4rem);
+  margin: 0;
+  padding: 3rem 2rem;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--light-border);
+  text-align: center;
+}
+
+.watching-from-section__map-overlay-body :deep(.reflection-list__quote),
+.watching-from-section__map-overlay-body :deep(.reflection-list__cite) {
+  text-align: center;
+}
+
+.watching-from-section__map-overlay-body :deep(.reflection-list__quote) {
+  font-size: clamp(1rem, 1.6vw, 2rem);
 }
 
 .watching-from-section__map-form-overlay {
@@ -1127,11 +1192,11 @@ onBeforeUnmount(() => {
 .watching-from-section__map-summary {
   margin: 0;
   font-family: var(--serif);
-  font-size: clamp(0.875rem, 1.2vw, 0.95rem);
+  font-size: clamp(0.875rem, 1.2vw, 1.3rem);
   font-weight: 300;
   line-height: 1.45;
-  letter-spacing: 0.03em;
-  opacity: 0.72;
+  letter-spacing: 0.02em;
+  opacity: 0.8;
 }
 
 .watching-from-section__viewer-wrap {
@@ -1259,106 +1324,5 @@ onBeforeUnmount(() => {
   font-weight: 300;
   letter-spacing: 0.03em;
   opacity: 0.72;
-}
-
-.watching-from-section__below-carousel {
-  --below-carousel-slides-visible: 1.35;
-  --below-carousel-visible-gaps: 1;
-  --below-carousel-gap: clamp(0.65rem, 1.5vw, 1rem);
-  display: grid;
-  gap: clamp(0.85rem, 2vw, 1.35rem);
-  min-width: 0;
-}
-
-.watching-from-section__below-title {
-  margin: 0;
-  font-weight: 300;
-  letter-spacing: 0.02em;
-}
-
-.watching-from-section__below-stage {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(0.5rem, 2vw, 1rem);
-  min-width: 0;
-}
-
-.watching-from-section__below-viewport {
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.watching-from-section__below-viewport::-webkit-scrollbar {
-  display: none;
-}
-
-.watching-from-section__below-track {
-  display: flex;
-  gap: var(--below-carousel-gap);
-  min-width: min-content;
-}
-
-.watching-from-section__below-slide {
-  flex: 0 0 calc(
-    (100% - (var(--below-carousel-gap) * var(--below-carousel-visible-gaps)))
-    / var(--below-carousel-slides-visible)
-  );
-  scroll-snap-align: start;
-  min-width: 0;
-}
-
-.watching-from-section__below-card {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-}
-
-.watching-from-section__below-card :deep(.reflection-card) {
-  width: 100%;
-  height: 100%;
-}
-
-.watching-from-section__below-card--longform {
-  aspect-ratio: 2 / 3;
-}
-
-.watching-from-section__below-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  opacity: 0.72;
-  transition: opacity 0.2s ease;
-}
-
-.watching-from-section__below-nav:hover:not(:disabled) {
-  opacity: 1;
-}
-
-.watching-from-section__below-nav:disabled {
-  opacity: 0;
-  cursor: default;
-}
-
-@media (min-width: 520px) {
-  .watching-from-section__below-carousel {
-    --below-carousel-slides-visible: 2.5;
-    --below-carousel-visible-gaps: 2;
-  }
-}
-
-@media (min-width: 900px) {
-  .watching-from-section__below-carousel {
-    --below-carousel-slides-visible: 4;
-    --below-carousel-visible-gaps: 3;
-  }
 }
 </style>
