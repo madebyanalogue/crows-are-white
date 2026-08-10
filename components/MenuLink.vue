@@ -65,6 +65,8 @@ const {
   isCurrentPage,
   isSamePageLink,
   isSamePageHref,
+  isShopFilterHref,
+  navigateInternalHref,
   getUrlHash,
   scrollToTop,
   scrollToHash,
@@ -84,6 +86,14 @@ function onLinkClick(event) {
   if (hash && isSamePageHref(href)) {
     event.preventDefault()
     scrollToHash(hash)
+    emit('click', event)
+    return
+  }
+
+  if (isShopFilterHref(href) && !isSamePageHref(href)) {
+    event.preventDefault()
+    navigateInternalHref(href, { replace: true })
+    scrollToTop({ smooth: false })
     emit('click', event)
     return
   }

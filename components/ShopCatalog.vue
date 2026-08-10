@@ -9,6 +9,7 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const { data: shopPage } = useShopPage()
 const {data: productData, pending} = useShopifyProducts()
 const viewMode = ref<'feature' | 'grid'>('feature')
 
@@ -32,7 +33,12 @@ function setFilter(id: ShopFilterId) {
 }
 
 const pageTitle = useState('pageTitle', () => '')
-pageTitle.value = 'Shop'
+const shopHeading = computed(() => shopPage.value?.title?.trim() || 'Shop')
+pageTitle.value = shopHeading.value
+
+watch(shopHeading, (value) => {
+  pageTitle.value = value
+})
 
 useHead({title: 'Shop — Crows Are White'})
 
@@ -47,6 +53,12 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 
 <template>
   <div class="shop-page">
+    <header class="shop-page__header wrapper">
+      <h1 class="shop-page__title h1 serif light">
+        {{ shopHeading }}
+      </h1>
+    </header>
+
     <div class="shop-toolbar">
       <div
         class="shop-filters"
@@ -178,13 +190,22 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   color: var(--shop-text);
 }
 
+.shop-page__header {
+  padding-top: 0;
+  padding-bottom: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.shop-page__title {
+  margin: 0;
+}
+
 .shop-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   min-height: 52px;
-  padding: 0.85rem clamp(1rem, 3vw, 2rem);
+  padding: 0.85rem var(--wrapper-padding);
   border-bottom: 1px solid var(--shop-line);
 }
 

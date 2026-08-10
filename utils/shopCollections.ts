@@ -30,8 +30,8 @@ const collectionAliases: Record<ShopCollectionHandle, string[]> = {
 
 export const SHOP_FILTERS: ShopFilter[] = [
   {id: 'all', label: 'All', href: '/shop'},
-  {id: 'posters', label: 'Prints', href: '/shop/collections/posters'},
-  {id: 'apparel', label: 'Apparel', href: '/shop/collections/apparel'},
+  {id: 'posters', label: 'Prints', href: '/shop?filter=posters'},
+  {id: 'apparel', label: 'Apparel', href: '/shop?filter=apparel'},
 ]
 
 export function isShopCollectionHandle(handle: string): handle is ShopCollectionHandle {

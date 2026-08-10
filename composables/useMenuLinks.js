@@ -17,14 +17,51 @@ export function isExternalUrl(url) {
   return !url.startsWith('/') && !url.startsWith('#')
 }
 
+function splitInternalHref(href) {
+  if (!href || href === '#') {
+    return { path: '', query: {}, hash: '' }
+  }
+
+  const hash = getUrlHash(href)
+  const withoutHash = hash ? href.slice(0, href.indexOf(hash)) : href
+  const [pathPart, queryString = ''] = withoutHash.split('?')
+  const path = normalizePath(pathPart)
+  const query = {}
+
+  if (queryString) {
+    for (const part of queryString.split('&')) {
+      if (!part) continue
+      const [key, value = ''] = part.split('=')
+      if (!key) continue
+      query[decodeURIComponent(key)] = decodeURIComponent(value)
+    }
+  }
+
+  return { path, query, hash }
+}
+
+function queriesMatch(left = {}, right = {}) {
+  const leftKeys = Object.keys(left).filter((key) => left[key] != null && left[key] !== '')
+  const rightKeys = Object.keys(right).filter((key) => right[key] != null && right[key] !== '')
+
+  if (leftKeys.length !== rightKeys.length) return false
+
+  return leftKeys.every((key) => String(left[key]) === String(right[key]))
+}
+
+function isShopFilterHref(href) {
+  const { path, query } = splitInternalHref(href)
+  return path === '/shop' && Boolean(query.filter)
+}
+
+export const CONTACT_FORM_HASH = '#contact-form'
+
 function normalizePath(path) {
   if (!path || path === '#') return ''
   const withoutHash = path.split('#')[0]
   if (withoutHash === '/') return '/'
   return withoutHash.replace(/\/$/, '') || '/'
 }
-
-export const CONTACT_FORM_HASH = '#contact-form'
 
 export function scrollToTop({ smooth = true } = {}) {
   if (!import.meta.client) return
@@ -290,7 +327,30 @@ export function useMenuLinks() {
     if (href.startsWith('mailto:') || href.startsWith('tel:')) return false
     if (isExternalUrl(href)) return false
 
-    return normalizePath(href) === normalizePath(route.path)
+    const target = splitInternalHref(href)
+    const currentPath = normalizePath(route.path)
+
+    if (target.path !== currentPath) return false
+    if (target.hash && target.hash !== route.hash) return false
+
+    return queriesMatch(target.query, route.query)
+  }
+
+  function navigateInternalHref(href, { replace = false } = {}) {
+    if (!import.meta.client) return Promise.resolve()
+
+    const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
+    skipNextPageTransition.value = true
+
+    const { path, query, hash } = splitInternalHref(href)
+    const router = useRouter()
+    const location = {
+      path,
+      query,
+      hash: hash || undefined,
+    }
+
+    return replace ? router.replace(location) : router.push(location)
   }
 
   return {
@@ -303,6 +363,8 @@ export function useMenuLinks() {
     isCurrentPage,
     isSamePageLink,
     isSamePageHref,
+    isShopFilterHref,
+    navigateInternalHref,
     getUrlHash,
     scrollElementIntoView,
     scrollToTop,

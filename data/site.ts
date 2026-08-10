@@ -147,8 +147,8 @@ export const defaultFooterMenus: FooterMenuGroup[] = [
     menu: {
       items: [
         {itemType: 'link', text: 'All', link: {type: 'url', url: '/shop'}},
-        {itemType: 'link', text: 'Apparel', link: {type: 'url', url: '/shop/collections/apparel'}},
-        {itemType: 'link', text: 'Prints', link: {type: 'url', url: '/shop/collections/posters'}},
+        {itemType: 'link', text: 'Apparel', link: {type: 'url', url: '/shop?filter=apparel'}},
+        {itemType: 'link', text: 'Prints', link: {type: 'url', url: '/shop?filter=posters'}},
         {itemType: 'link', text: 'Shipping & Delivery', link: {type: 'url', url: '/shipping-delivery'}},
       ],
     },

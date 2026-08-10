@@ -27,6 +27,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     isTransitioning.value = false
   })
 
+  function resolvesToShopRoute(path = '') {
+    return isShopRoute(path) || /^\/shop\/collections\/[^/]+\/?$/.test(path)
+  }
+
   router.beforeEach((to, from) => {
     if (from.matched.length > 0) {
       isInitialPageLoad.value = false
@@ -35,7 +39,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (from.matched.length === 0) return true
     if (to.fullPath === from.fullPath) return true
 
-    skipNextPageTransition.value = isShopRoute(from.path) && isShopRoute(to.path)
+    skipNextPageTransition.value = resolvesToShopRoute(from.path) && resolvesToShopRoute(to.path)
 
     suspendPageColorTransitions()
 
