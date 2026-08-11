@@ -349,7 +349,7 @@ const sectionStyle = computed(() => {
   min-height: 100dvh;
   padding:
     var(--watch-nav-clearance)
-    var(--watch-gutter)
+    var(--wrapper-padding)
     clamp(3rem, 8vw, 6rem);
   --watch-gap: 6rem;
 }
@@ -609,6 +609,7 @@ const sectionStyle = computed(() => {
     border-top: 1px solid var(--watch-line);
     border-left: 1px solid var(--watch-line);
     gap:0px;
+    max-width: unset;
   }
 }
 

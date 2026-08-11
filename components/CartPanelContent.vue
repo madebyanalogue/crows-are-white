@@ -53,6 +53,16 @@ const panelRef = ref<HTMLElement | null>(null)
 let revealTween: gsap.core.Tween | null = null
 let hasRevealedContent = false
 
+const showEmptyPanel = computed(() =>
+  items.value.length === 0 && !pendingNewLineSlot.value,
+)
+
+const emptyPanelMessage = computed(() => {
+  if (loading.value && !isAddingItem.value) return 'Loading cart…'
+  if (isAddingItem.value) return 'Adding to cart…'
+  return ''
+})
+
 function revealTargetEls() {
   const root = panelRef.value
   if (!root) return []
@@ -183,34 +193,25 @@ onBeforeUnmount(() => {
     </header>
 
     <div
-      v-if="loading && items.length === 0 && !isAddingItem && props.variant !== 'dropdown'"
+      v-if="showEmptyPanel"
       class="cart-panel__empty"
     >
-      Loading cart…
+      <template v-if="emptyPanelMessage">
+        <p>{{ emptyPanelMessage }}</p>
+      </template>
+      <template v-else>
+        <p>Your cart is empty.</p>
+        <NuxtLink
+          to="/shop"
+          class="cart-panel__shop-link"
+          @click="onClose"
+        >
+          Browse the shop
+        </NuxtLink>
+      </template>
     </div>
 
-    <div
-      v-else-if="items.length === 0 && isAddingItem && !pendingNewLineSlot"
-      class="cart-panel__empty"
-    >
-      Adding to cart…
-    </div>
-
-    <div
-      v-else-if="items.length === 0 && !pendingNewLineSlot && !(props.variant === 'dropdown' && loading)"
-      class="cart-panel__empty"
-    >
-      <p>Your cart is empty.</p>
-      <NuxtLink
-        to="/shop"
-        class="cart-panel__shop-link"
-        @click="onClose"
-      >
-        Browse the shop
-      </NuxtLink>
-    </div>
-
-    <template v-else-if="items.length > 0 || pendingNewLineSlot">
+    <template v-else>
       <ul class="cart-panel__items">
         <li
           v-for="item in items"
@@ -419,8 +420,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 16px;
+  min-height: 11rem;
   padding: 32px 24px;
   color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+.cart-panel--dropdown .cart-panel__empty {
+  flex: none;
+  min-height: 11.75rem;
+}
+
+.cart-panel__empty p {
+  margin: 0;
+  text-align: center;
 }
 
 .cart-panel__shop-link,

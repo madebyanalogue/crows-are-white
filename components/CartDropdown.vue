@@ -10,6 +10,10 @@ const awaitingInitialCart = computed(
   () => loading.value && items.value.length === 0,
 )
 
+const isEmptyCartOpen = computed(
+  () => isOpen.value && items.value.length === 0,
+)
+
 function clearRevealTimer() {
   if (revealTimer != null) {
     clearTimeout(revealTimer)
@@ -86,6 +90,7 @@ onUnmounted(() => {
     :class="{
       'is-open': isOpen,
       'is-awaiting-cart': isOpen && awaitingInitialCart,
+      'is-empty-cart': isEmptyCartOpen,
     }"
     :inert="isOpen ? undefined : true"
     :aria-hidden="isOpen ? undefined : 'true'"
@@ -132,7 +137,7 @@ onUnmounted(() => {
   visibility: hidden;
 }
 
-.site-header__cart-wrap.is-open.is-awaiting-cart .site-header__cart-inner {
-  min-height: 160px;
+.site-header__cart-wrap.is-open:is(.is-awaiting-cart, .is-empty-cart) .site-header__cart-inner {
+  min-height: 11.75rem;
 }
 </style>

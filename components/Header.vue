@@ -177,6 +177,8 @@ const heroMenuFrosted = useHeroMenuFrosted()
 const pageTitle = useState('pageTitle', () => '')
 const awaitingPageTitle = ref(false)
 const { getMenuItemUrl } = useMenuLinks()
+const { shouldSkipTransition } = usePageTransition()
+const pageTransitioning = useState('pageTransitioning', () => false)
 const navInnerRef = ref(null)
 const panelRef = ref(null)
 const pageNameWrapRef = ref(null)
@@ -189,6 +191,8 @@ let titleSettleTimer = null
 let pageNameHidden = false
 let suppressPageNameIn = false
 let openingCartFromMenu = false
+let wipeCoverComplete = false
+let pendingPageNameReveal = ''
 const switchingFromCartToMenu = useState('crows_switchingFromCartToMenu', () => false)
 const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
 const panelHeightMorphing = useState('crows_panelHeightMorphing', () => false)
@@ -589,6 +593,57 @@ function normalizeRoutePath(fullPath = '') {
   return normalizePath(path)
 }
 
+function showPageNameInstant(name) {
+  killPageNameTween()
+  suppressPageNameIn = false
+  displayedPageName.value = name || ''
+  pageNameHidden = false
+
+  if (!import.meta.client) return
+
+  nextTick(() => {
+    const chars = pageNameCharEls()
+    if (chars.length) gsap.set(chars, { yPercent: 0 })
+    if (pageNameWrapRef.value) gsap.set(pageNameWrapRef.value, { autoAlpha: 1 })
+  })
+}
+
+function tryRevealPendingPageName() {
+  if (!pendingPageNameReveal || menuOpen.value || cartOpen.value) return
+  showPageNameInstant(pendingPageNameReveal)
+  pendingPageNameReveal = ''
+}
+
+function onPageTransitionBeforeLeave() {
+  wipeCoverComplete = false
+  pendingPageNameReveal = ''
+  suppressPageNameIn = true
+
+  if (!pageNameHidden && !menuOpen.value && !cartOpen.value) {
+    dropPageName()
+  }
+}
+
+function onPageTransitionWipeCovered() {
+  wipeCoverComplete = true
+  tryRevealPendingPageName()
+}
+
+function onPageTransitionComplete() {
+  wipeCoverComplete = false
+  pendingPageNameReveal = ''
+  suppressPageNameIn = false
+
+  if (
+    pageNameHidden
+    && !menuOpen.value
+    && !cartOpen.value
+    && displayedPageName.value !== 'Cart'
+  ) {
+    showPageNameInstant(currentPageName.value)
+  }
+}
+
 async function onRouteChange(fullPath, oldFullPath) {
   if (!import.meta.client) return
   if (!oldFullPath || fullPath === oldFullPath) return
@@ -596,14 +651,26 @@ async function onRouteChange(fullPath, oldFullPath) {
 
   suppressPageNameIn = true
   if (cartOpen.value) closeCart()
-  const dropPromise = dropPageName()
+
+  if (!pageNameHidden && !menuOpen.value) {
+    await dropPageName()
+  }
+
   if (menuOpen.value) closeMenu()
-  await dropPromise
 
   const nextName = await waitForTitleSettle()
   awaitingPageTitle.value = false
-  suppressPageNameIn = false
-  await revealPageName(nextName)
+
+  if (shouldSkipTransition() || !pageTransitioning.value) {
+    showPageNameInstant(nextName)
+    return
+  }
+
+  pendingPageNameReveal = nextName
+
+  if (wipeCoverComplete) {
+    tryRevealPendingPageName()
+  }
 }
 
 async function animateMenuItemsIn() {
@@ -688,6 +755,9 @@ onMounted(() => {
   if (!import.meta.client) return
   displayedPageName.value = currentPageName.value
   if (pageNameWrapRef.value) gsap.set(pageNameWrapRef.value, { autoAlpha: 1 })
+  document.addEventListener('crows:page-transition-before-leave', onPageTransitionBeforeLeave)
+  document.addEventListener('crows:page-transition-wipe-covered', onPageTransitionWipeCovered)
+  document.addEventListener('page-transition-complete', onPageTransitionComplete)
   keyHandler = (event) => {
     if (event.key === 'Escape') closeMenu()
   }
@@ -696,6 +766,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (!import.meta.client) return
+  document.removeEventListener('crows:page-transition-before-leave', onPageTransitionBeforeLeave)
+  document.removeEventListener('crows:page-transition-wipe-covered', onPageTransitionWipeCovered)
+  document.removeEventListener('page-transition-complete', onPageTransitionComplete)
   killMenuItemsTween()
   killPageNameTween()
   if (titleSettleTimer != null) clearTimeout(titleSettleTimer)

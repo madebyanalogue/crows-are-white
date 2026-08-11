@@ -44,6 +44,7 @@ export function useSiteSettings() {
   })
   const footerStrapline = computed(() => settings.value?.footerStrapline || [])
   const footerLegal = computed(() => settings.value?.footerLegal || [])
+  const footerShopifyLine = computed(() => settings.value?.footerShopifyLine?.trim() || '')
   const privacyMenu = computed(() => settings.value?.privacyMenu || defaultPrivacyMenu)
   const siteTitle = computed(() => settings.value?.title || 'Crows Are White')
   const preloaderDisabled = computed(() => settings.value?.disablePreloader === true)
@@ -144,6 +145,7 @@ export function useSiteSettings() {
     footerMenus,
     footerStrapline,
     footerLegal,
+    footerShopifyLine,
     privacyMenu,
     siteTitle,
     preloaderDisabled,

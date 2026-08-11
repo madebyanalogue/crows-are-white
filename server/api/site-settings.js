@@ -97,6 +97,7 @@ export default defineEventHandler(async () => {
     },
     footerStrapline[] ${portableTextProjection},
     footerLegal[] ${portableTextProjection},
+    footerShopifyLine,
     privacyMenu-> ${menuProjection},
     trustpilot {
       url,

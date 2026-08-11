@@ -680,6 +680,7 @@ export function usePageTransition() {
                   onComplete: () => {
                     console.log('[page-transition] cover:onComplete')
                     logWipe('cover:onComplete', primary)
+                    document.dispatchEvent(new CustomEvent('crows:page-transition-wipe-covered'))
                   },
                 }),
               )

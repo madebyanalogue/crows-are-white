@@ -25,21 +25,8 @@ export function getLoopVideoHeadLinks(loop) {
       key: `loop-video-preconnect-${loop.kind || 'mp4'}`,
       rel: 'preconnect',
       href: origin,
-      crossorigin: 'anonymous',
     })
   }
-
-  const href = getLoopVideoPreloadUrl(loop)
-  if (!href) return links
-
-  links.push({
-    key: 'loop-video-preload',
-    rel: 'preload',
-    as: 'fetch',
-    href,
-    type: 'video/mp4',
-    crossorigin: 'anonymous',
-  })
 
   if (loop.posterUrl) {
     links.push({

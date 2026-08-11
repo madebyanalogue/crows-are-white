@@ -697,7 +697,14 @@ function pageSectionProjection() {
       _key,
       caption,
       image ${imageProjection}
-    }
+    },
+    laurelsItems[] {
+      _key,
+      alt,
+      image ${imageProjection}
+    },
+    laurelsPaddingTop,
+    laurelsPaddingBottom
   }`
 }
 

@@ -48,11 +48,46 @@ function isRawCssColor(color) {
   )
 }
 
+function parseHexChannels(hex) {
+  const normalized = hex.replace('#', '')
+  if (normalized.length === 3) {
+    return {
+      r: Number.parseInt(normalized[0] + normalized[0], 16),
+      g: Number.parseInt(normalized[1] + normalized[1], 16),
+      b: Number.parseInt(normalized[2] + normalized[2], 16),
+    }
+  }
+  if (normalized.length === 6) {
+    return {
+      r: Number.parseInt(normalized.slice(0, 2), 16),
+      g: Number.parseInt(normalized.slice(2, 4), 16),
+      b: Number.parseInt(normalized.slice(4, 6), 16),
+    }
+  }
+  return null
+}
+
+function resolveColorAlpha(value) {
+  if (typeof value?.alpha === 'number') return value.alpha
+  if (typeof value?.rgb?.a === 'number') return value.rgb.a
+  return 1
+}
+
+function hexAlphaToCssColor(hex, alpha = 1) {
+  const safeAlpha = Math.min(1, Math.max(0, Number(alpha)))
+  if (safeAlpha >= 1) return hex
+
+  const channels = parseHexChannels(hex)
+  if (!channels) return hex
+
+  return `rgba(${channels.r}, ${channels.g}, ${channels.b}, ${safeAlpha})`
+}
+
 /** Normalise Sanity colour objects, hex strings, or legacy brand tokens. */
 export function normalizeColorValue(value) {
   if (!value) return undefined
   if (typeof value === 'object' && typeof value.hex === 'string') {
-    return value.hex
+    return hexAlphaToCssColor(value.hex, resolveColorAlpha(value))
   }
   if (typeof value === 'string') {
     return value

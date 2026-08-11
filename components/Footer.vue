@@ -51,6 +51,35 @@
           </div>
         </div>
 
+        <nav
+          v-if="visibleSocialLinks.length"
+          class="footer__social"
+          aria-label="Social media"
+        >
+          <ul class="footer__social-list h7">
+            <li
+              v-for="link in visibleSocialLinks"
+              :key="`${link.platform}-${link.url}`"
+            >
+              <a
+                class="footer__social-link underline-links"
+                :href="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ link.label?.trim() || formatSocialPlatform(link.platform) }}
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <p
+          v-if="footerShopifyLine"
+          class="footer__shopify-line h8"
+        >
+          {{ footerShopifyLine }}
+        </p>
+
         <div
           v-if="privacyMenuItems.length || footerLegal.length"
           class="footer__bottom"
@@ -87,7 +116,24 @@ const {
   footerLegal,
   privacyMenu,
   footerShowTrustpilot,
+  socialLinks,
+  footerShopifyLine,
 } = useSiteSettings()
+
+const SOCIAL_PLATFORM_LABELS = {
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  twitter: 'Twitter',
+  tiktok: 'TikTok',
+}
+
+function formatSocialPlatform(platform) {
+  return SOCIAL_PLATFORM_LABELS[String(platform ?? '').trim()] || platform || 'Link'
+}
+
+const visibleSocialLinks = computed(() =>
+  socialLinks.value.filter((link) => String(link?.url ?? '').trim()),
+)
 
 const footerMenuGroups = computed(() =>
   footerMenus.value
@@ -173,6 +219,34 @@ const {
 
 .footer__legal {
   max-width: 49rem;
+}
+
+.footer__social {
+  display: flex;
+  justify-content: center;
+}
+
+.footer__social-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer__social-link {
+  display: inline-block;
+  padding: 0.65rem 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.footer__shopify-line {
+  margin: 0;
+  text-align: center;
+  opacity: 0.65;
 }
 
 .footer__privacy {

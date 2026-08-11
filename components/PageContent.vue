@@ -96,6 +96,10 @@
           v-else-if="section.sectionType === 'synopsis'"
           :section="section"
         />
+        <PageSectionLaurels
+          v-else-if="section.sectionType === 'laurels'"
+          :section="section"
+        />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--
