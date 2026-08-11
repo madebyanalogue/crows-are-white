@@ -45,6 +45,10 @@ const sectionStyle = computed(() => ({
   '--host-hand': toCssColor(props.section?.hostScreeningAccentColor, '#ff59d0'),
   '--host-form-bg': toCssColor(props.section?.hostScreeningFormBackgroundColor, '#ebe4eb'),
   '--host-overlay': overlayOpacity.value,
+  '--host-media-position-desktop':
+    props.section?.hostScreeningImagePositionDesktop?.trim() || 'center center',
+  '--host-media-position-mobile':
+    props.section?.hostScreeningImagePositionMobile?.trim() || 'center center',
 }))
 
 const orgTypes = [
@@ -87,29 +91,32 @@ function onSubmit() {
     :class="{ 'has-background': hasMedia }"
     :style="sectionStyle"
   >
-    <div
-      v-if="hasMedia"
-      class="page-section-host-screening__media-wrap"
-      aria-hidden="true"
-    >
-      <SectionLoopVideo
-        v-if="loop"
-        :loop="loop"
-        title="Host a screening background"
-        aspect-class="page-section-host-screening__media"
-      />
-      <img
-        v-else-if="imageUrl"
-        class="page-section-host-screening__media page-section-host-screening__image"
-        :src="imageUrl"
-        :alt="section?.hostScreeningImage?.alt || ''"
-        draggable="false"
+    <div class="page-section-host-screening__layout">
+      <div
+        v-if="hasMedia"
+        class="page-section-host-screening__media-column"
+        aria-hidden="true"
       >
-      <div class="page-section-host-screening__overlay" />
-    </div>
+        <div class="page-section-host-screening__media-inner">
+          <SectionLoopVideo
+            v-if="loop"
+            :loop="loop"
+            title="Host a screening background"
+            aspect-class="page-section-host-screening__media"
+          />
+          <img
+            v-else-if="imageUrl"
+            class="page-section-host-screening__media page-section-host-screening__image"
+            :src="imageUrl"
+            :alt="section?.hostScreeningImage?.alt || ''"
+            draggable="false"
+          >
+          <div class="page-section-host-screening__overlay" />
+        </div>
+      </div>
 
-    <div class="page-section-host-screening__inner">
-      <div class="page-section-host-screening__form-container">
+      <div class="page-section-host-screening__form-column">
+        <div class="page-section-host-screening__form-container">
         <h1 class="page-section-host-screening__title serif">
           {{ title }}
         </h1>
@@ -237,6 +244,7 @@ function onSubmit() {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   </section>
@@ -255,7 +263,13 @@ function onSubmit() {
     var(--host-nav-clearance)
     var(--wrapper-padding, 25px)
     var(--host-nav-clearance);
-  overflow: hidden;
+}
+
+.page-section-host-screening.has-background {
+  padding:
+    var(--host-nav-clearance)
+    0
+    var(--host-nav-clearance);
 }
 
 @media (min-width: 700px) {
@@ -264,10 +278,37 @@ function onSubmit() {
   }
 }
 
-.page-section-host-screening__media-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+.page-section-host-screening__layout {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 580px);
+  margin: auto;
+}
+
+.page-section-host-screening.has-background .page-section-host-screening__layout {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  min-height: calc(100dvh - (2 * var(--host-nav-clearance)));
+  margin: 0;
+}
+
+.page-section-host-screening__media-column {
+  display: none;
+}
+
+.page-section-host-screening.has-background .page-section-host-screening__media-column {
+  display: block;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.page-section-host-screening__media-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .page-section-host-screening :deep(.page-section-host-screening__media) {
@@ -291,10 +332,12 @@ function onSubmit() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--host-media-position-mobile, center center);
 }
 
 .page-section-host-screening__image {
   object-fit: cover;
+  object-position: var(--host-media-position-mobile, center center);
 }
 
 .page-section-host-screening__overlay {
@@ -305,17 +348,92 @@ function onSubmit() {
   pointer-events: none;
 }
 
-.page-section-host-screening__inner {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 580px);
-  margin: auto;
+.page-section-host-screening__form-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.page-section-host-screening.has-background .page-section-host-screening__form-column {
+  padding:
+    clamp(1.25rem, 3vw, 2.5rem)
+    var(--wrapper-padding, 25px);
 }
 
 .page-section-host-screening__form-container {
+  width: 100%;
   background: var(--host-form-bg);
   color: var(--host-ink);
+  border: 3px double var(--host-line);
   padding: 35px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1000px) {
+  .page-section-host-screening.has-background {
+    padding: 0;
+    min-height: 100dvh;
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 100dvh;
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__media-column {
+    display: block;
+    min-height: 100dvh;
+  }
+
+  .page-section-host-screening__image,
+  .page-section-host-screening :deep(.section-loop-video__el),
+  .page-section-host-screening :deep(.video-loop__native),
+  .page-section-host-screening :deep(.video-loop__iframe) {
+    object-position: var(--host-media-position-desktop, center center);
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__form-column {
+    padding:
+      var(--host-nav-clearance)
+      clamp(1.5rem, 4vw, 3.5rem)
+      var(--host-nav-clearance);
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__form-container {
+    max-width: 580px;
+  }
+}
+
+@media (max-width: 999px) {
+  .page-section-host-screening.has-background .page-section-host-screening__layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    min-height: 0;
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__form-column {
+    order: 1;
+    padding:
+      0
+      var(--wrapper-padding, 25px)
+      clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__media-column {
+    order: 2;
+    display: block;
+    width: 100%;
+    aspect-ratio:1;
+    min-height: 0;
+  }
+
+  .page-section-host-screening.has-background .page-section-host-screening__media-inner {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
 }
 
 .page-section-host-screening__title {
@@ -459,7 +577,14 @@ function onSubmit() {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding-top: 1.35rem;
+  padding-top: 1.8rem;
+}
+
+.host-form__legend span:not(.host-form__legend-dot) {
+  font-family: var(--handwritten);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 18px;
 }
 
 .host-form__legend {

@@ -172,6 +172,35 @@ export function extractSiteMenuColors(settings = {}) {
     ...extractPageChromeColors(menuColors),
     menuBorderDisabled: menuColors.menuBorderDisabled === true
       || menuColors.menuBorderEnabled === false,
+    menuBorderInset: menuColors.menuBorderInset,
+  }
+}
+
+export function getMenuBorderVars({
+  menuBorderColor,
+  menuBorderDisabled,
+  menuBorderInset,
+} = {}) {
+  const menuBorder = menuBorderColor
+    ? toCssColor(menuBorderColor, DEFAULT_MENU_BORDER_COLOR)
+    : DEFAULT_MENU_BORDER_COLOR
+  const showMenuBorder = menuBorderDisabled !== true
+  const inset = Number.isFinite(Number(menuBorderInset)) ? Number(menuBorderInset) : 6
+
+  if (!showMenuBorder) {
+    return {
+      '--menu-border-color': menuBorder,
+      '--menu-border-width': '0px',
+      '--menu-border-inset': '0px',
+      '--menu-border-inner-display': 'none',
+    }
+  }
+
+  return {
+    '--menu-border-color': menuBorder,
+    '--menu-border-width': '1px',
+    '--menu-border-inset': `${Math.max(0, inset)}px`,
+    '--menu-border-inner-display': 'block',
   }
 }
 
@@ -187,6 +216,7 @@ export function mergePageChromeColors(pageSource = {}, siteMenuSource = {}) {
     menuBorderColor: siteMenu.menuBorderColor,
     menuBorderDisabled: siteMenuSource.menuBorderDisabled === true
       || siteMenuSource.menuBorderEnabled === false,
+    menuBorderInset: siteMenuSource.menuBorderInset,
     menuTextColor: siteMenu.menuTextColor,
     menuHighlightColor: pageFeatureColor || siteMenu.menuHighlightColor,
     basketIconColor: siteMenu.basketIconColor,
@@ -204,6 +234,7 @@ export function getPageColorVars(colors = {}) {
     menuBackgroundColor,
     menuBorderColor,
     menuBorderDisabled,
+    menuBorderInset,
     menuTextColor,
     menuHighlightColor,
     basketIconColor,
@@ -222,10 +253,11 @@ export function getPageColorVars(colors = {}) {
     'obsidian',
   )
   const menuBackground = toCssColor(menuBackgroundColor, DEFAULT_MENU_BACKGROUND_COLOR)
-  const menuBorder = menuBorderColor
-    ? toCssColor(menuBorderColor, DEFAULT_MENU_BORDER_COLOR)
-    : DEFAULT_MENU_BORDER_COLOR
-  const showMenuBorder = menuBorderDisabled !== true
+  const menuBorderVars = getMenuBorderVars({
+    menuBorderColor,
+    menuBorderDisabled,
+    menuBorderInset,
+  })
   const menuText = toCssColor(
     resolvePageTextColor(menuTextColor, menuBackgroundColor || DEFAULT_MENU_BACKGROUND_COLOR),
     'obsidian',
@@ -254,8 +286,7 @@ export function getPageColorVars(colors = {}) {
     '--background-color': background,
     '--text-color': text,
     '--menu-background-color': menuBackground,
-    '--menu-border-color': menuBorder,
-    '--menu-border': showMenuBorder ? `3px double ${menuBorder}` : 'none',
+    ...menuBorderVars,
     '--menu-text-color': menuText,
     '--menu-highlight-color': menuHighlight,
     '--feature-color': menuHighlight,

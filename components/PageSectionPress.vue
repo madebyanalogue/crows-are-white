@@ -8,6 +8,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  isFirstSection: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const DEFAULT_MEDIA_KEY = '__default__'
@@ -190,9 +194,23 @@ function captionClasses(source, extra = {}) {
   }
 }
 
+const hideMediaColumn = computed(() => props.section?.pressHideMediaColumn === true)
+
+const mobileLinkGridCount = computed(() => {
+  const count = links.value.length
+  if (count >= 1 && count <= 4) return count
+  return 0
+})
+
 const pressLayoutClasses = computed(() => [
   `is-media-valign-${mediaVerticalAlign.value}`,
   `is-media-align-${mediaHorizontalAlign.value}`,
+  {
+    'page-section-press--hide-media': hideMediaColumn.value,
+  },
+  mobileLinkGridCount.value
+    ? `page-section-press--mobile-links-${mobileLinkGridCount.value}`
+    : 'page-section-press--mobile-links-stack',
 ])
 
 const pressMediaStyle = computed(() => ({
@@ -231,7 +249,7 @@ function onLinkLeave(event) {
   const link = event.currentTarget
   const next = event.relatedTarget
   if (next instanceof Node && link.contains(next)) return
-  if (next instanceof Element && next.closest('.page-section-press__link')) return
+  if (next instanceof Element && next.closest('.page-section-press__link-cell')) return
   activeLinkKey.value = null
 }
 
@@ -273,12 +291,28 @@ const showDefaultCaption = computed(() => {
   if (defaultMedia.value.kind === 'image') return true
   return defaultMediaReady.value
 })
+
+const sectionStyle = computed(() => {
+  const style = {}
+
+  if (!props.isFirstSection) {
+    style['--press-nav-clearance'] = '0px'
+  }
+
+  const featureColor = props.section?.pressFeatureColor
+  if (featureColor) {
+    style['--press-feature-color'] = toCssColor(featureColor, 'arancio')
+  }
+
+  return Object.keys(style).length ? style : undefined
+})
 </script>
 
 <template>
   <section
     class="page-section-press"
     :class="pressLayoutClasses"
+    :style="sectionStyle"
     aria-label="Press"
   >
     <div class="page-section-press__layout">
@@ -366,14 +400,12 @@ const showDefaultCaption = computed(() => {
         class="page-section-press__links"
         aria-label="Press links"
       >
-        <div
-          v-for="(link, index) in links"
-          :key="link._key"
-          class="page-section-press__link-row"
-        >
+        <div class="page-section-press__links-grid">
           <a
+            v-for="(link, index) in links"
+            :key="link._key"
             :href="link.href"
-            class="page-section-press__link large-title"
+            class="page-section-press__link-cell large-title"
             :class="{ 'is-active': activeLinkKey === link._key }"
             :target="link.target"
             :rel="link.rel"
@@ -382,13 +414,14 @@ const showDefaultCaption = computed(() => {
             @pointerenter="onLinkHover(index)"
             @pointerleave="onLinkLeave"
           >
-            <span class="page-section-press__link-text">{{ linkDisplayLabel(link) }}</span>
-            <span
-              v-if="link.linkIcon"
-              class="page-section-press__link-icon"
-              :class="`page-section-press__link-icon--${link.linkIcon}`"
-              aria-hidden="true"
-            >
+            <span class="page-section-press__link-inner">
+              <span class="page-section-press__link-text">{{ linkDisplayLabel(link) }}</span>
+              <span
+                v-if="link.linkIcon"
+                class="page-section-press__link-icon"
+                :class="`page-section-press__link-icon--${link.linkIcon}`"
+                aria-hidden="true"
+              >
               <svg
                 v-if="link.linkIcon === 'downArrow'"
                 viewBox="0 0 8 8"
@@ -426,6 +459,7 @@ const showDefaultCaption = computed(() => {
                 />
               </svg>
             </span>
+            </span>
           </a>
         </div>
       </nav>
@@ -441,6 +475,7 @@ const showDefaultCaption = computed(() => {
 <style scoped>
 .page-section-press {
   --press-border: color-mix(in srgb, var(--text-color) 15%, transparent);
+  --press-feature-color: var(--feature-color, var(--menu-highlight-color, var(--arancio)));
   --press-nav-clearance: 75px;
   --press-line-padding: clamp(1.5rem, 6vh, 3.5rem);
   --press-aspect-w: 9;
@@ -463,7 +498,7 @@ const showDefaultCaption = computed(() => {
   min-height: 0;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .page-section-press__layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
@@ -474,7 +509,7 @@ const showDefaultCaption = computed(() => {
   display: none;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .page-section-press__divider {
     display: block;
     position: absolute;
@@ -513,7 +548,7 @@ const showDefaultCaption = computed(() => {
   justify-content: flex-end;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .page-section-press__media {
     overflow: visible;
   }
@@ -532,13 +567,146 @@ const showDefaultCaption = computed(() => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  border-top: 1px solid var(--press-border);
+  padding: var(--wrapper-padding);
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1000px) {
   .page-section-press__links {
     border-top: 0;
     height: 100%;
+    padding: 0;
+  }
+}
+
+.page-section-press__links-grid {
+  display: grid;
+  width: 100%;
+  min-height: 0;
+}
+
+@media (max-width: 999px) {
+  .page-section-press__layout {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+  }
+
+  .page-section-press__link-cell {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    grid-row: auto;
+    align-self: stretch;
+    border-right: 0;
+  }
+
+  .page-section-press__link-cell:not(:last-child) {
+    border-bottom: 1px solid var(--press-border);
+  }
+}
+
+@media (min-width: 1000px) {
+  .page-section-press__links-grid {
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .page-section-press--hide-media .page-section-press__media {
+    display: none;
+  }
+
+  .page-section-press--hide-media {
+    min-height: 0;
+  }
+
+  .page-section-press--hide-media .page-section-press__layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .page-section-press--hide-media .page-section-press__divider {
+    display: none;
+  }
+
+  .page-section-press--hide-media .page-section-press__links {
+    flex: 0 0 auto;
+    justify-content: center;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding: 0;
+  }
+
+  .page-section-press--hide-media .page-section-press__links-grid {
+    display: grid;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    grid-auto-rows: auto;
+  }
+
+  .page-section-press--hide-media .page-section-press__link-cell {
+    flex: initial;
+    min-height: 0;
+    border-bottom: 0;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-1 .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-2 .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-2 .page-section-press__link-cell:nth-child(1) {
+    border-right: 1px solid var(--press-border);
+    border-bottom: 0;
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-3 .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-3 .page-section-press__link-cell:nth-child(1) {
+    grid-row: 1 / -1;
+    align-self: start;
+    border-right: 1px solid var(--press-border);
+    border-bottom: 0;
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-3 .page-section-press__link-cell:nth-child(2) {
+    border-bottom: 1px solid var(--press-border);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-4 .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-4 .page-section-press__link-cell:nth-child(1),
+  .page-section-press--hide-media.page-section-press--mobile-links-4 .page-section-press__link-cell:nth-child(3) {
+    border-right: 1px solid var(--press-border);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-4 .page-section-press__link-cell:nth-child(1),
+  .page-section-press--hide-media.page-section-press--mobile-links-4 .page-section-press__link-cell:nth-child(2) {
+    border-bottom: 1px solid var(--press-border);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-stack .page-section-press__links-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-section-press--hide-media.page-section-press--mobile-links-stack .page-section-press__link-cell:not(:last-child) {
+    border-bottom: 1px solid var(--press-border);
   }
 }
 
@@ -646,25 +814,12 @@ const showDefaultCaption = computed(() => {
   object-fit: cover;
 }
 
-.page-section-press__link-row {
-  flex: 1;
+.page-section-press__link-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(5rem, 32vh, 32rem);
+  min-height: 0;
   padding: 1.5rem clamp(1.25rem, 6vw, 30px);
-  border-bottom: 1px solid var(--press-border);
-  cursor: default;
-}
-
-.page-section-press__link-row:last-child {
-  border-bottom: 0;
-}
-
-.page-section-press__link {
-  display: inline-flex;
-  align-items: flex-end;
-  justify-content: center;
   text-decoration: none;
   text-align: center;
   color: inherit;
@@ -672,8 +827,27 @@ const showDefaultCaption = computed(() => {
   transition: color 0.2s ease;
 }
 
-.page-section-press__link.is-active {
-  color: var(--menu-highlight-color, var(--arancio));
+@media (min-width: 1000px) {
+  .page-section-press__link-cell {
+    flex: 1;
+    min-height: clamp(5rem, 32vh, 32rem);
+    border-bottom: 1px solid var(--press-border);
+  }
+
+  .page-section-press__link-cell:last-child {
+    border-bottom: 0;
+  }
+}
+
+.page-section-press__link-cell.is-active {
+  color: var(--press-feature-color);
+}
+
+.page-section-press__link-inner {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: center;
 }
 
 .page-section-press__link-text {
@@ -681,8 +855,8 @@ const showDefaultCaption = computed(() => {
   pointer-events: auto;
 }
 
-.page-section-press__link:focus-visible {
-  outline: 2px solid var(--menu-highlight-color, var(--arancio));
+.page-section-press__link-cell:focus-visible {
+  outline: 2px solid var(--press-feature-color);
   outline-offset: 4px;
 }
 
@@ -706,7 +880,7 @@ const showDefaultCaption = computed(() => {
     opacity 0.2s ease;
 }
 
-.page-section-press__link.is-active .page-section-press__link-icon {
+.page-section-press__link-cell.is-active .page-section-press__link-icon {
   width: 0.4em;
   max-width: 0.4em;
   padding-left: 0.35em;

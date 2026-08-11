@@ -139,12 +139,6 @@ const mapLightStyle = computed(() => props.section?.newsletterMapLightStyle === 
 
 const mapZoomControls = computed(() => props.section?.newsletterMapZoomControls === true)
 
-const mapSubscriberCount = computed(() => {
-  const value = Number(props.section?.newsletterMapSubscriberCount)
-  if (Number.isFinite(value) && value >= 0) return value
-  return null
-})
-
 const { items: reflectionItems } = useReflections(500)
 </script>
 
@@ -172,7 +166,6 @@ const { items: reflectionItems } = useReflections(500)
             compact
             :items="reflectionItems"
             :title="mapTitle"
-            :subscriber-count="mapSubscriberCount"
             :map-background-image="mapBackgroundImage"
             :map-light-style="mapLightStyle"
             :show-map-zoom-controls="mapZoomControls"

@@ -1,6 +1,7 @@
 import {
   DEFAULT_MENU_BORDER_COLOR,
   DEFAULT_MENU_HIGHLIGHT_COLOR,
+  getMenuBorderVars,
   getPageColorVars,
   normalizeColorValue,
   toCssColor,
@@ -38,18 +39,18 @@ export function getHeroFeatureColorVar(section = {}) {
 
 function applyHeroMenuBorderColor(result, heroMenuBorderColor) {
   if (heroMenuBorderColor === 'transparent') {
-    result['--menu-border-color'] = 'transparent'
-    result['--menu-border'] = 'none'
+    Object.assign(result, getMenuBorderVars({
+      menuBorderColor: 'transparent',
+      menuBorderDisabled: true,
+    }))
     return
   }
 
   if (heroMenuBorderColor) {
-    const borderColor = toCssColor(
+    result['--menu-border-color'] = toCssColor(
       heroMenuBorderColor,
       DEFAULT_MENU_BORDER_COLOR,
     )
-    result['--menu-border-color'] = borderColor
-    result['--menu-border'] = `3px double ${borderColor}`
   }
 }
 
@@ -116,7 +117,9 @@ export const HERO_MENU_CSS_VARS = [
   '--hero-menu-feature-color',
   '--menu-background-color',
   '--menu-border-color',
-  '--menu-border',
+  '--menu-border-width',
+  '--menu-border-inset',
+  '--menu-border-inner-display',
   '--menu-text-color',
   '--basket-icon-color',
 ]

@@ -52,6 +52,7 @@
         <PageSectionPress
           v-else-if="section.sectionType === 'press'"
           :section="section"
+          :is-first-section="index === 0"
         />
         <PageSectionPressQuotes
           v-else-if="section.sectionType === 'pressQuotes'"

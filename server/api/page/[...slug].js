@@ -449,10 +449,12 @@ function pageSectionProjection() {
     relatedProductsLimit,
     relatedProductsExcludeCurrent,
     pressMediaWidth,
+    pressHideMediaColumn,
     pressMediaHorizontalAlign,
     pressMediaVerticalAlign,
     pressCaptionTypography,
     ${colorField('pressCaptionColor')},
+    ${colorField('pressFeatureColor')},
     pressDefaultMedia {
       mediaType,
       alt,
@@ -576,6 +578,8 @@ function pageSectionProjection() {
     ${colorField('hostScreeningAccentColor')},
     hostScreeningMediaType,
     hostScreeningOverlayOpacity,
+    hostScreeningImagePositionDesktop,
+    hostScreeningImagePositionMobile,
     hostScreeningImage ${imageProjection},
     hostScreeningVideo {
       asset-> {

@@ -504,6 +504,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
   height: var(--cinematic-notch-radius);
   background: var(--cinematic-notch-mask-color);
   pointer-events: none;
+  display:none;
 }
 
 .cinematic-video-frame__notch--tl {

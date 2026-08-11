@@ -744,7 +744,10 @@ onBeforeUnmount(() => {
 .site-header.is-cart-open .site-header__panel::before {
   inset: 0;
   background-color: var(--cart-background-color, var(--menu-background-color, var(--crema)));
-  border: var(--menu-border, 3px double var(--menu-border-color, #999));
+}
+
+.site-header.is-cart-open .site-header__panel::after {
+  inset: var(--menu-border-inset, 6px);
 }
 
 .site-header.is-cart-open.is-over-hero-frosted .site-header__panel::before {
@@ -822,14 +825,33 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 0;
   background-color: var(--menu-background-color, var(--crema));
-  border: var(--menu-border, 3px double var(--menu-border-color, #999));
+  border: var(--menu-border-width, 1px) solid var(--menu-border-color, #999);
   pointer-events: none;
   transition: inset 0.32s ease;
+}
+
+.site-header__panel::after {
+  content: '';
+  position: absolute;
+  inset: var(--menu-border-inset, 6px);
+  z-index: 0;
+  display: var(--menu-border-inner-display, block);
+  border: var(--menu-border-width, 1px) solid var(--menu-border-color, #999);
+  pointer-events: none;
+  transition: inset 0.32s ease;
+  left: 2px;
+    right: 2px;
+    bottom: 2px;
+    top: 2px;
 }
 
 @media (hover: hover) {
   .site-header:not(.is-open) .site-header__panel:hover::before {
     inset: calc(var(--site-header-panel-hover-expand) * -1);
+  }
+
+  .site-header:not(.is-open) .site-header__panel:hover::after {
+    inset: calc(var(--menu-border-inset, 6px) - var(--site-header-panel-hover-expand));
   }
 }
 
@@ -842,11 +864,14 @@ onBeforeUnmount(() => {
   inset: 0;
 }
 
+.site-header.is-open .site-header__panel::after {
+  inset: var(--menu-border-inset, 6px);
+}
+
 .site-header.is-over-hero-frosted .site-header__panel::before {
   background-color: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(20px);
-  border: var(--menu-border, 3px double var(--menu-border-color, #999));
 }
 
 .site-header__bar {
@@ -1119,7 +1144,7 @@ onBeforeUnmount(() => {
   /* min-height: 3.5rem; */
   padding: 0;
   font-family: var(--serif);
-  font-size: clamp(28px, 7.2vw, 42px);
+  font-size: clamp(38px, 8vw, 42px);
   font-weight: 300;
   letter-spacing: 0.035em;
   /* text-transform: uppercase; */

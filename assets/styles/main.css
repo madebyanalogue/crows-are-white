@@ -50,6 +50,9 @@ html.is-preloader-active body {
   --text-color-rgb: var(--black-rgb);
   --menu-background-color: var(--crema);
   --menu-border-color: #999;
+  --menu-border-width: 1px;
+  --menu-border-inset: 6px;
+  --menu-border-inner-display: block;
   --menu-text-color: var(--obsidian);
   --menu-highlight-color: var(--arancio);
   --feature-color: var(--menu-highlight-color);

@@ -125,6 +125,7 @@ export default defineEventHandler(async () => {
     },
     menuColors {
       menuBorderDisabled,
+      menuBorderInset,
       ${colorField('menuBackgroundColor')},
       ${colorField('menuBorderColor')},
       ${colorField('menuTextColor')},

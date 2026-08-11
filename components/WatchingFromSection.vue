@@ -1,5 +1,5 @@
 <script setup>
-import { filterReflectionsByMapMarker, getReflectionCountries, normalizeReflectionField } from '~/utils/reflections'
+import { filterReflectionsByMapMarker, getReflectionCountries, normalizeReflectionField, sortReflectionsRandom } from '~/utils/reflections'
 import { formatWatchingFromMapMarkerSelectionLabel } from '~/utils/watchingFrom'
 
 const props = defineProps({
@@ -37,7 +37,7 @@ const props = defineProps({
   },
   viewAllLabel: {
     type: String,
-    default: 'View more',
+    default: 'View all',
   },
   mapBackgroundImage: {
     type: Object,
@@ -56,19 +56,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  subscriberCount: {
-    type: Number,
-    default: null,
-  },
 })
 
 const emit = defineEmits(['select-marker', 'submitted'])
 
 const STORAGE_KEY = 'caw-watching-from-city'
+const INITIAL_MAP_SAMPLE_SIZE = 20
 
 const cityQuery = ref('')
 const userLocation = ref(null)
 const selectedMarker = ref(null)
+const initialSampleReflections = ref([])
 const geocoding = ref(false)
 const geocodeError = ref('')
 const reflectionFormOpen = ref(false)
@@ -86,17 +84,8 @@ const reflectionLocations = computed(() => aggregateWatchingFromLocations(props.
 
 const mapStats = computed(() => summarizeWatchingFromStats(reflectionLocations.value))
 
-const DEFAULT_MAP_SUBSCRIBER_COUNT = 120
-
 const mapSummaryLabel = computed(() => {
   const segments = []
-
-  const subscriberCount = props.subscriberCount ?? DEFAULT_MAP_SUBSCRIBER_COUNT
-  const resolvedSubscriberCount = Number(subscriberCount)
-  if (Number.isFinite(resolvedSubscriberCount) && resolvedSubscriberCount > 0) {
-    const subscribersLabel = resolvedSubscriberCount === 1 ? 'Subscriber' : 'Subscribers'
-    segments.push(`${resolvedSubscriberCount} ${subscribersLabel}`)
-  }
 
   const reflectionCount = props.items.length
   if (reflectionCount > 0) {
@@ -118,21 +107,27 @@ const displayLocations = computed(() =>
   mergeWatchingFromLocations(reflectionLocations.value, userLocation.value),
 )
 
-const markerReflections = computed(() => {
-  if (!selectedMarker.value) return []
+const isMapOverlayLayout = computed(() => props.mapPostsLayout === 'below')
 
-  return filterReflectionsByMapMarker(props.items, selectedMarker.value)
+const markerReflections = computed(() => {
+  if (selectedMarker.value) {
+    return filterReflectionsByMapMarker(props.items, selectedMarker.value)
+  }
+
+  if (!isMapOverlayLayout.value) {
+    return initialSampleReflections.value
+  }
+
+  return []
 })
 
 const activeReflection = computed(() =>
   markerReflections.value[activeReflectionIndex.value] || null,
 )
 
-const isMapOverlayLayout = computed(() => props.mapPostsLayout === 'below')
-
 const showSidebarViewer = computed(() =>
   !isMapOverlayLayout.value
-  && Boolean(selectedMarker.value && activeReflection.value),
+  && Boolean(activeReflection.value),
 )
 
 const showMapOverlayList = computed(() =>
@@ -235,19 +230,23 @@ const statsMessage = computed(() => {
 })
 
 const statusMessage = computed(() => {
-  if (selectedMarker.value && activeReflection.value) {
+  if (activeReflection.value && markerReflections.value.length) {
     const total = markerReflections.value.length
     const position = activeReflectionIndex.value + 1
     const suffix = total === 1 ? '1 reflection' : `${position} of ${total} reflections`
 
-    if (selectedMarker.value.isCluster) {
-      return `${selectedMarker.value.count} reflections nearby · ${suffix}`
+    if (selectedMarker.value) {
+      if (selectedMarker.value.isCluster) {
+        return `${selectedMarker.value.count} reflections nearby · ${suffix}`
+      }
+
+      const label = selectedMarker.value.label
+        || selectedMarker.value.locations?.[0]?.label
+        || ''
+      return `${label} · ${suffix}`
     }
 
-    const label = selectedMarker.value.label
-      || selectedMarker.value.locations?.[0]?.label
-      || ''
-    return `${label} · ${suffix}`
+    return suffix
   }
 
   const query = cityQuery.value.trim()
@@ -274,6 +273,22 @@ const statusMessage = computed(() => {
 
   return statsMessage.value
 })
+
+function buildInitialMapSample(items = []) {
+  if (!items.length) return []
+
+  const capped = Math.min(INITIAL_MAP_SAMPLE_SIZE, items.length)
+  const seed = import.meta.client ? Date.now() : 0
+
+  return sortReflectionsRandom(items, seed).slice(0, capped)
+}
+
+function refreshInitialMapSample(items = props.items) {
+  if (selectedMarker.value || isMapOverlayLayout.value) return
+
+  initialSampleReflections.value = buildInitialMapSample(items)
+  activeReflectionIndex.value = 0
+}
 
 function selectMarker(marker) {
   if (!marker || marker.isUser) return
@@ -453,6 +468,16 @@ watch(cityQuery, (value) => {
 })
 
 watch(
+  () => props.items,
+  (items) => {
+    if (!initialSampleReflections.value.length) {
+      refreshInitialMapSample(items)
+    }
+  },
+  { immediate: true },
+)
+
+watch(
   () => props.selectedMarkerId,
   (markerId) => {
     if (markerId) return
@@ -559,7 +584,7 @@ onBeforeUnmount(() => {
           Leave a Reflection
         </button>
 
-        <span
+        <!-- <span
           v-if="viewAllPath && showHeaderLeaveReflection"
           class="watching-from-section__header-divider"
           aria-hidden="true"
@@ -571,7 +596,7 @@ onBeforeUnmount(() => {
           class="watching-from-section__view-all serif"
         >
           {{ viewAllLabel }}
-        </NuxtLink>
+        </NuxtLink> -->
       </div>
 
       <label
