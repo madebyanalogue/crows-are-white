@@ -378,7 +378,7 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 .page-section-letterbox-video__frame.is-natural-shape {
   aspect-ratio: auto;
-  height: auto;
+  height: 100%;
   max-height: none;
 }
 

@@ -59,6 +59,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  overlayBoldTypography: {
+    type: Boolean,
+    default: false,
+  },
   showClose: {
     type: Boolean,
     default: false,
@@ -351,6 +355,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
           :runtime="runtime"
           :show-title="overlayShowTitle"
           :show-runtime="overlayShowRuntime"
+          :bold-typography="overlayBoldTypography"
         />
       </div>
 
@@ -481,7 +486,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 
 .cinematic-video-frame__notch-clip {
   container-type: inline-size;
-  --cinematic-notch-radius: clamp(8px, 0.94cqi, 15px);
+  --cinematic-notch-radius: 0;
   --cinematic-notch-mask-color: var(--background-color, #f0f0ed);
   position: relative;
   aspect-ratio: 16 / 9;

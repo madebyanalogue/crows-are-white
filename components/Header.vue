@@ -923,12 +923,17 @@ onBeforeUnmount(() => {
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  font-size: 17px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
+    font-size: 17px;
+    font-weight: 300;
+    letter-spacing: 0.07em;
   line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
+}
+@media (min-width: 700px) {
+.site-header__page-name {
+font-size: 18px;
+}
 }
 
 .site-header:not(.is-open) .site-header__page-name-wrap {

@@ -614,9 +614,9 @@ onBeforeUnmount(() => {
   color: var(--cart-background-color, var(--menu-background-color, #fff));
   font-family: var(--serif);
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 300;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   cursor: pointer;
 }
 

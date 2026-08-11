@@ -1,5 +1,11 @@
 <template>
-  <section v-if="videoSrc" ref="sectionRef" class="section-video">
+  <section
+    v-if="videoSrc"
+    ref="sectionRef"
+    class="section-video"
+    :class="sectionClasses"
+    :style="sectionStyle"
+  >
     <div class="section-video__inner">
       <Video ref="videoRef" :src="videoSrc" />
 
@@ -60,12 +66,64 @@
 <script setup>
 import MenuLink from '~/components/MenuLink.vue'
 import { pageBackgroundVar } from '~/utils/pageColors'
+import { parseAspectRatioString } from '~/utils/aspectRatio'
 
 const props = defineProps({
   section: {
     type: Object,
     required: true,
   },
+})
+
+const VIDEO_ASPECT_RATIO_PRESETS = {
+  '9/16': [9, 16],
+  '2/3': [2, 3],
+  '3/4': [3, 4],
+  '4/5': [4, 5],
+  '1/1': [1, 1],
+  '16/9': [16, 9],
+  '3/2': [3, 2],
+}
+
+function resolveVideoAspectRatio(value) {
+  if (!value || value === 'viewport') return null
+
+  const preset = VIDEO_ASPECT_RATIO_PRESETS[value]
+  if (preset) return `${preset[0]} / ${preset[1]}`
+
+  return parseAspectRatioString(value)
+}
+
+const enablePaddingTop = computed(() => props.section?.videoEnablePaddingTop === true)
+const enablePaddingBottom = computed(() => props.section?.videoEnablePaddingBottom === true)
+
+const mobileAspectRatio = computed(() =>
+  resolveVideoAspectRatio(props.section?.videoAspectRatioMobile),
+)
+
+const desktopAspectRatio = computed(() =>
+  resolveVideoAspectRatio(props.section?.videoAspectRatioDesktop),
+)
+
+const sectionClasses = computed(() => ({
+  'section-video--pad-top': enablePaddingTop.value,
+  'section-video--pad-bottom': enablePaddingBottom.value,
+  'section-video--ratio-mobile': Boolean(mobileAspectRatio.value),
+  'section-video--ratio-desktop': Boolean(desktopAspectRatio.value),
+}))
+
+const sectionStyle = computed(() => {
+  const style = {}
+
+  if (mobileAspectRatio.value) {
+    style['--video-aspect-mobile'] = mobileAspectRatio.value
+  }
+
+  if (desktopAspectRatio.value) {
+    style['--video-aspect-desktop'] = desktopAspectRatio.value
+  }
+
+  return Object.keys(style).length ? style : undefined
 })
 
 const { trustpilotUrl, preloaderDisabled } = useSiteSettings()
@@ -220,8 +278,39 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.section-video--pad-top {
+  padding-top: var(--wrapper-padding);
+}
+
+.section-video--pad-bottom {
+  padding-bottom: var(--wrapper-padding);
+}
+
 .section-video__inner {
   position: relative;
+  width: 100%;
+}
+
+.section-video--ratio-mobile .section-video__inner {
+  aspect-ratio: var(--video-aspect-mobile);
+}
+
+.section-video__inner :deep(.video) {
+  height: 100dvh;
+}
+
+.section-video--ratio-mobile .section-video__inner :deep(.video) {
+  height: 100%;
+}
+
+@media (min-width: 1000px) {
+  .section-video--ratio-desktop .section-video__inner {
+    aspect-ratio: var(--video-aspect-desktop);
+  }
+
+  .section-video--ratio-desktop .section-video__inner :deep(.video) {
+    height: 100%;
+  }
 }
 
 .section-video__overlay {

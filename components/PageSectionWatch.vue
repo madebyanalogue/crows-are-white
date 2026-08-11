@@ -511,27 +511,25 @@ const sectionStyle = computed(() => {
 }
 
 .page-section-watch__cta {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: 0;
-    margin: 0;
-    padding: clamp(14px, 1vw, 1.2rem) clamp(20px, 2vw, 2rem) clamp(14px, 1vw, 1rem);
-    background: var(--watch-accent);
-    color: var(--watch-accent-text);
-    font-family: var(--serif);
-    font-size: clamp(16px, 3vw, 18px);
-    font-weight: 400;
-    letter-spacing: 0.04em;
-    line-height: 1.15;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
-    white-space: nowrap;
-    min-width: clamp(200px, 50vw, 280px);
-    border-radius: 8px;
-    corner-shape: notch;
-    font-family: var(--body-serif);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: clamp(14px, 1vw, 1.1rem) clamp(20px, 2vw, 2rem);
+  background: var(--watch-accent);
+  color: var(--watch-accent-text);
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  min-width: clamp(200px, 50vw, 280px);
+  border-radius: 5px;
 }
 
 .page-section-watch__cta:hover {
@@ -639,7 +637,10 @@ const sectionStyle = computed(() => {
 }
 
 
-
+.page-section-watch__play {
+    display: block;
+  }
+/* 
 @media (min-width: 1000px) {
   .page-section-watch__hero-copy {
     flex-direction: row;
@@ -656,5 +657,5 @@ const sectionStyle = computed(() => {
   .page-section-watch__cta span {
     display:none;
   }
-}
+} */
 </style>

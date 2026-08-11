@@ -26,6 +26,8 @@ function resolveSectionPadding(value) {
 
 const title = computed(() => props.section?.trailerTitle?.trim() || 'Watch Trailer')
 
+const boldTypography = computed(() => props.section?.trailerBoldTypography === true)
+
 const overlayColor = computed(() => {
   const { trailerTextColor, trailerBackgroundColor } = props.section || {}
   if (!trailerTextColor && !trailerBackgroundColor) return ''
@@ -189,6 +191,8 @@ onBeforeUnmount(() => {
         :title="title"
         :runtime="displayRuntime"
         :overlay-color="overlayColor"
+        :overlay-bold-typography="boldTypography"
+        :overlay-show-runtime="!boldTypography"
         :provider="playerProvider"
         :video-src="videoUrl"
         :youtube-id="youtubeId"

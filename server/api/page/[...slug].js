@@ -299,8 +299,10 @@ function pageSectionProjection() {
     videoShowTrustpilot,
     ${colorField('videoOverlayColor')},
     videoOverlayOpacity,
-    videoPaddingTop,
-    videoPaddingBottom,
+    videoEnablePaddingTop,
+    videoEnablePaddingBottom,
+    videoAspectRatioMobile,
+    videoAspectRatioDesktop,
     videoFile {
       asset-> {
         _id,
@@ -348,6 +350,7 @@ function pageSectionProjection() {
       }
     },
     trailerTitle,
+    trailerBoldTypography,
     ${colorField('trailerTextColor')},
     ${colorField('trailerBackgroundColor')},
     trailerRuntimeSeconds,
