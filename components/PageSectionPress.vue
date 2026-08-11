@@ -245,15 +245,18 @@ function resetToDefault() {
     : links.value.find((link) => link.imageUrl)?._key || DEFAULT_MEDIA_KEY
 }
 
-function onLinkLeave(event) {
-  const link = event.currentTarget
+function onLinkTextLeave(event) {
+  const text = event.currentTarget
   const next = event.relatedTarget
-  if (next instanceof Node && link.contains(next)) return
-  if (next instanceof Element && next.closest('.page-section-press__link-cell')) return
+  if (next instanceof Node && text.contains(next)) return
+  if (next instanceof Element && next.closest('.page-section-press__link-text')) return
   activeLinkKey.value = null
 }
 
-function onLinkBlur() {
+function onLinkBlur(event) {
+  const link = event.currentTarget
+  const next = event.relatedTarget
+  if (next instanceof Node && link.contains(next)) return
   activeLinkKey.value = null
 }
 
@@ -411,11 +414,13 @@ const sectionStyle = computed(() => {
             :rel="link.rel"
             @focus="onLinkHover(index)"
             @blur="onLinkBlur"
-            @pointerenter="onLinkHover(index)"
-            @pointerleave="onLinkLeave"
           >
             <span class="page-section-press__link-inner">
-              <span class="page-section-press__link-text">{{ linkDisplayLabel(link) }}</span>
+              <span
+                class="page-section-press__link-text"
+                @pointerenter="onLinkHover(index)"
+                @pointerleave="onLinkTextLeave"
+              >{{ linkDisplayLabel(link) }}</span>
               <span
                 v-if="link.linkIcon"
                 class="page-section-press__link-icon"

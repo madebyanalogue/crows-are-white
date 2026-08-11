@@ -20,6 +20,18 @@ const emptyText = computed(() =>
   props.section?.screeningsEmptyText?.trim()
   || 'Try clearing your filters, or check back soon for new dates.',
 )
+const emptyButtonLabel = computed(() => props.section?.screeningsEmptyButtonLabel?.trim() || '')
+const emptyButtonHref = computed(() => {
+  const anchor = props.section?.screeningsEmptyButtonAnchor?.trim().replace(/^#/, '') || 'newsletter'
+  return `#${anchor || 'newsletter'}`
+})
+
+const { scrollToHash } = useMenuLinks()
+
+function onEmptyButtonClick(event: MouseEvent) {
+  event.preventDefault()
+  scrollToHash(emptyButtonHref.value)
+}
 
 const cityFilter = ref('')
 const stateFilter = ref('')
@@ -71,7 +83,7 @@ async function animateRows({ pageLoad = false } = {}) {
 
   await nextTick()
 
-  const rows = listRef.value?.querySelectorAll('.screenings-row')
+  const rows = listRef.value?.querySelectorAll('.screenings-animate-item')
   if (!rows?.length) return
 
   listTween?.kill()
@@ -104,14 +116,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="screenings-page">
-    <header ref="introRef" class="screenings-page__intro">
-      <h1 class="screenings-page__title serif">{{ title }}</h1>
-    </header>
 
     <div class="screenings-page__content">
-        <!-- <p class="screenings-page__lede">
+         <!-- <p class="screenings-page__lede">
             {{ lede }}
-          </p>
+          </p> -->
+      <header ref="introRef" class="screenings-page__intro">
+        <h1 class="screenings-page__title serif">{{ title }}</h1>
+      </header>
+      
         <div ref="toolbarRef" class="screenings-toolbar">
           <label class="screenings-filter">
             <span class="screenings-filter__label">City</span>
@@ -136,7 +149,7 @@ onBeforeUnmount(() => {
               </option>
             </select>
           </label>
-        </div> -->
+        </div> 
       </div>
 
     <div
@@ -147,20 +160,36 @@ onBeforeUnmount(() => {
       <p class="screenings-empty__text">
         {{ emptyText }}
       </p>
+      <a
+        v-if="emptyButtonLabel"
+        :href="emptyButtonHref"
+        class="screenings-empty__button"
+        @click="onEmptyButtonClick"
+      >
+        {{ emptyButtonLabel }}
+      </a>
     </div>
 
-    <ul
+    <div
       v-else
       ref="listRef"
-      class="screenings-list"
-      aria-label="Theatrical screenings"
+      class="screenings-list-wrap"
     >
-      <li
-        v-for="s in filtered"
-        :key="`${s.city}-${s.date}-${s.venue}`"
-        class="screenings-row"
-        :class="{ 'screenings-row--disabled': s.status === 'coming-soon' }"
+      <div
+        class="screenings-page__divider screenings-animate-item"
+        aria-hidden="true"
+      />
+
+      <ul
+        class="screenings-list"
+        aria-label="Theatrical screenings"
       >
+        <li
+          v-for="s in filtered"
+          :key="`${s.city}-${s.date}-${s.venue}`"
+          class="screenings-row screenings-animate-item"
+          :class="{ 'screenings-row--disabled': s.status === 'coming-soon' }"
+        >
         <component
           :is="s.status === 'coming-soon' ? 'div' : 'a'"
           class="screenings-row__link"
@@ -198,6 +227,7 @@ onBeforeUnmount(() => {
         </component>
       </li>
     </ul>
+    </div>
   </div>
 </template>
 
@@ -207,6 +237,7 @@ onBeforeUnmount(() => {
   --screenings-muted: color-mix(in srgb, var(--screenings-ink) 58%, transparent);
   --screenings-line: color-mix(in srgb, var(--screenings-ink) 14%, transparent);
   --screenings-accent: var(--arancio, #ff9944);
+  --screenings-accent-text: #000;
   --screenings-label: 12px;
   --screenings-body: clamp(16px, 1.5vw, 40px);
   --screenings-ui: 14px;
@@ -225,7 +256,7 @@ onBeforeUnmount(() => {
   min-height: 75vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: start;
 }
 
 .screenings-page__intro {
@@ -240,9 +271,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap:2rem;
   padding-bottom: 3rem;
-  margin-bottom: 0.25rem;
-  border-bottom: 1px solid var(--screenings-line);
+  margin-bottom: 0;
 }
+
 @media (min-width: 1000px) {
 .screenings-page__content {
   display: flex;
@@ -251,6 +282,16 @@ onBeforeUnmount(() => {
   align-items: bottom;
 }
 
+}
+
+.screenings-list-wrap {
+  display: grid;
+}
+
+.screenings-page__divider {
+  height: 0;
+  margin: 0 0 0.25rem;
+  border-bottom: 1px solid var(--screenings-line);
 }
 
 .screenings-page__title {
@@ -497,18 +538,48 @@ onBeforeUnmount(() => {
 }
 
 .screenings-empty__title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 1rem;
   font-size: clamp(26px, 3vw, 34px);
-  text-transform: uppercase;
+  font-weight: 300;
+    letter-spacing: 0.02em;
 }
 
 .screenings-empty__text {
   margin: 0;
-  font-family: var(--sans);
-  font-size: var(--screenings-ui);
-  letter-spacing: 0.05em;
+    font-family: var(--body-serif);
+    font-size: 17px;
+    /* letter-spacing: 0.05em; */
+    /* text-transform: uppercase; */
+    color: var(--screenings-muted);
+}
+
+.screenings-empty__button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 0;
+  margin: 2.5rem 0 0;
+  padding: 16px;
+  background: var(--screenings-accent);
+  color: var(--screenings-accent-text);
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.07em;
+  line-height: 1.1;
   text-transform: uppercase;
-  color: var(--screenings-muted);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  min-width: clamp(200px, 50vw, 280px);
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screenings-empty__button:hover {
+  filter: brightness(1.05);
 }
 
 @media (max-width: 799px) {

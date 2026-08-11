@@ -274,19 +274,18 @@ const statusMessage = computed(() => {
   return statsMessage.value
 })
 
-function buildInitialMapSample(items = []) {
+function buildInitialMapSample(items = [], seed = 0) {
   if (!items.length) return []
 
   const capped = Math.min(INITIAL_MAP_SAMPLE_SIZE, items.length)
-  const seed = import.meta.client ? Date.now() : 0
 
   return sortReflectionsRandom(items, seed).slice(0, capped)
 }
 
-function refreshInitialMapSample(items = props.items) {
+function refreshInitialMapSample(items = props.items, { seed = 0 } = {}) {
   if (selectedMarker.value || isMapOverlayLayout.value) return
 
-  initialSampleReflections.value = buildInitialMapSample(items)
+  initialSampleReflections.value = buildInitialMapSample(items, seed)
   activeReflectionIndex.value = 0
 }
 
@@ -517,6 +516,10 @@ onMounted(() => {
   hydrateSavedCity()
   if (cityQuery.value.trim()) {
     scheduleGeocode(cityQuery.value)
+  }
+
+  if (!selectedMarker.value && !isMapOverlayLayout.value && props.items.length) {
+    refreshInitialMapSample(props.items, { seed: Date.now() })
   }
 
   document.addEventListener('keydown', handleKeydown)

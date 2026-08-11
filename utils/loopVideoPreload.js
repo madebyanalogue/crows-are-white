@@ -35,9 +35,10 @@ export function getLoopVideoHeadLinks(loop) {
   links.push({
     key: 'loop-video-preload',
     rel: 'preload',
-    as: 'video',
+    as: 'fetch',
     href,
     type: 'video/mp4',
+    crossorigin: 'anonymous',
   })
 
   if (loop.posterUrl) {

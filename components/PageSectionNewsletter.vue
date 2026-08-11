@@ -139,11 +139,17 @@ const mapLightStyle = computed(() => props.section?.newsletterMapLightStyle === 
 
 const mapZoomControls = computed(() => props.section?.newsletterMapZoomControls === true)
 
+const sectionId = computed(() => {
+  const raw = props.section?.newsletterSectionId?.trim().replace(/^#/, '') || 'newsletter'
+  return raw || 'newsletter'
+})
+
 const { items: reflectionItems } = useReflections(500)
 </script>
 
 <template>
   <div
+    :id="sectionId"
     class="page-section-newsletter"
     :style="sectionStyle"
   >

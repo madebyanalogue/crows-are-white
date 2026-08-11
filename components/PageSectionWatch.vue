@@ -1,5 +1,6 @@
 <script setup>
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
+import { getLoopVideoHeadLinks } from '~/utils/loopVideoPreload'
 import { toCssColor, isLightColor } from '~/utils/pageColors'
 import { film as defaultFilm } from '~/data/site'
 import { streamingLinks as defaultStreamingLinks } from '~/data/site'
@@ -29,15 +30,21 @@ const previewVideo = computed(() => {
   return null
 })
 
-const activePreviewSrc = computed(() => {
+const previewPlaybackUrl = computed(() => previewVideo.value?.url720 || '')
+const hasDesktopPreviewSource = computed(() => {
   const video = previewVideo.value
-  if (!video) return ''
+  return Boolean(video?.url1080 && video.url1080 !== video.url720)
+})
 
-  const prefer1080 = import.meta.client
-    && window.matchMedia('(min-width: 1000px)').matches
-    && video.url1080
-
-  return prefer1080 ? video.url1080 : video.url720
+const previewHeadLoop = computed(() => {
+  const video = previewVideo.value
+  if (!video) return null
+  return {
+    kind: 'mp4',
+    url720: video.url720,
+    url1080: video.url1080,
+    url: video.url720,
+  }
 })
 
 const videoRef = ref(null)
@@ -82,7 +89,7 @@ function onVideoLoaded() {
   attemptPlay()
 }
 
-watch(activePreviewSrc, () => {
+watch(previewPlaybackUrl, () => {
   videoReady.value = false
   clearRevealFallback()
   nextTick(() => {
@@ -99,11 +106,7 @@ onMounted(() => {
 onBeforeUnmount(clearRevealFallback)
 
 useHead({
-  link: computed(() => {
-    const href = activePreviewSrc.value
-    if (!href) return []
-    return [{ rel: 'preload', as: 'video', href, type: 'video/mp4' }]
-  }),
+  link: computed(() => getLoopVideoHeadLinks(previewHeadLoop.value)),
 })
 
 const title = computed(
@@ -198,12 +201,10 @@ const sectionStyle = computed(() => {
     >
       <div class="page-section-watch__hero-media">
         <video
-          v-if="activePreviewSrc"
+          v-if="previewPlaybackUrl"
           ref="videoRef"
-          :key="activePreviewSrc"
           class="page-section-watch__video"
           :class="{ 'is-ready': videoReady }"
-          :src="activePreviewSrc"
           autoplay
           muted
           loop
@@ -214,7 +215,18 @@ const sectionStyle = computed(() => {
           @loadeddata="onVideoLoaded"
           @canplay="revealVideo"
           @playing="revealVideo"
-        />
+        >
+          <source
+            v-if="hasDesktopPreviewSource"
+            media="(min-width: 1000px)"
+            :src="previewVideo.url1080"
+            type="video/mp4"
+          >
+          <source
+            :src="previewPlaybackUrl"
+            type="video/mp4"
+          >
+        </video>
         <div
           v-if="showHeroOverlay"
           class="page-section-watch__hero-overlay"
@@ -516,12 +528,12 @@ const sectionStyle = computed(() => {
   appearance: none;
   border: 0;
   margin: 0;
-  padding: clamp(14px, 1vw, 1.1rem) clamp(20px, 2vw, 2rem);
+  padding: 16px;
   background: var(--watch-accent);
   color: var(--watch-accent-text);
   font-family: var(--serif);
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 300;
   letter-spacing: 0.07em;
   line-height: 1.1;
   text-transform: uppercase;
@@ -529,7 +541,7 @@ const sectionStyle = computed(() => {
   text-decoration: none;
   white-space: nowrap;
   min-width: clamp(200px, 50vw, 280px);
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 .page-section-watch__cta:hover {
@@ -585,12 +597,12 @@ const sectionStyle = computed(() => {
   height: 100%;
   padding: 1rem 0.75rem;
   box-sizing: border-box;
-  font-size: clamp(17px, 2vw, 30px);
+  font-size: clamp(17px, 2vw, 35px);
+  font-weight: 300;
   letter-spacing: 0.02em;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  text-transform: uppercase;
   color: var(--watch-muted);
   transition: color 0.18s ease;
 }

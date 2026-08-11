@@ -75,6 +75,7 @@ function pageSectionProjection() {
     contactFormMarketingConsentEnabled,
     contactFormMarketingConsentLabel,
     contactFormMarketingConsentRequired,
+    newsletterSectionId,
     newsletterTitle,
     newsletterIntro,
     newsletterSubmitLabel,
@@ -574,6 +575,8 @@ function pageSectionProjection() {
     screeningsLede,
     screeningsEmptyTitle,
     screeningsEmptyText,
+    screeningsEmptyButtonLabel,
+    screeningsEmptyButtonAnchor,
     hostScreeningTitle,
     hostScreeningIntro,
     ${colorField('hostScreeningFormBackgroundColor')},
@@ -662,7 +665,39 @@ function pageSectionProjection() {
     reflectionsBackgroundOverlayOpacity,
     reflectionsBackgroundScrimOpacity,
     reflectionsPaddingTop,
-    reflectionsPaddingBottom
+    reflectionsPaddingBottom,
+    synopsisTitle,
+    synopsisIntro[] ${portableTextProjection},
+    synopsisLinkGroups[] {
+      _key,
+      title,
+      items[] {
+        _key,
+        itemType,
+        title,
+        url
+      }
+    },
+    synopsisUsefulLinks[] {
+      _key,
+      text,
+      url
+    },
+    synopsisButtons[] {
+      _key,
+      style,
+      type,
+      linkTitle,
+      url,
+      page-> {
+        slug { current }
+      }
+    },
+    synopsisGallery[] {
+      _key,
+      caption,
+      image ${imageProjection}
+    }
   }`
 }
 

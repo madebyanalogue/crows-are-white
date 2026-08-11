@@ -92,6 +92,10 @@
           :is-first-section="index === 0"
           :full-page="sections.length === 1"
         />
+        <PageSectionSynopsis
+          v-else-if="section.sectionType === 'synopsis'"
+          :section="section"
+        />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--
