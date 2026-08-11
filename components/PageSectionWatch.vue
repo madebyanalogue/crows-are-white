@@ -531,7 +531,7 @@ const sectionStyle = computed(() => {
   background: var(--watch-accent);
   color: var(--watch-accent-text);
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 300;
   letter-spacing: 0.07em;
   line-height: 1.1;
@@ -542,6 +542,11 @@ const sectionStyle = computed(() => {
   min-width: clamp(200px, 50vw, 280px);
   border-radius: 0;
   height:50px;
+}
+@media (min-width: 700px) {
+  .page-section-watch__cta {
+    font-size: 18px;
+  }
 }
 
 .page-section-watch__cta:hover {
@@ -564,11 +569,13 @@ const sectionStyle = computed(() => {
 
 .page-section-watch__platforms-label {
   margin: 0;
-  text-align: center;
-  font-size: clamp(1.65rem, 3vw, 2.15rem);
-  font-weight: 400;
-  line-height: 1;
-  color: var(--watch-platforms-label-color, var(--watch-accent));
+    text-align: center;
+    font-size: clamp(1.65rem, 3vw, 2.15rem);
+    /* font-weight: 400; */
+    line-height: 1;
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    font-family: var(--serif);
 }
 
 .page-section-watch__grid {
@@ -577,16 +584,32 @@ const sectionStyle = computed(() => {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--watch-line);
-  border-left: 1px solid var(--watch-line);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap:15px;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
 .page-section-watch__grid-item {
   min-width: 0;
-  border-right: 1px solid var(--watch-line);
-  border-bottom: 1px solid var(--watch-line);
-  aspect-ratio: 2;
+  border: 1px solid var(--watch-line);
+  font-size: 20px;
+}
+
+@media (min-width: 700px) {
+  .page-section-watch__grid-item {
+    border-left: none;
+    border-top: none;
+    aspect-ratio: 2;
+  }
+  .page-section-watch__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid var(--watch-line);
+    border-left: 1px solid var(--watch-line);
+    border-top: 1px solid var(--watch-line);
+    border-left: 1px solid var(--watch-line);
+    gap:0px;
+  }
 }
 
 .page-section-watch__grid-link {
@@ -597,7 +620,7 @@ const sectionStyle = computed(() => {
   height: 100%;
   padding: 1rem 0.75rem;
   box-sizing: border-box;
-  font-size: clamp(17px, 2vw, 35px);
+  font-size: clamp(18px, 2vw, 35px);
   font-weight: 300;
   letter-spacing: 0.02em;
   line-height: 1.2;

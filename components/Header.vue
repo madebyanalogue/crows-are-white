@@ -817,6 +817,7 @@ onBeforeUnmount(() => {
   pointer-events: auto;
   overflow: visible;
   transition: width 0.32s ease;
+  backdrop-filter: blur(30px);
 }
 
 .site-header__panel::before {
@@ -1127,7 +1128,7 @@ font-size: 18px;
 }
 
 .site-header.is-open .site-header__nav-inner {
-  padding: 10px 47px 35px;
+  padding: 10px clamp(35px, 10%, 45px) 35px;
   gap: 40px;
 }
 

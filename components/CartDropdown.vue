@@ -1,10 +1,14 @@
 <script setup>
-const { isOpen, closeCart } = useCart()
+const { isOpen, closeCart, loading, items } = useCart()
 const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
 
 const contentVisible = ref(false)
 let revealTimer = null
 const PANEL_TRANSITION_MS = 320
+
+const awaitingInitialCart = computed(
+  () => loading.value && items.value.length === 0,
+)
 
 function clearRevealTimer() {
   if (revealTimer != null) {
@@ -13,10 +17,10 @@ function clearRevealTimer() {
   }
 }
 
-watch(isOpen, (open) => {
+function scheduleContentReveal() {
   clearRevealTimer()
 
-  if (!open) {
+  if (!isOpen.value) {
     contentVisible.value = false
     return
   }
@@ -27,10 +31,37 @@ watch(isOpen, (open) => {
   }
 
   contentVisible.value = false
-  revealTimer = window.setTimeout(() => {
+
+  const delay = PANEL_TRANSITION_MS
+
+  const tryReveal = () => {
     revealTimer = null
-    if (isOpen.value) contentVisible.value = true
-  }, PANEL_TRANSITION_MS)
+    if (!isOpen.value) return
+
+    if (awaitingInitialCart.value) {
+      revealTimer = window.setTimeout(tryReveal, 50)
+      return
+    }
+
+    contentVisible.value = true
+  }
+
+  revealTimer = window.setTimeout(tryReveal, delay)
+}
+
+watch(isOpen, (open) => {
+  if (!open) {
+    contentVisible.value = false
+    clearRevealTimer()
+    return
+  }
+
+  scheduleContentReveal()
+})
+
+watch(awaitingInitialCart, (awaiting) => {
+  if (!isOpen.value || contentVisible.value || awaiting) return
+  scheduleContentReveal()
 })
 
 function onKeydown(event) {
@@ -52,7 +83,10 @@ onUnmounted(() => {
 <template>
   <div
     class="site-header__cart-wrap"
-    :class="{ 'is-open': isOpen }"
+    :class="{
+      'is-open': isOpen,
+      'is-awaiting-cart': isOpen && awaitingInitialCart,
+    }"
     :inert="isOpen ? undefined : true"
     :aria-hidden="isOpen ? undefined : 'true'"
   >
@@ -91,5 +125,14 @@ onUnmounted(() => {
 .site-header__cart-inner {
   min-height: 0;
   overflow: hidden;
+}
+
+.site-header__cart-wrap:not(.is-open) .site-header__cart-inner {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.site-header__cart-wrap.is-open.is-awaiting-cart .site-header__cart-inner {
+  min-height: 160px;
 }
 </style>

@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
     </header>
 
     <div
-      v-if="loading && items.length === 0 && !isAddingItem"
+      v-if="loading && items.length === 0 && !isAddingItem && props.variant !== 'dropdown'"
       class="cart-panel__empty"
     >
       Loading cart…
@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      v-else-if="items.length === 0 && !pendingNewLineSlot"
+      v-else-if="items.length === 0 && !pendingNewLineSlot && !(props.variant === 'dropdown' && loading)"
       class="cart-panel__empty"
     >
       <p>Your cart is empty.</p>
@@ -370,6 +370,11 @@ onBeforeUnmount(() => {
   min-height: 0;
   background: var(--cart-background-color, var(--menu-background-color, transparent));
   color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
+}
+
+.cart-panel--dropdown.cart-panel--content-hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .cart-panel--dropdown.cart-panel--content-hidden :is(
