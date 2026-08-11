@@ -82,7 +82,7 @@ function onSubmit() {
           <p
             v-for="(paragraph, index) in introParagraphs"
             :key="index"
-            class="newsletter-block__intro-paragraph serif"
+            class="newsletter-block__intro-paragraph serif light"
           >
             {{ paragraph }}
           </p>
@@ -598,14 +598,10 @@ function onSubmit() {
 }
 
 .newsletter-block__panel .newsletter-block__intro-paragraph {
-  font-size: clamp(0.875rem, 1.35vw, 1rem);
-  line-height: 1.45;
 }
 
 .newsletter-block__intro-paragraph {
   margin: 0;
-  font-size: clamp(0.875rem, 1.35vw, 1rem);
-  line-height: 1.45;
 }
 
 .newsletter-block__title {

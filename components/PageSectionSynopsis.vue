@@ -9,14 +9,8 @@ const props = defineProps({
 const title = computed(() => props.section?.synopsisTitle?.trim() || '')
 const introBlocks = computed(() => props.section?.synopsisIntro || [])
 
-const linkGroups = computed(() =>
-  (props.section?.synopsisLinkGroups || [])
-    .map((group, index) => ({
-      _key: group._key || `synopsis-link-group-${index}`,
-      title: group.title?.trim() || '',
-      columns: splitLinkGroupItems(group.items || []),
-    }))
-    .filter((group) => group.title || group.columns.some((column) => column.length)),
+const linkGroupRows = computed(() =>
+  buildSynopsisLinkGroupRows(props.section?.synopsisLinkGroups || []),
 )
 
 const usefulLinks = computed(() =>
@@ -61,13 +55,88 @@ const galleryItems = computed(() =>
 const hasContent = computed(() =>
   title.value
   || introBlocks.value.length
-  || linkGroups.value.length
+  || linkGroupRows.value.length
   || usefulLinks.value.length
   || buttons.value.length
   || galleryItems.value.length,
 )
 
-function splitLinkGroupItems(items) {
+function normalizeSynopsisLink(entry, index) {
+  const label = entry?.title?.trim() || ''
+  const url = entry?.url?.trim() || ''
+  if (!label) return null
+
+  return {
+    _key: entry._key || `synopsis-link-${index}`,
+    label,
+    url,
+  }
+}
+
+function normalizeSynopsisLinkGroup(group, index) {
+  const linkEntries = group.links?.length
+    ? group.links
+    : (group.items || []).filter((item) => item?.itemType !== 'columnBreak')
+
+  const links = linkEntries
+    .map((entry, linkIndex) => normalizeSynopsisLink(entry, linkIndex))
+    .filter(Boolean)
+
+  const titleValue = group.title?.trim() || ''
+  if (!titleValue && !links.length) return null
+
+  return {
+    _key: group._key || `synopsis-link-group-${index}`,
+    title: titleValue,
+    links,
+  }
+}
+
+function buildSynopsisLinkGroupRows(entries) {
+  if (!entries.length) return []
+
+  const usesTopLevelColumnBreaks = entries.some((entry) =>
+    entry?._type === 'synopsisLinkGroupColumnBreak',
+  )
+
+  if (usesTopLevelColumnBreaks) {
+    const rows = [[]]
+
+    entries.forEach((entry, index) => {
+      if (entry?._type === 'synopsisLinkGroupColumnBreak') {
+        rows.push([])
+        return
+      }
+
+      const group = normalizeSynopsisLinkGroup(entry, index)
+      if (group) rows[rows.length - 1].push(group)
+    })
+
+    return rows
+      .filter((row) => row.length)
+      .map((groups, index) => ({
+        _key: groups.map((group) => group._key).join('-') || `synopsis-link-group-row-${index}`,
+        groups,
+      }))
+  }
+
+  return entries
+    .map((group, index) => {
+      const normalized = normalizeSynopsisLinkGroup(group, index)
+      if (!normalized) return null
+
+      return {
+        _key: normalized._key,
+        groups: [{
+          ...normalized,
+          columns: splitLegacyLinkGroupItems(group.items || []),
+        }],
+      }
+    })
+    .filter(Boolean)
+}
+
+function splitLegacyLinkGroupItems(items) {
   const columns = [[]]
 
   for (const item of items) {
@@ -76,15 +145,10 @@ function splitLinkGroupItems(items) {
       continue
     }
 
-    const label = item?.title?.trim() || ''
-    const url = item?.url?.trim() || ''
-    if (!label || !url) continue
+    const link = normalizeSynopsisLink(item, columns.length)
+    if (!link) continue
 
-    columns[columns.length - 1].push({
-      _key: item._key,
-      label,
-      url,
-    })
+    columns[columns.length - 1].push(link)
   }
 
   return columns.filter((column) => column.length)
@@ -125,35 +189,70 @@ function resolveButtonItem(button) {
       </header>
 
       <div
-        v-if="linkGroups.length"
+        v-if="linkGroupRows.length"
         class="page-section-synopsis__link-groups"
       >
-        <section
-          v-for="group in linkGroups"
-          :key="group._key"
-          class="page-section-synopsis__link-group"
+        <div
+          v-for="row in linkGroupRows"
+          :key="row._key"
+          class="page-section-synopsis__link-group-row"
+          :class="{ 'page-section-synopsis__link-group-row--multi': row.groups.length > 1 }"
         >
-          <h3
-            v-if="group.title"
-            class="page-section-synopsis__link-group-title h4 serif"
+          <section
+            v-for="group in row.groups"
+            :key="group._key"
+            class="page-section-synopsis__link-group"
           >
-            {{ group.title }}
-          </h3>
+            <h3
+              v-if="group.title"
+              class="page-section-synopsis__link-group-title h4 serif"
+            >
+              {{ group.title }}
+            </h3>
 
-          <div
-            class="page-section-synopsis__link-columns"
-            :class="{ 'page-section-synopsis__link-columns--single': group.columns.length === 1 }"
-          >
+            <div
+              v-if="group.columns?.length"
+              class="page-section-synopsis__link-columns"
+              :class="{ 'page-section-synopsis__link-columns--single': group.columns.length === 1 }"
+            >
+              <ul
+                v-for="(column, columnIndex) in group.columns"
+                :key="`${group._key}-column-${columnIndex}`"
+                class="page-section-synopsis__link-list"
+              >
+                <li
+                  v-for="link in column"
+                  :key="link._key"
+                >
+                  <a
+                    v-if="link.url"
+                    :href="link.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="page-section-synopsis__external-link underline-links"
+                  >
+                    {{ link.label }}
+                  </a>
+                  <span
+                    v-else
+                    class="page-section-synopsis__link-label"
+                  >
+                    {{ link.label }}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
             <ul
-              v-for="(column, columnIndex) in group.columns"
-              :key="`${group._key}-column-${columnIndex}`"
+              v-else-if="group.links?.length"
               class="page-section-synopsis__link-list"
             >
               <li
-                v-for="link in column"
+                v-for="link in group.links"
                 :key="link._key"
               >
                 <a
+                  v-if="link.url"
                   :href="link.url"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -161,10 +260,16 @@ function resolveButtonItem(button) {
                 >
                   {{ link.label }}
                 </a>
+                <span
+                  v-else
+                  class="page-section-synopsis__link-label"
+                >
+                  {{ link.label }}
+                </span>
               </li>
             </ul>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       <div
@@ -251,6 +356,22 @@ function resolveButtonItem(button) {
   gap: clamp(1.5rem, 3vw, 2.25rem);
 }
 
+.page-section-synopsis__link-group-row {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.page-section-synopsis__link-group-row--multi {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem clamp(1.5rem, 4vw, 3rem);
+}
+
+@media (max-width: 699px) {
+  .page-section-synopsis__link-group-row--multi {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .page-section-synopsis__link-group {
   display: grid;
   gap: 0.85rem;
@@ -326,5 +447,6 @@ function resolveButtonItem(button) {
 
 .page-section-synopsis__gallery {
   width: 100%;
+  display: none;
 }
 </style>

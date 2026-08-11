@@ -46,7 +46,7 @@ const bylineParts = computed(() => {
   }
 })
 
-const showButtons = ref(false)
+const showButtons = ref(true)
 const hasButtonToggle = computed(() => buttons.value.length > 0)
 const showButtonStack = computed(() => showButtons.value && buttons.value.length > 0)
 const scrimOpacity = computed(() => {

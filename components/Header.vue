@@ -451,18 +451,21 @@ function closeMenu() {
 
 function onMenuNavigate() {
   // Keep title clipped through navigation; route watcher swaps + rises new title
-  const pathBefore = route.fullPath
+  const pathBefore = normalizeRoutePath(route.fullPath)
   suppressPageNameIn = true
   dropPageName()
   closeMenu()
 
-  // Same-page link: route won't change, so restore title after close
+  // Same-page link: route path won't change, so restore title after close
   setTimeout(() => {
-    if (route.fullPath !== pathBefore) return
+    if (normalizeRoutePath(route.fullPath) !== pathBefore) {
+      suppressPageNameIn = false
+      return
+    }
     if (!suppressPageNameIn || menuOpen.value) return
     suppressPageNameIn = false
     animatePageNameIn()
-  }, 120)
+  }, MENU_OPEN_MS)
 }
 
 function menuItemEls() {

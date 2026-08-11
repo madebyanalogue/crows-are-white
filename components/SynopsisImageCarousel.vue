@@ -56,7 +56,7 @@ function scrollBySlides(direction) {
 
   viewport.scrollBy({
     left: direction * slideStride,
-    behavior: 'smooth',
+    behavior: 'auto',
   })
 }
 
@@ -176,23 +176,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .synopsis-image-carousel {
-  --synopsis-carousel-slides-visible: 1.15;
-  --synopsis-carousel-visible-gaps: 1;
-  --synopsis-carousel-gap: 15px;
-}
-
-@media (min-width: 700px) {
-  .synopsis-image-carousel {
-    --synopsis-carousel-slides-visible: 2.2;
-    --synopsis-carousel-visible-gaps: 2;
-  }
-}
-
-@media (min-width: 1000px) {
-  .synopsis-image-carousel {
-    --synopsis-carousel-slides-visible: 3;
-    --synopsis-carousel-visible-gaps: 2;
-  }
+  --synopsis-carousel-gap: 0;
+  width: 50%;
 }
 
 .synopsis-image-carousel__controls {
@@ -248,6 +233,7 @@ onBeforeUnmount(() => {
   touch-action: pan-x;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
 }
 
 .synopsis-image-carousel__viewport::-webkit-scrollbar {
@@ -260,10 +246,7 @@ onBeforeUnmount(() => {
 }
 
 .synopsis-image-carousel__slide {
-  flex: 0 0 calc(
-    (100% - (var(--synopsis-carousel-gap) * var(--synopsis-carousel-visible-gaps)))
-    / var(--synopsis-carousel-slides-visible)
-  );
+  flex: 0 0 100%;
   min-width: 0;
   margin: 0;
   scroll-snap-align: start;
@@ -273,7 +256,16 @@ onBeforeUnmount(() => {
 .synopsis-image-carousel__image {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+}
+
+.synopsis-image-carousel__image :deep(.app-image__media) {
+  aspect-ratio: 1.8;
+}
+
+.synopsis-image-carousel__image :deep(.app-image__img) {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
 }

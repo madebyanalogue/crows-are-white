@@ -571,6 +571,16 @@ function pageSectionProjection() {
         slug { current }
       }
     },
+    letterboxLink2Text,
+    letterboxLink2Style,
+    letterboxLink2 {
+      type,
+      linkTitle,
+      url,
+      page-> {
+        slug { current }
+      }
+    },
     screeningsTitle,
     screeningsLede,
     screeningsEmptyTitle,
@@ -670,7 +680,13 @@ function pageSectionProjection() {
     synopsisIntro[] ${portableTextProjection},
     synopsisLinkGroups[] {
       _key,
+      _type,
       title,
+      links[] {
+        _key,
+        title,
+        url
+      },
       items[] {
         _key,
         itemType,

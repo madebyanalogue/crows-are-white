@@ -137,9 +137,25 @@ function onImageLoad(event) {
   })
 }
 
-const overlayLink = computed(() => {
-  const label = props.section?.letterboxLinkText?.trim()
-  const link = props.section?.letterboxLink
+const overlayLink = computed(() => resolveOverlayLink(
+  props.section?.letterboxLinkText,
+  props.section?.letterboxLink,
+  props.section?.letterboxLinkStyle,
+))
+
+const overlayLink2 = computed(() => resolveOverlayLink(
+  props.section?.letterboxLink2Text,
+  props.section?.letterboxLink2,
+  props.section?.letterboxLink2Style,
+))
+
+const overlayLinks = computed(() =>
+  [overlayLink.value, overlayLink2.value].filter(Boolean),
+)
+
+function resolveOverlayLink(labelValue, linkValue, styleValue) {
+  const label = labelValue?.trim()
+  const link = linkValue
   if (!label || !link) return null
 
   const menuItem = {
@@ -167,12 +183,11 @@ const overlayLink = computed(() => {
     rel: getMenuItemRel(menuItem),
     useRouterLink,
     menuItem,
-    style: props.section?.letterboxLinkStyle === 'light' ? 'light' : 'background',
+    style: styleValue === 'light' ? 'light' : 'background',
   }
-})
+}
 
-function onLinkClick(event) {
-  const link = overlayLink.value
+function onLinkClick(event, link) {
   if (!link?.useRouterLink) return
 
   const { href, menuItem } = link
@@ -285,28 +300,33 @@ useVideoParallax(sectionRef, parallaxRef, {
         >
 
         <div
-          v-if="overlayLink"
+          v-if="overlayLinks.length"
           class="page-section-letterbox-video__link-wrap"
         >
-          <NuxtLink
-            v-if="overlayLink.useRouterLink"
-            :to="overlayLink.href"
-            class="page-section-letterbox-video__link large-title"
-            :class="`page-section-letterbox-video__link--${overlayLink.style}`"
-            @click="onLinkClick"
+          <template
+            v-for="(link, index) in overlayLinks"
+            :key="`${link.label}-${index}`"
           >
-            {{ overlayLink.label }}
-          </NuxtLink>
-          <a
-            v-else
-            :href="overlayLink.href"
-            class="page-section-letterbox-video__link large-title"
-            :class="`page-section-letterbox-video__link--${overlayLink.style}`"
-            :target="overlayLink.target"
-            :rel="overlayLink.rel"
-          >
-            {{ overlayLink.label }}
-          </a>
+            <NuxtLink
+              v-if="link.useRouterLink"
+              :to="link.href"
+              class="page-section-letterbox-video__link large-title"
+              :class="`page-section-letterbox-video__link--${link.style}`"
+              @click="onLinkClick($event, link)"
+            >
+              {{ link.label }}
+            </NuxtLink>
+            <a
+              v-else
+              :href="link.href"
+              class="page-section-letterbox-video__link large-title"
+              :class="`page-section-letterbox-video__link--${link.style}`"
+              :target="link.target"
+              :rel="link.rel"
+            >
+              {{ link.label }}
+            </a>
+          </template>
         </div>
       </div>
     </div>
@@ -440,8 +460,10 @@ useVideoParallax(sectionRef, parallaxRef, {
   inset: 0;
   z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  gap: clamp(2rem, 6vw, 4rem);
   padding: 1.5rem clamp(1.25rem, 6vw, 30px);
   pointer-events: none;
 }

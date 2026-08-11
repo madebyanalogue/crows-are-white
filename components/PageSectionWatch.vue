@@ -664,12 +664,13 @@ const sectionStyle = computed(() => {
 }
 
 .page-section-watch--fill-screen .page-section-watch__hero {
-  width: calc(100% + (2 * var(--watch-gutter)));
+  width: calc(100% + (2 * var(--wrapper-padding)));
   max-width: none;
   margin-top: 0;
-  margin-left: calc(-1 * var(--watch-gutter));
-  margin-right: calc(-1 * var(--watch-gutter));
+  margin-left: calc(-1 * var(--wrapper-padding));
+  margin-right: calc(-1 * var(--wrapper-padding));
   border-radius: 0;
+  min-height: 90dvh;
 }
 
 

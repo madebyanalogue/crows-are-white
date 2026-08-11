@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
 
 .page-section-trailer :deep(.page-section-trailer__frame) {
   width: 100%;
-  max-width: 1600px;
+  max-width: 2200px;
   margin-inline: auto;
 }
 

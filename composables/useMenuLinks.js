@@ -331,7 +331,6 @@ export function useMenuLinks() {
     const currentPath = normalizePath(route.path)
 
     if (target.path !== currentPath) return false
-    if (target.hash && target.hash !== route.hash) return false
 
     return queriesMatch(target.query, route.query)
   }
