@@ -514,12 +514,11 @@ const sectionStyle = computed(() => {
   font-weight: 300;
   letter-spacing: 0.04em;
   line-height: 1.2;
-  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.88);
 }
 
 .page-section-watch__meta-divider {
-  opacity: 0.45;
+  opacity: 0.65;
 }
 
 .page-section-watch__cta {
@@ -542,6 +541,7 @@ const sectionStyle = computed(() => {
   white-space: nowrap;
   min-width: clamp(200px, 50vw, 280px);
   border-radius: 0;
+  height:50px;
 }
 
 .page-section-watch__cta:hover {

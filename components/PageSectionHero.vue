@@ -143,7 +143,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 
       <p
         v-if="byline"
-        class="page-section-hero__byline handwritten"
+        class="page-section-hero__byline"
         :class="{ 'is-centered-wide': !showButtons }"
       >
         <template v-if="bylineParts?.lead">
@@ -166,7 +166,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   position: relative;
   height: 100svh;
   min-height: 50vw;
-  max-height: 160vw;
+  max-height: 170vw;
   overflow: hidden;
   background: #000;
   color: var(--fuji, #fff);
@@ -284,7 +284,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 70px;
+  bottom: clamp(40px, 3vw, 50px);
   z-index: 3;
   display: grid;
   grid-template-columns: 1fr min(var(--site-header-panel-width-closed), 100%) 1fr;
@@ -314,9 +314,12 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   margin: 0;
   align-self: end;
   width: 100%;
-  font-size: clamp(38px, 2vw, 42px);
+  text-transform: uppercase;
+  font-weight: 300;
+  font-family: var(--serif);
+  font-size: clamp(23px, 1.35vw, 30px);
   line-height: 1.2;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
   text-align: center;
   color: var(--hero-feature-color);
   grid-area: byline;
@@ -407,7 +410,6 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
       "byline"
       "buttons";
     justify-items: center;
-    bottom: 50px;
   }
 
   .page-section-hero__bottom.is-buttons-hidden {
@@ -424,7 +426,6 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 
   .page-section-hero__byline {
     grid-column: auto;
-    font-size: clamp(24px, 5.5vw, 42px);
     margin-bottom: 1rem;
   }
 
@@ -446,16 +447,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 
 
 
-.page-section-hero__byline {
-text-transform: uppercase;
-    font-weight: 300;
-    font-family: 'Moulin';
-    font-size: clamp(20px, 1vw, 28px);
-    line-height: 1.2;
-    letter-spacing: 0.04em;
-}
-
 .page-section-hero__byline span {
-      font-size: 65%;
+  font-size: 65%;
 }
 </style>
