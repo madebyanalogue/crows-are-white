@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import type {ShopifyProduct} from '~/types/shopify'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   products: ShopifyProduct[]
   pending?: boolean
   emptyMessage?: string
   ariaLabel?: string
-}>()
+  columns?: number
+}>(), {
+  columns: 4,
+})
+
+const carouselStyle = computed(() => ({
+  '--shop-carousel-slides-desktop': String(props.columns),
+  '--shop-carousel-visible-gaps-desktop': String(Math.max(0, props.columns - 1)),
+}))
+
+const skeletonCount = computed(() => props.columns)
 
 const viewportRef = ref<HTMLElement | null>(null)
 const atStart = ref(true)
 const atEnd = ref(false)
 const hasOverflow = ref(false)
-
-const skeletonCount = 4
 
 const showControls = computed(() =>
   !props.pending && props.products.length > 1 && hasOverflow.value,
@@ -111,6 +119,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="shop-product-carousel"
+    :style="carouselStyle"
     :aria-label="ariaLabel"
   >
     <div
@@ -213,7 +222,7 @@ onBeforeUnmount(() => {
 .shop-product-carousel {
   --shop-carousel-slides-visible: 1.5;
   --shop-carousel-visible-gaps: 1;
-  --shop-carousel-gap: 5px;
+  --shop-carousel-gap: 2px;
 }
 
 @media (min-width: 660px) {
@@ -225,8 +234,8 @@ onBeforeUnmount(() => {
 
 @media (min-width: 1000px) {
   .shop-product-carousel {
-    --shop-carousel-slides-visible: 4;
-    --shop-carousel-visible-gaps: 3;
+    --shop-carousel-slides-visible: var(--shop-carousel-slides-desktop, 4);
+    --shop-carousel-visible-gaps: var(--shop-carousel-visible-gaps-desktop, 3);
   }
 }
 
