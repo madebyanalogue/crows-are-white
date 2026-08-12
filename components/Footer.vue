@@ -183,8 +183,8 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 .footer__inner {
   display: flex;
   flex-direction: column;
-  gap: 170px;
-  padding:calc(var(--section-padding) * .75) 40px;
+  gap: 150px;
+  padding: 140px 40px 90px;
 }
 .menus--container {
   display: flex;
@@ -204,9 +204,6 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
   .footer__menus {
     grid-template-columns: 1fr 1fr 1fr auto;
     padding-right:20px;
-  }
-  .logo-social-container {
-    gap:50px;
   }
 }
 

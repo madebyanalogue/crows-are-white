@@ -15,6 +15,8 @@ const viewMode = ref<'feature' | 'grid'>('feature')
 
 const activeFilter = ref<ShopFilterId>(shopFilterFromQuery(route.query.filter))
 
+const isCollectionView = computed(() => activeFilter.value !== 'all')
+
 watch(
   () => route.query.filter,
   (value) => {
@@ -83,6 +85,7 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
       </div>
 
       <div
+        v-if="!isCollectionView"
         class="shop-views"
         role="group"
         aria-label="Grid layout"
@@ -355,12 +358,12 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   }
 }
 
-/* Feature view: 2 columns, then 3 — same bottom/right pattern. */
+/* Feature view: 2 columns below 700px, then 3. */
 .shop-grid--feature .shop-cell:nth-child(2n) {
   border-right: none;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 700px) {
   .shop-grid--feature .shop-cell:nth-child(2n) {
     border-right: 1px solid var(--shop-line);
   }
@@ -390,7 +393,7 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@media (min-width: 900px) {
+@media (min-width: 700px) {
   .shop-grid--feature {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
