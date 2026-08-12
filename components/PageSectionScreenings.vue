@@ -38,9 +38,10 @@ const stateFilter = ref('')
 const listRef = ref<HTMLElement | null>(null)
 const introRef = ref<HTMLElement | null>(null)
 const toolbarRef = ref<HTMLElement | null>(null)
+const pendingEnter = ref(true)
 
 let listTween: gsap.core.Tween | null = null
-let introTween: gsap.core.Tween | null = null
+let enterTween: gsap.core.Tween | null = null
 
 const availableStates = computed(() =>
   [...new Set(screenings.value.map((s) => s.state))].sort(),
@@ -55,30 +56,70 @@ const filtered = computed(() =>
   }),
 )
 
-async function animateIntro({ pageLoad = false } = {}) {
-  if (!import.meta.client) return
+function isPageTransitionActive() {
+  if (!import.meta.client) return false
 
-  await nextTick()
+  try {
+    const isTransitioning = useState('pageTransitioning', () => false)
+    return isTransitioning.value
+      || document.documentElement.classList.contains('is-page-transitioning')
+  } catch {
+    return document.documentElement.classList.contains('is-page-transitioning')
+  }
+}
 
-  const title = introRef.value?.querySelector('.screenings-page__title')
-  const toolbar = toolbarRef.value
-  const targets = [title, toolbar].filter(Boolean) as Element[]
-  if (!targets.length) return
+function waitForPageTransitionComplete() {
+  if (!import.meta.client || !isPageTransitionActive()) {
+    return Promise.resolve()
+  }
 
-  introTween?.kill()
-  gsap.set(targets, { autoAlpha: 0, y: 14 })
-
-  introTween = gsap.to(targets, {
-    autoAlpha: 1,
-    y: 0,
-    duration: 0.65,
-    stagger: 0.12,
-    delay: pageLoad ? 0.55 : 0,
-    ease: 'power2.out',
+  return new Promise<void>((resolve) => {
+    const finish = () => resolve()
+    document.addEventListener('page-transition-complete', finish, { once: true })
+    setTimeout(finish, 4000)
   })
 }
 
-async function animateRows({ pageLoad = false } = {}) {
+async function collectEnterTargets() {
+  await nextTick()
+
+  const titleEl = introRef.value?.querySelector('.screenings-page__title')
+  const toolbar = toolbarRef.value
+  const rows = listRef.value?.querySelectorAll('.screenings-animate-item')
+
+  return [
+    titleEl,
+    toolbar,
+    ...(rows ? Array.from(rows) : []),
+  ].filter(Boolean) as Element[]
+}
+
+async function animatePageEnter({ delay = 0 } = {}) {
+  if (!import.meta.client) return
+
+  const targets = await collectEnterTargets()
+  if (!targets.length) {
+    pendingEnter.value = false
+    return
+  }
+
+  enterTween?.kill()
+  gsap.set(targets, { autoAlpha: 0, y: 18 })
+
+  enterTween = gsap.to(targets, {
+    autoAlpha: 1,
+    y: 0,
+    duration: 0.7,
+    stagger: 0.14,
+    delay,
+    ease: 'power2.out',
+    onComplete: () => {
+      pendingEnter.value = false
+    },
+  })
+}
+
+async function animateRows() {
   if (!import.meta.client) return
 
   await nextTick()
@@ -94,28 +135,45 @@ async function animateRows({ pageLoad = false } = {}) {
     y: 0,
     duration: 0.7,
     stagger: 0.14,
-    delay: pageLoad ? 1 : 0,
     ease: 'power2.out',
   })
 }
 
+async function schedulePageEnter() {
+  if (!import.meta.client) return
+
+  pendingEnter.value = true
+
+  const targets = await collectEnterTargets()
+  if (targets.length) {
+    gsap.set(targets, { autoAlpha: 0, y: 18 })
+  }
+
+  const fromPageTransition = isPageTransitionActive()
+  await waitForPageTransitionComplete()
+  await animatePageEnter({ delay: fromPageTransition ? 0.15 : 0.55 })
+}
+
 onMounted(() => {
-  animateIntro({ pageLoad: true })
-  if (filtered.value.length) animateRows({ pageLoad: true })
+  schedulePageEnter()
 })
 
 watch(filtered, () => {
+  if (pendingEnter.value) return
   animateRows()
 })
 
 onBeforeUnmount(() => {
   listTween?.kill()
-  introTween?.kill()
+  enterTween?.kill()
 })
 </script>
 
 <template>
-  <div class="screenings-page">
+  <div
+    class="screenings-page"
+    :class="{ 'screenings-page--pending-enter': pendingEnter }"
+  >
 
     <div class="screenings-page__content">
          <!-- <p class="screenings-page__lede">
@@ -257,6 +315,13 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     justify-content: start;
+}
+
+.screenings-page--pending-enter .screenings-page__title,
+.screenings-page--pending-enter .screenings-toolbar,
+.screenings-page--pending-enter .screenings-animate-item {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .screenings-page__intro {

@@ -183,7 +183,11 @@ function resolveOverlayLink(labelValue, linkValue, styleValue) {
     rel: getMenuItemRel(menuItem),
     useRouterLink,
     menuItem,
-    style: styleValue === 'light' ? 'light' : 'background',
+    style: styleValue === 'light'
+      ? 'light'
+      : styleValue === 'condensed'
+        ? 'condensed'
+        : 'background',
   }
 }
 
@@ -500,6 +504,23 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 .page-section-letterbox-video__link--light:hover {
   opacity: 0.82;
+}
+
+.page-section-letterbox-video__link--condensed {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--condensed);
+  font-size: calc(clamp(30px, 3vw, 70px) * 1.3);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--feature-color, var(--menu-highlight-color, var(--arancio)));
+}
+
+.page-section-letterbox-video__link--condensed:hover {
+  color: var(--feature-color, var(--menu-highlight-color, var(--arancio)));
+  opacity: 1;
 }
 
 .page-section-letterbox-video__link:focus-visible {

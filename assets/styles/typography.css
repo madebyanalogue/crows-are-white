@@ -50,8 +50,16 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Modern Era';
+  src: url('/fonts/ModernEra-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --sans: 'Basis Grotesque', system-ui, sans-serif;
+  --sans: 'Modern Era', 'Basis Grotesque', system-ui, sans-serif;
   --serif: "Sirca Display", ui-serif, Georgia, serif;
   --serif-body: "athelas", ui-serif, Georgia, serif;
   --quote: 'Aktiv Grotesk', system-ui, sans-serif;

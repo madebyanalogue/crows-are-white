@@ -115,7 +115,7 @@ useMenuLinkUnderline(linkRef, hoverLineRef)
   line-height: var(--underline-link-line-height);
   transition: opacity 0.3s ease-out;
   display:block;
-  padding: .5em 0;
+  padding: .55em 0;
   line-height: 1.2;
 }
 .menu-link-group li:last-child .menu-link {

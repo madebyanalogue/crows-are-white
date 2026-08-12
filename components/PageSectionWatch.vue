@@ -670,7 +670,7 @@ const sectionStyle = computed(() => {
   margin-left: calc(-1 * var(--wrapper-padding));
   margin-right: calc(-1 * var(--wrapper-padding));
   border-radius: 0;
-  min-height: 90dvh;
+  min-height: 90vh;
 }
 
 

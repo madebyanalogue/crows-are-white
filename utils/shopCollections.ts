@@ -30,7 +30,7 @@ const collectionAliases: Record<ShopCollectionHandle, string[]> = {
 
 export const SHOP_FILTERS: ShopFilter[] = [
   {id: 'all', label: 'All', href: '/shop'},
-  {id: 'posters', label: 'Prints', href: '/shop?filter=posters'},
+  {id: 'posters', label: 'Prints', href: '/shop?filter=prints'},
   {id: 'apparel', label: 'Apparel', href: '/shop?filter=apparel'},
 ]
 
@@ -55,19 +55,24 @@ export function shopFilterFromQuery(value?: string | string[] | null): ShopFilte
   return resolveShopFilterId(typeof raw === 'string' ? raw : undefined)
 }
 
+export function shopFilterQueryValue(filter: ShopFilterId) {
+  if (filter === 'posters') return 'prints'
+  return filter
+}
+
 export function shopIndexLink(filter: ShopFilterId = 'all') {
   if (filter === 'all') return '/shop'
-  return { path: '/shop', query: { filter } }
+  return { path: '/shop', query: { filter: shopFilterQueryValue(filter) } }
 }
 
 export function shopIndexHref(filter: ShopFilterId = 'all') {
   if (filter === 'all') return '/shop'
-  return `/shop?filter=${encodeURIComponent(filter)}`
+  return `/shop?filter=${encodeURIComponent(shopFilterQueryValue(filter))}`
 }
 
 export function shopProductLink(handle: string, filter: ShopFilterId = 'all') {
   if (filter === 'all') return `/shop/${handle}`
-  return `/shop/${handle}?filter=${encodeURIComponent(filter)}`
+  return `/shop/${handle}?filter=${encodeURIComponent(shopFilterQueryValue(filter))}`
 }
 
 function normalizeToken(value = '') {
