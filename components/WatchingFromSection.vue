@@ -562,7 +562,7 @@ onBeforeUnmount(() => {
         <h3
           v-if="resolvedTitle"
           id="watching-from-heading"
-          class="watching-from-section__title h2 serif light"
+          class="watching-from-section__title h2 condensed"
         >
           {{ resolvedTitle }}
         </h3>

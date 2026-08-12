@@ -61,6 +61,7 @@ export function useSiteSettings() {
   const footerBackgroundColor = computed(() => settings.value?.footerBackgroundColor || 'crayon')
   const footerTextColor = computed(() => settings.value?.footerTextColor || 'racing-green')
   const footerSocialFeatureColor = computed(() => settings.value?.footerSocialFeatureColor || 'arancio')
+  const footerMenuHoverColor = computed(() => settings.value?.footerMenuHoverColor || 'arancio')
   const seoTitle = computed(() => settings.value?.seoTitle || settings.value?.title || 'Crows Are White')
   const seoDescription = computed(() => settings.value?.seoDescription || '')
   const facebookShareImage = computed(() => resolveSanityAssetUrl(settings.value?.facebookShareImage?.asset))
@@ -163,6 +164,7 @@ export function useSiteSettings() {
     footerBackgroundColor,
     footerTextColor,
     footerSocialFeatureColor,
+    footerMenuHoverColor,
     seoTitle,
     seoDescription,
     facebookShareImage,

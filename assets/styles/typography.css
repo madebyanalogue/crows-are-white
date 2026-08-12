@@ -80,7 +80,7 @@
   --caption: clamp(12px, 1vw, 16px);
   --caption-gap: 18px;
   --header: clamp(14px, 1vw, 15.5px);
-  --body: clamp(14px, calc(var(--unit-font) * .8), 18px);
+  --body: clamp(15px, 1.1vw, 18px);
   --rich-text: clamp(17px, calc(var(--unit-font) * 1.5), 23px);
   --body-serif: var(--serif-body);
 
@@ -96,7 +96,6 @@
 @media (min-width: 1000px) {
   :root {
     --unit-font: clamp(11px, 1.1vw, 20px);
-    --body: clamp(14px, calc(var(--unit-font) * 1), 23px);
   }
 }
 
@@ -165,7 +164,6 @@ header {
 
 @media (max-width: 999px) {
   .show-desktop { display: none !important; }
-  body { line-height: 2; }
 }
 
 @media (min-width: 1000px) {
@@ -195,6 +193,12 @@ header {
   font-family: var(--handwritten);
   font-weight: 400;
   letter-spacing: normal;
+}
+
+.condensed {
+  font-family: var(--condensed);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 
 .caption {

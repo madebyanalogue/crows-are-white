@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
 }
 
 .synopsis-image-carousel__controls {
-  position: relative;
+  position: absolute;
   left: 0;
   display: flex;
   justify-content: space-between;
@@ -303,9 +303,9 @@ onBeforeUnmount(() => {
 .synopsis-image-carousel__frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1.6;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0px;
 }
 
 .synopsis-image-carousel__frame :deep(.app-image),

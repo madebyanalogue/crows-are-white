@@ -621,18 +621,19 @@ const sectionStyle = computed(() => {
   height: 100%;
   padding: 1rem 0.75rem;
   box-sizing: border-box;
-  font-size: clamp(18px, 2vw, 35px);
+  font-family: var(--condensed);
+  font-size: clamp(18px, 3vw, 35px);
   font-weight: 300;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  color: var(--watch-muted);
+  text-transform: uppercase;
   transition: color 0.18s ease;
 }
 
 .page-section-watch__grid-link:hover {
-  color: var(--watch-ink);
+  color: var(--watch-feature-color);
 }
 
 @media (min-width: 700px) {
@@ -670,7 +671,7 @@ const sectionStyle = computed(() => {
   margin-left: calc(-1 * var(--wrapper-padding));
   margin-right: calc(-1 * var(--wrapper-padding));
   border-radius: 0;
-  min-height: 90vh;
+  min-height: 600px;
 }
 
 

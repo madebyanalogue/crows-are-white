@@ -1,4 +1,5 @@
 import type {ShopifyCart} from '~/types/shopify'
+import { lockOverlayScroll, unlockOverlayScroll } from '~/composables/useOverlayScrollLock'
 
 const CART_SLOT_OPEN_MS = 380
 
@@ -141,7 +142,8 @@ export function useCart() {
 
   watch(isOpen, (open) => {
     if (!import.meta.client || cartDisplayMode.value !== 'drawer') return
-    document.body.style.overflow = open ? 'hidden' : ''
+    if (open) lockOverlayScroll()
+    else unlockOverlayScroll()
   })
 
   return {

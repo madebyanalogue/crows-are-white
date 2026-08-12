@@ -55,6 +55,7 @@ export default defineEventHandler(async () => {
     ${colorField('footerBackgroundColor')},
     ${colorField('footerTextColor')},
     ${colorField('footerSocialFeatureColor')},
+    ${colorField('footerMenuHoverColor')},
     seoTitle,
     seoDescription,
     facebookShareImage {

@@ -28,7 +28,7 @@
             class="menus--container"
           >
             <nav
-              class="footer__menus grid-1 grid-md-3 gap-x-5"
+              class="footer__menus grid-1 grid-sm-3 gap-x-7"
               aria-label="Footer"
             >
               <div
@@ -166,11 +166,13 @@ const {
   footerShowLogo,
   footerSocialStyle,
   footerSocialFeatureColor,
+  footerMenuHoverColor,
   footerShopifyLine,
 } = useSiteSettings()
 
 const footerStyle = computed(() => ({
   '--footer-social-feature-color': toCssColor(footerSocialFeatureColor.value, 'arancio'),
+  '--footer-menu-hover-color': toCssColor(footerMenuHoverColor.value, 'arancio'),
 }))
 
 const footerLegalBlocks = computed(() =>
@@ -248,7 +250,7 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__menu-title {
-  font-size: 40px;
+  font-size: clamp(28px, 3vw, 40px);
   font-weight: 300;
   letter-spacing: -0.03em;
   margin-bottom: 13px;
@@ -261,7 +263,12 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
   display: flex;
   flex-direction: column;
   gap: 190px;
-  padding: 140px 40px 90px;
+  padding: 100px 0px 70px;
+}
+@media (min-width: 1000px) {
+  .footer__inner {
+    padding: 140px 40px 90px;
+  }
 }
 .menus--container {
   display: flex;
@@ -278,7 +285,7 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__menus .h7 {
-  font-size: 23px;
+  font-size: clamp(20px, 2.5vw, 23px);
 }
 
 .footer__menu {
@@ -307,11 +314,12 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__menu-list :deep(.menu-link) {
-  transition: opacity 0.3s ease;
+  transition: color 0.3s ease;
 }
 
-.footer__menu-list :deep(.menu-link:hover) {
-  opacity: 0.6;
+.footer__menu-list :deep(.menu-link:hover),
+.footer__menu-list :deep(.menu-link:focus-visible) {
+  color: var(--footer-menu-hover-color);
 }
 
 .footer__menu-list :deep(.menu-link:hover .menu-link__text) {
@@ -334,7 +342,7 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0 1.5rem;
+  gap: 1.1rem;
   width: 100%;
 }
 
@@ -468,10 +476,14 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__privacy-list :deep(.menu-link) {
-  padding: 0.65rem 0;
   display: inline-block;
   opacity: 0.4;
   transition: opacity 0.3s ease;
+}
+@media (min-width: 700px) {
+  .footer__privacy-list :deep(.menu-link) {
+    padding: 0.65rem 0;
+}
 }
 
 .footer__privacy-list :deep(.menu-link:hover) {

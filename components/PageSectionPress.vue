@@ -748,9 +748,9 @@ const sectionStyle = computed(() => {
   position: absolute;
   right: 10px;
   top: calc(100% + .75em);
-  max-width: min(72%, 35rem);
+  max-width: min(78%, 35rem);
   font-family: var(--handwritten);
-  font-size: clamp(18px, 2.1vw, 40px);
+  font-size: clamp(23px, 2.1vw, 40px);
   line-height: 1.05;
   text-align: right;
   color: var(--text-color);

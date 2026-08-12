@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
 
 .shop-product-carousel__slide :deep(.shop-product-card) {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0px;
   overflow: hidden;
   background: #fff;
 }

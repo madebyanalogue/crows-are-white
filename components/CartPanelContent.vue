@@ -50,6 +50,9 @@ function onItemEnterEnd(lineId: string, event: AnimationEvent) {
 }
 
 const panelRef = ref<HTMLElement | null>(null)
+const itemsListRef = ref<HTMLElement | null>(null)
+const footerBorderVisible = ref(false)
+let itemsResizeObserver: ResizeObserver | null = null
 let revealTween: gsap.core.Tween | null = null
 let hasRevealedContent = false
 
@@ -63,16 +66,51 @@ const emptyPanelMessage = computed(() => {
   return ''
 })
 
+function updateFooterBorderVisibility() {
+  const el = itemsListRef.value
+  if (!el) {
+    footerBorderVisible.value = false
+    return
+  }
+
+  footerBorderVisible.value = el.scrollHeight > el.clientHeight + 1
+}
+
+function bindItemsList(el: HTMLElement | null) {
+  itemsListRef.value = el
+  itemsResizeObserver?.disconnect()
+  itemsResizeObserver = null
+
+  if (!el || !import.meta.client) {
+    footerBorderVisible.value = false
+    return
+  }
+
+  itemsResizeObserver = new ResizeObserver(() => {
+    updateFooterBorderVisibility()
+  })
+  itemsResizeObserver.observe(el)
+  updateFooterBorderVisibility()
+}
+
+function scheduleFooterBorderCheck() {
+  if (!import.meta.client) return
+  nextTick(() => {
+    updateFooterBorderVisibility()
+    requestAnimationFrame(updateFooterBorderVisibility)
+  })
+}
+
 function revealTargetEls() {
   const root = panelRef.value
   if (!root) return []
 
-  const items = root.querySelectorAll(
+  const itemEls = root.querySelectorAll(
     '.cart-panel__item:not(.cart-panel__item--placeholder)',
   )
   const footer = root.querySelector('.cart-panel__footer')
   const empty = root.querySelector('.cart-panel__empty')
-  const targets = [...items]
+  const targets = [...itemEls]
   if (footer) targets.push(footer)
   else if (empty) targets.push(empty)
   return targets
@@ -105,9 +143,11 @@ function animateRevealTargets() {
     ease: 'power2.out',
     onComplete: () => {
       revealTween = null
+      scheduleFooterBorderCheck()
     },
   })
   hasRevealedContent = true
+  scheduleFooterBorderCheck()
 }
 
 function scheduleReveal() {
@@ -148,23 +188,33 @@ watch([loading, () => items.value.length, pendingNewLineSlot, isAddingItem], () 
 
   if (!props.revealContent) {
     hideRevealTargets()
+    scheduleFooterBorderCheck()
     return
   }
 
-  if (hasRevealedContent) return
+  if (hasRevealedContent) {
+    scheduleFooterBorderCheck()
+    return
+  }
   if (!canRevealNow()) return
   hideRevealTargets()
   scheduleReveal()
 })
 
+watch([() => items.value.length, pendingNewLineSlot, () => props.variant], scheduleFooterBorderCheck)
+
 onMounted(() => {
   if (props.variant === 'dropdown') {
     hideRevealTargets()
   }
+  scheduleFooterBorderCheck()
+  window.addEventListener('resize', scheduleFooterBorderCheck, { passive: true })
 })
 
 onBeforeUnmount(() => {
   killRevealTween()
+  itemsResizeObserver?.disconnect()
+  window.removeEventListener('resize', scheduleFooterBorderCheck)
 })
 </script>
 
@@ -212,7 +262,11 @@ onBeforeUnmount(() => {
     </div>
 
     <template v-else>
-      <ul class="cart-panel__items">
+      <ul
+        :ref="bindItemsList"
+        class="cart-panel__items"
+        data-lenis-prevent
+      >
         <li
           v-for="item in items"
           :key="item.id"
@@ -320,7 +374,10 @@ onBeforeUnmount(() => {
         </li>
       </ul>
 
-      <footer class="cart-panel__footer">
+      <footer
+        class="cart-panel__footer"
+        :class="{ 'cart-panel__footer--scrollable': footerBorderVisible }"
+      >
         <div class="cart-panel__subtotal">
           <span>Subtotal</span>
           <span class="cart-panel__subtotal-value">{{ formatPrice(subtotal, currencyCode) }}</span>
@@ -364,11 +421,16 @@ onBeforeUnmount(() => {
 
 .cart-panel--drawer {
   height: 100%;
+  min-height: 0;
   background: var(--cart-background-color, var(--menu-background-color, #fff));
 }
 
 .cart-panel--dropdown {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
   background: var(--cart-background-color, var(--menu-background-color, transparent));
   color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
@@ -443,12 +505,25 @@ onBeforeUnmount(() => {
 }
 
 .cart-panel__items {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: none;
   list-style: none;
   margin: 0;
   padding: 8px 47px;
-  max-height: min(52vh, 420px);
+}
+
+.cart-panel__items::-webkit-scrollbar {
+  display: none;
+}
+
+.cart-panel--drawer .cart-panel__items,
+.cart-panel--dropdown .cart-panel__items {
+  max-height: none;
 }
 
 .cart-panel__item {
@@ -600,8 +675,13 @@ onBeforeUnmount(() => {
 }
 
 .cart-panel__footer {
+  flex-shrink: 0;
   padding: 16px 47px 35px;
-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-top: 1px solid transparent;
+}
+
+.cart-panel__footer--scrollable {
+  border-top-color: color-mix(in srgb, currentColor 12%, transparent);
 }
 
 .cart-panel__subtotal {

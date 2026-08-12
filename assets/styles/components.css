@@ -3468,7 +3468,7 @@ width: 90%;
   line-height: var(--underline-link-line-height);
   transition: opacity 0.3s ease-out;
   display:block;
-  padding: .35em 0;
+  padding: .45em 0;
   line-height: 1.2;
   letter-spacing: 0.02em;
 }
@@ -4108,11 +4108,12 @@ body.header-mobile-open {
 }
 
 .footer__menu-list :global(.menu-link) {
-  transition: opacity 0.3s ease;
+  transition: color 0.3s ease;
 }
 
-.footer__menu-list :global(.menu-link:hover) {
-  opacity: 0.6;
+.footer__menu-list :global(.menu-link:hover),
+.footer__menu-list :global(.menu-link:focus-visible) {
+  color: var(--footer-menu-hover-color);
 }
 
 .footer__menu-list :global(.menu-link:hover .menu-link__text) {

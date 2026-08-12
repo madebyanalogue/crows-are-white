@@ -115,6 +115,7 @@
         <div
           ref="navInnerRef"
           class="site-header__nav-inner"
+          data-lenis-prevent
         >
           <ul class="site-header__list">
             <li
@@ -166,6 +167,7 @@
 <script setup>
 import gsap from 'gsap'
 import { defaultMainMenu, defaultMainMenuSub } from '~/data/site'
+import { lockOverlayScroll, resetOverlayScrollLock, unlockOverlayScroll } from '~/composables/useOverlayScrollLock'
 import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
 
 const { primaryMenu, secondaryMenu, cartDisplayMode } = useSiteSettings()
@@ -706,10 +708,28 @@ function resetMenuItems() {
 
 watch(() => route.fullPath, onRouteChange)
 
+function shouldLockOverlayScroll() {
+  return menuOpen.value || (cartOpen.value && cartDisplayMode.value === 'dropdown')
+}
+
+function syncOverlayScrollLock() {
+  if (!import.meta.client) return
+
+  const shouldLock = shouldLockOverlayScroll()
+  const isLocked = document.documentElement.classList.contains('is-overlay-scroll-locked')
+
+  if (shouldLock && !isLocked) {
+    lockOverlayScroll()
+  } else if (!shouldLock && isLocked) {
+    unlockOverlayScroll()
+  }
+
+  document.documentElement.classList.toggle('is-nav-open', menuOpen.value)
+}
+
 watch(menuOpen, (open) => {
   if (!import.meta.client) return
-  document.documentElement.classList.toggle('is-nav-open', open)
-  document.body.style.overflow = open ? 'hidden' : ''
+  syncOverlayScrollLock()
 
   if (open) {
     // Start letter drop immediately — don't wait on panel expand
@@ -724,6 +744,7 @@ watch(menuOpen, (open) => {
 
 watch(cartOpen, (open) => {
   if (!import.meta.client) return
+  syncOverlayScrollLock()
 
   if (open) {
     if (openingCartFromMenu) {
@@ -777,8 +798,8 @@ onBeforeUnmount(() => {
   if (titleSettleTimer != null) clearTimeout(titleSettleTimer)
   if (panelSwitchTimer != null) clearTimeout(panelSwitchTimer)
   clearPanelHeightLock()
+  resetOverlayScrollLock()
   document.documentElement.classList.remove('is-nav-open')
-  document.body.style.overflow = ''
   if (keyHandler) window.removeEventListener('keydown', keyHandler)
 })
 </script>
@@ -786,6 +807,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .site-header {
   --site-header-bar-height: 50px;
+  --site-header-viewport-inset: 20px;
   position: fixed;
   top: 10px;
   left: 0;
@@ -800,6 +822,7 @@ onBeforeUnmount(() => {
 @media (min-width: 700px) {
   .site-header {
     top: 25px;
+    --site-header-viewport-inset: 50px;
   }
 }
 
@@ -812,7 +835,10 @@ onBeforeUnmount(() => {
 }
 
 .site-header.is-cart-open .site-header__panel {
+  display: flex;
+  flex-direction: column;
   width: min(100%, var(--site-header-panel-width-open));
+  max-height: calc(100dvh - var(--site-header-viewport-inset));
   overflow: hidden;
   color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
@@ -835,6 +861,13 @@ onBeforeUnmount(() => {
 .site-header.is-cart-open .site-header__bar {
   padding: 12px;
   height: calc(var(--site-header-bar-height) + 24px);
+}
+
+.site-header.is-cart-open :deep(.site-header__cart-wrap.is-open) {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .site-header.is-cart-open .site-header__nav {
@@ -933,7 +966,10 @@ onBeforeUnmount(() => {
 }
 
 .site-header.is-open .site-header__panel {
+  display: flex;
+  flex-direction: column;
   width: min(100%, var(--site-header-panel-width-open));
+  max-height: calc(100dvh - var(--site-header-viewport-inset));
   overflow: hidden;
 }
 
@@ -1190,17 +1226,31 @@ font-size: 18px;
 }
 
 .site-header.is-open .site-header__nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
   grid-template-rows: 1fr;
   padding-top: calc(var(--site-header-bar-height) + 24px);
+  overflow: hidden;
 }
 
 .site-header__nav-inner {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: none;
   min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 0;
+}
+
+.site-header__nav-inner::-webkit-scrollbar {
+  display: none;
 }
 
 .site-header.is-open .site-header__nav-inner {
