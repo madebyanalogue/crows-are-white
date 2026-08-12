@@ -12,7 +12,7 @@
             class="page-content__intro-title text-center "
             :class="richTextTwoColumns ? 'text-left-md' : 'text-center '"
           >
-            <h1 class="h1 serif light">{{ page.title }}</h1>
+            <h1 class="h1 condensed">{{ page.title }}</h1>
           </div>
           <SanityContent
             v-if="hasRichText"

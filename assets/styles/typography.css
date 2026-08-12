@@ -221,7 +221,6 @@ header {
 .rich-text {
   overflow-wrap: break-word;
   min-width: 0;
-  font-family: var(--body-serif);
 }
 
 .rich-text a,

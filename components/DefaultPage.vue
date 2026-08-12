@@ -6,7 +6,7 @@
     >
       <header class="page-content__intro page-content__intro--single grid-1">
         <div class="page-content__intro-title text-center">
-          <h1 class="h1 serif light">
+          <h1 class="h1 condensed">
             <slot name="title">{{ title }}</slot>
           </h1>
         </div>
