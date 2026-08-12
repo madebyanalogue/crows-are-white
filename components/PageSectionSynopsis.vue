@@ -409,7 +409,7 @@ function resolveButtonItem(button) {
 .page-section-synopsis__body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.5rem, 8vw, 10rem);
+  gap: clamp(1.5rem, 0vw, 10rem);
   align-items: center;
   max-width: 1600px;
   margin: 0 auto;
@@ -432,7 +432,8 @@ function resolveButtonItem(button) {
   font-size: var(--synopsis-text-size);
   line-height: var(--synopsis-text-line-height);
   max-width: 510px;
-  gap: 4.5rem;
+  gap: 3rem;
+  margin: 0 auto;
 }
 
 .page-section-synopsis__text {
@@ -453,6 +454,7 @@ function resolveButtonItem(button) {
 
 .page-section-synopsis__intro {
   letter-spacing: 0.025em;
+  opacity: 0.65;
 }
 
 .page-section-synopsis__intro :deep(p),
@@ -583,7 +585,7 @@ function resolveButtonItem(button) {
   letter-spacing: 0.02em;
   color: inherit;
   text-decoration: none;
-  opacity: 0.4;
+  opacity: 0.65;
   transition: opacity 0.3s ease;
 }
 
@@ -613,8 +615,13 @@ function resolveButtonItem(button) {
   text-decoration: underline;
   text-underline-offset: 0.3em;
   text-decoration-thickness: 0.5px;
+  opacity: 0.65;
+  transition: opacity 0.3s ease;
 }
-
+.page-section-synopsis__useful-link:hover {
+  opacity: 1;
+  text-decoration-thickness: 0px;
+}
 .page-section-synopsis__buttons-row {
   display: flex;
   justify-content: center;
