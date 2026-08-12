@@ -587,6 +587,7 @@ function pageSectionProjection() {
     screeningsEmptyText,
     screeningsEmptyButtonLabel,
     screeningsEmptyButtonAnchor,
+    ${colorField('screeningsFeatureColor')},
     hostScreeningTitle,
     hostScreeningIntro,
     ${colorField('hostScreeningFormBackgroundColor')},

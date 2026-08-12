@@ -126,54 +126,51 @@ onBeforeUnmount(() => {
       v-if="$slots.header || showControls"
       class="shop-product-carousel__header"
     >
-      <div
-        v-if="$slots.header"
-        class="shop-product-carousel__header-start"
-      >
+      <div class="shop-product-carousel__header-start">
         <slot name="header" />
-      </div>
 
-      <div
-        v-if="showControls"
-        class="shop-product-carousel__controls"
-      >
-        <button
-          type="button"
-          class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
-          aria-label="Previous products"
-          :disabled="!canGoPrev"
-          @click="goPrev"
+        <div
+          v-if="showControls"
+          class="shop-product-carousel__controls"
         >
-          <svg
-            viewBox="0 0 13 12"
-            fill="none"
-            aria-hidden="true"
+          <button
+            type="button"
+            class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
+            aria-label="Previous products"
+            :disabled="!canGoPrev"
+            @click="goPrev"
           >
-            <path
-              stroke="currentColor"
-              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-            />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
 
-        <button
-          type="button"
-          class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
-          aria-label="Next products"
-          :disabled="!canGoNext"
-          @click="goNext"
-        >
-          <svg
-            viewBox="0 0 13 12"
-            fill="none"
-            aria-hidden="true"
+          <button
+            type="button"
+            class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
+            aria-label="Next products"
+            :disabled="!canGoNext"
+            @click="goNext"
           >
-            <path
-              stroke="currentColor"
-              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-            />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -240,26 +237,23 @@ onBeforeUnmount(() => {
 }
 
 .shop-product-carousel__header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
   min-height: clamp(2.5rem, 6vw, 3.25rem);
   margin-bottom: 2rem;
   padding: 0 clamp(1rem, 3vw, 2rem);
 }
 
 .shop-product-carousel__header-start {
-  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 50px;
   min-width: 0;
-  margin-right: auto;
 }
 
 .shop-product-carousel__controls {
   display: flex;
   flex: 0 0 auto;
-  align-items: stretch;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .shop-product-carousel__viewport {
@@ -309,15 +303,11 @@ onBeforeUnmount(() => {
   height: clamp(2.5rem, 6vw, 3.25rem);
   margin: 0;
   padding: 0;
-  border: 1px solid var(--shop-line);
-  background: var(--shop-bg);
+  border: 0;
+  background: transparent;
   color: inherit;
   cursor: pointer;
   transition: opacity 0.2s ease;
-}
-
-.shop-product-carousel__arrow--prev {
-  border-right: 0;
 }
 
 .shop-product-carousel__arrow svg {

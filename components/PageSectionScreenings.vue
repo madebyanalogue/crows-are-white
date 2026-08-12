@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import gsap from 'gsap'
+import { toCssColor } from '~/utils/pageColors'
 
 const props = defineProps({
   section: {
@@ -26,6 +27,13 @@ const emptyButtonHref = computed(() => {
   return `#${anchor || 'newsletter'}`
 })
 
+const screeningsStyle = computed(() => ({
+  '--screenings-feature-color': toCssColor(
+    props.section?.screeningsFeatureColor,
+    'arancio',
+  ),
+}))
+
 const { scrollToHash } = useMenuLinks()
 
 function onEmptyButtonClick(event: MouseEvent) {
@@ -41,7 +49,7 @@ const toolbarRef = ref<HTMLElement | null>(null)
 const pendingEnter = ref(true)
 
 let listTween: gsap.core.Tween | null = null
-let enterTween: gsap.core.Tween | null = null
+let enterTween: gsap.core.Timeline | null = null
 
 const availableStates = computed(() =>
   [...new Set(screenings.value.map((s) => s.state))].sort(),
@@ -104,19 +112,39 @@ async function animatePageEnter({ delay = 0 } = {}) {
   }
 
   enterTween?.kill()
+
+  const titleEl = introRef.value?.querySelector('.screenings-page__title')
+  const otherTargets = targets.filter((target) => target !== titleEl)
+
   gsap.set(targets, { autoAlpha: 0, y: 18 })
 
-  enterTween = gsap.to(targets, {
-    autoAlpha: 1,
-    y: 0,
-    duration: 0.7,
-    stagger: 0.14,
+  const timeline = gsap.timeline({
     delay,
-    ease: 'power2.out',
     onComplete: () => {
       pendingEnter.value = false
     },
   })
+
+  if (titleEl) {
+    timeline.to(titleEl, {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.55,
+      ease: 'power2.out',
+    }, 0)
+  }
+
+  if (otherTargets.length) {
+    timeline.to(otherTargets, {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.55,
+      stagger: 0.1,
+      ease: 'power2.out',
+    }, titleEl ? 0.08 : 0)
+  }
+
+  enterTween = timeline
 }
 
 async function animateRows() {
@@ -151,7 +179,7 @@ async function schedulePageEnter() {
 
   const fromPageTransition = isPageTransitionActive()
   await waitForPageTransitionComplete()
-  await animatePageEnter({ delay: fromPageTransition ? 0.15 : 0.55 })
+  await animatePageEnter({ delay: fromPageTransition ? 0 : 0.08 })
 }
 
 onMounted(() => {
@@ -173,6 +201,7 @@ onBeforeUnmount(() => {
   <div
     class="screenings-page"
     :class="{ 'screenings-page--pending-enter': pendingEnter }"
+    :style="screeningsStyle"
   >
 
     <div class="screenings-page__content">
@@ -483,9 +512,10 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.screenings-row:not(.screenings-row--disabled) .screenings-row__action .screenings-book,
+.screenings-row:not(.screenings-row--disabled) .screenings-row__action:hover .screenings-book,
 .screenings-row:not(.screenings-row--disabled) .screenings-row__link:focus-visible .screenings-row__action .screenings-book {
-  background-color: var(--screenings-ink);
+  background-color: var(--screenings-feature-color, var(--screenings-ink));
+  border-color: var(--screenings-feature-color, var(--screenings-ink));
   color: #fff;
 }
 

@@ -546,8 +546,8 @@ function onSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 2.5;
-  min-height: clamp(420px, 60vh, 760px);
+  aspect-ratio: 2;
+  min-height: clamp(450px, 70vh, 780px);
   overflow: hidden;
 }
 

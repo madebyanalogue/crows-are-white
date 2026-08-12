@@ -54,6 +54,7 @@ export default defineEventHandler(async () => {
     ${colorField('pageTransitionWipeColor')},
     ${colorField('footerBackgroundColor')},
     ${colorField('footerTextColor')},
+    ${colorField('footerSocialFeatureColor')},
     seoTitle,
     seoDescription,
     facebookShareImage {
@@ -98,6 +99,8 @@ export default defineEventHandler(async () => {
     footerStrapline[] ${portableTextProjection},
     footerLegal[] ${portableTextProjection},
     footerShopifyLine,
+    footerShowLogo,
+    footerSocialStyle,
     privacyMenu-> ${menuProjection},
     trustpilot {
       url,

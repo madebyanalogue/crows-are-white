@@ -60,6 +60,7 @@ export function useSiteSettings() {
   const pageTransitionWipeColor = computed(() => settings.value?.pageTransitionWipeColor || 'aintree')
   const footerBackgroundColor = computed(() => settings.value?.footerBackgroundColor || 'crayon')
   const footerTextColor = computed(() => settings.value?.footerTextColor || 'racing-green')
+  const footerSocialFeatureColor = computed(() => settings.value?.footerSocialFeatureColor || 'arancio')
   const seoTitle = computed(() => settings.value?.seoTitle || settings.value?.title || 'Crows Are White')
   const seoDescription = computed(() => settings.value?.seoDescription || '')
   const facebookShareImage = computed(() => resolveSanityAssetUrl(settings.value?.facebookShareImage?.asset))
@@ -102,6 +103,10 @@ export function useSiteSettings() {
   }))
   const watchNowDropdown = computed(() => settings.value?.watchNowDropdown || null)
   const socialLinks = computed(() => settings.value?.socialLinks || [])
+  const footerShowLogo = computed(() => settings.value?.footerShowLogo !== false)
+  const footerSocialStyle = computed(() =>
+    settings.value?.footerSocialStyle === 'initials' ? 'initials' : 'icons',
+  )
   const mailchimpAction = computed(() => settings.value?.mailchimpAction || '')
   const cartDisplayMode = computed(() =>
     settings.value?.cartDisplayMode === 'drawer' ? 'drawer' : 'dropdown',
@@ -157,6 +162,7 @@ export function useSiteSettings() {
     pageTransitionWipeColor,
     footerBackgroundColor,
     footerTextColor,
+    footerSocialFeatureColor,
     seoTitle,
     seoDescription,
     facebookShareImage,
@@ -177,6 +183,8 @@ export function useSiteSettings() {
     assemble,
     watchNowDropdown,
     socialLinks,
+    footerShowLogo,
+    footerSocialStyle,
     mailchimpAction,
     cartDisplayMode,
     menuColors,
