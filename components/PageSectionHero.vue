@@ -292,7 +292,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
     "spacer buttons byline";
   align-items: end;
   gap: 1rem 1.5rem;
-  padding: 0 1rem;
+  padding: 0 var(--wrapper-padding);
   pointer-events: none;
 }
 
@@ -441,6 +441,17 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   }
 
   .page-section-hero__bottom-spacer {
+    display: none;
+  }
+}
+
+@media (max-width: 699px) {
+  .page-section-hero__bottom:not(.is-buttons-hidden) {
+    grid-template-rows: auto;
+    grid-template-areas: "buttons";
+  }
+
+  .page-section-hero__bottom:not(.is-buttons-hidden) .page-section-hero__byline {
     display: none;
   }
 }

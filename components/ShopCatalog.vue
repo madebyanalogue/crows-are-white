@@ -85,8 +85,8 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
       </div>
 
       <div
-        v-if="!isCollectionView"
         class="shop-views"
+        :class="{ 'shop-views--collection': isCollectionView }"
         role="group"
         aria-label="Grid layout"
       >
@@ -272,6 +272,16 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   display: flex;
   align-items: center;
   gap: 0.65rem;
+}
+
+.shop-views--collection {
+  display: none;
+}
+
+@media (min-width: 1000px) {
+  .shop-views--collection {
+    display: flex;
+  }
 }
 
 .shop-views__btn {

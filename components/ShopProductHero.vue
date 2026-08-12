@@ -54,7 +54,6 @@ const activeImageIndex = ref(0)
 const displayImageIndex = ref(0)
 
 const CAROUSEL_DRAG_ATTRACTION = 0.022
-const CAROUSEL_ARROW_ATTRACTION = 0.01
 
 let carouselInstance: {
   off: (event: string, handler: () => void) => void
@@ -106,30 +105,12 @@ const { flickity, reload } = useFlickity(carouselRef, () => ({
   onReady: bindCarousel,
 }))
 
-function restoreCarouselDragPhysics() {
-  if (!carouselInstance) return
-  carouselInstance.options.selectedAttraction = CAROUSEL_DRAG_ATTRACTION
+function showPreviousImage() {
+  flickity.value?.previous(true, false)
 }
 
-function runCarouselStep(direction: 'previous' | 'next') {
-  const instance = flickity.value as NonNullable<typeof carouselInstance> | null
-  if (!instance) return
-
-  instance.options.selectedAttraction = CAROUSEL_ARROW_ATTRACTION
-
-  const onSettle = () => {
-    if (instance.isAnimating) return
-    restoreCarouselDragPhysics()
-    instance.off('settle', onSettle)
-  }
-
-  instance.on('settle', onSettle)
-
-  if (direction === 'previous') {
-    instance.previous(true, false)
-  } else {
-    instance.next(true, false)
-  }
+function showNextImage() {
+  flickity.value?.next(true, false)
 }
 
 function selectCarouselIndex(index: number, isInstant = true) {
@@ -148,14 +129,6 @@ function selectCarouselIndex(index: number, isInstant = true) {
 
   activeImageIndex.value = normalizedIndex
   displayImageIndex.value = normalizedIndex
-}
-
-function showPreviousImage() {
-  runCarouselStep('previous')
-}
-
-function showNextImage() {
-  runCarouselStep('next')
 }
 
 function onCarouselKeydown(event: KeyboardEvent) {

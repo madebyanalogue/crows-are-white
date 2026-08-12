@@ -582,6 +582,7 @@ function onSubmit() {
   padding: clamp(1.25rem, 3vw, 2rem);
   background: var(--background-color);
   --newsletter-ink: var(--text-color);
+  opacity: 0;
 }
 
 .newsletter-block__panel-title {
