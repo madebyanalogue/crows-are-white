@@ -250,7 +250,7 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__menu-title {
-  font-size: clamp(28px, 3vw, 40px);
+  font-size: clamp(31px, 3vw, 40px);
   font-weight: 300;
   letter-spacing: -0.03em;
   margin-bottom: 13px;
@@ -285,7 +285,7 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 }
 
 .footer__menus .h7 {
-  font-size: clamp(20px, 2.5vw, 23px);
+  font-size: 23px;
 }
 
 .footer__menu {

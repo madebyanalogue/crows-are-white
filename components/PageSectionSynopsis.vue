@@ -398,7 +398,7 @@ function resolveButtonItem(button) {
   --synopsis-text-line-height: 1.5;
   --synopsis-link-group-gap: 2.7em;
   padding: 135px 0;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.04em;
 }
 
 .page-section-synopsis__inner {
@@ -421,8 +421,6 @@ function resolveButtonItem(button) {
   font-size: var(--synopsis-text-size);
   font-weight: 300;
   line-height: var(--synopsis-text-line-height);
-  letter-spacing: 0.02em;
-  font-size:133%;
 }
 
 .page-section-synopsis__copy {
@@ -544,7 +542,6 @@ function resolveButtonItem(button) {
   font-size: var(--synopsis-text-size);
   font-weight: 300;
   line-height: var(--synopsis-text-line-height);
-  letter-spacing: 0.02em;
 }
 
 .page-section-synopsis__link-columns {
@@ -582,7 +579,6 @@ function resolveButtonItem(button) {
   font-size: var(--synopsis-text-size);
   font-weight: 300;
   line-height: var(--synopsis-text-line-height);
-  letter-spacing: 0.02em;
   color: inherit;
   text-decoration: none;
   opacity: 0.65;
@@ -615,11 +611,11 @@ function resolveButtonItem(button) {
   text-decoration: underline;
   text-underline-offset: 0.3em;
   text-decoration-thickness: 0.5px;
-  opacity: 0.65;
   transition: opacity 0.3s ease;
+  opacity: 1;
 }
 .page-section-synopsis__useful-link:hover {
-  opacity: 1;
+  opacity: 0.65;
   text-decoration-thickness: 0px;
 }
 .page-section-synopsis__buttons-row {
@@ -673,7 +669,6 @@ function resolveButtonItem(button) {
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
   transition:
     background-color 0.25s ease,
     color 0.25s ease,

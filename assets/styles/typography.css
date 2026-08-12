@@ -119,7 +119,7 @@ h1, h2, h3, h4, h5, h6 {
 
 body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.000em; }
 .jumbo { font-size: clamp(42px, 10vw, calc(var(--unit-font) * 7.1)); line-height: 1.1; letter-spacing: -0.000em; }
-.h1 { font-size: var(--h1); line-height: 1.25; letter-spacing: -0.000em; }
+.h1 { font-size: var(--h1); line-height: 1.1; letter-spacing: -0.000em; }
 .h2 { font-size: var(--h2); line-height: 1.25; letter-spacing: -0.000em; }
 .h3 { font-size: var(--h3); line-height: 1.25; letter-spacing: -0.000em; }
 .h4 { font-size: var(--h4); line-height: 1.3; letter-spacing: -0.000em; }

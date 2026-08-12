@@ -11,9 +11,6 @@ const props = defineProps({
 })
 
 const DEFAULT_NEWSLETTER_TITLE = 'Stay with the Story'
-const DEFAULT_NEWSLETTER_INTRO = `If this film resonated with you, we'd love to keep in touch.
-
-Receive occasional letters from the filmmakers, screening news, and updates as the journey continues.`
 const DEFAULT_NEWSLETTER_SUBMIT_LABEL = 'Stay in Touch'
 
 function isPlaceholderNewsletterTitle(value) {
@@ -36,7 +33,7 @@ function resolveNewsletterTitle(section) {
 
 function resolveNewsletterIntro(section) {
   const cms = section?.newsletterIntro?.trim()
-  if (isPlaceholderNewsletterIntro(cms)) return DEFAULT_NEWSLETTER_INTRO
+  if (!cms || isPlaceholderNewsletterIntro(cms)) return ''
   return cms
 }
 
@@ -49,10 +46,10 @@ const title = computed(() => resolveNewsletterTitle(props.section))
 const intro = computed(() => resolveNewsletterIntro(props.section))
 const submitLabel = computed(() => resolveNewsletterSubmitLabel(props.section))
 
-const resolvedTextColor = computed(() => {
-  const { newsletterTextColor, newsletterBackgroundColor } = props.section || {}
-  if (!newsletterTextColor && !newsletterBackgroundColor) return null
-  return resolvePageTextColor(newsletterTextColor, newsletterBackgroundColor)
+const accentColor = computed(() => {
+  const color = props.section?.newsletterTextColor
+  if (!color) return null
+  return toCssColor(color, 'obsidian')
 })
 
 const loop = computed(() => {
@@ -76,13 +73,18 @@ const background = computed(() => {
   if (!imageUrl && !videoUrl && !hasCloudflareLoop) return null
 
   const overlay = Number(props.section?.newsletterOverlayOpacity)
+  const fallbackLightText = !accentColor.value
+    && isLightColor(resolvePageTextColor(
+      props.section?.newsletterTextColor,
+      props.section?.newsletterBackgroundColor,
+    ))
 
   return {
     imageUrl,
     videoUrl,
     loop: hasCloudflareLoop ? loop.value : null,
     alt: props.section?.newsletterImage?.alt || '',
-    textColor: isLightColor(resolvedTextColor.value) ? 'light' : undefined,
+    textColor: fallbackLightText ? 'light' : undefined,
     overlayOpacity: Number.isFinite(overlay) ? Math.min(Math.max(overlay, 0), 100) / 100 : 0,
   }
 })
@@ -95,8 +97,8 @@ const sectionStyle = computed(() => {
     style.background = toCssColor(backgroundColor, DEFAULT_PAGE_COLOR)
   }
 
-  if (resolvedTextColor.value) {
-    style.color = toCssColor(resolvedTextColor.value, 'obsidian')
+  if (accentColor.value) {
+    style.color = accentColor.value
   }
 
   return style
@@ -161,6 +163,7 @@ const { items: reflectionItems } = useReflections(500)
         :title="title"
         :intro="intro"
         :submit-label="submitLabel"
+        :accent-color="accentColor"
         :background="background"
         :layout="layout"
       >

@@ -14,6 +14,10 @@ const props = defineProps({
     type: String,
     default: 'Stay in Touch',
   },
+  accentColor: {
+    type: String,
+    default: '',
+  },
   // { imageUrl, videoUrl, alt, textColor: 'dark' | 'light', overlayOpacity }
   background: {
     type: Object,
@@ -49,6 +53,27 @@ const introParagraphs = computed(() => {
     .filter(Boolean)
 })
 
+const blockStyle = computed(() => {
+  const style = {}
+
+  if (props.accentColor) {
+    style['--newsletter-ink'] = props.accentColor
+  }
+
+  if (hasMedia.value && !isSplitLayout.value && !isMapLayout.value && props.background?.overlayOpacity != null) {
+    style['--newsletter-overlay'] = props.background.overlayOpacity
+  }
+
+  return Object.keys(style).length ? style : null
+})
+
+const useLightInk = computed(() =>
+  !props.accentColor
+  && !isSplitLayout.value
+  && !isMapLayout.value
+  && props.background?.textColor === 'light',
+)
+
 function onSubmit() {
   submitted.value = true
 }
@@ -59,12 +84,12 @@ function onSubmit() {
     class="newsletter-block"
     :class="{
       'has-background': hasMedia && !isSplitLayout && !isMapLayout,
-      'is-light': !isSplitLayout && !isMapLayout && background?.textColor === 'light',
+      'is-light': useLightInk,
       'newsletter-block--split': isSplitLayout,
       'newsletter-block--map': isMapLayout,
     }"
-    :style="hasMedia && !isSplitLayout && !isMapLayout ? {'--newsletter-overlay': background.overlayOpacity} : null"
-    :aria-label="title"
+    :style="blockStyle"
+    :aria-label="title.replace(/\s+/g, ' ').trim()"
   >
     <div
       v-if="isMapLayout"
@@ -355,7 +380,7 @@ function onSubmit() {
       />
 
       <div class="newsletter-block__panel">
-        <h2 class="newsletter-block__panel-title serif">
+        <h2 class="newsletter-block__panel-title condensed">
           {{ title }}
         </h2>
 
@@ -393,17 +418,19 @@ function onSubmit() {
               class="newsletter-block__input serif"
               type="email"
               name="EMAIL"
+              placeholder="Email address"
+              aria-label="Email address"
               required
               autocomplete="email"
             >
+            <button
+              type="submit"
+              class="newsletter-block__submit serif"
+              :disabled="!mailchimpAction"
+            >
+              {{ submitLabel }}
+            </button>
           </div>
-          <button
-            type="submit"
-            class="newsletter-block__submit serif"
-            :disabled="!mailchimpAction"
-          >
-            {{ submitLabel }}
-          </button>
         </form>
 
         <p
@@ -577,18 +604,18 @@ function onSubmit() {
 .newsletter-block__panel {
   position: relative;
   z-index: 2;
-  width: min(100%, 34rem);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  background: var(--background-color);
-  --newsletter-ink: var(--text-color);
-  opacity: 0;
+  width: 100%;
+  padding: var(--wrapper-padding);
+  background: transparent;
 }
 
 .newsletter-block__panel-title {
-  margin: 0 0 clamp(0.85rem, 2vw, 1.25rem);
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  margin: 0 0 clamp(50px, 5vw, 7rem);
+  font-size: clamp(1.35rem, 3.45vw, 9rem);
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 0.925;
+  white-space: pre-line;
+  text-align: center;
 }
 
 .newsletter-block__intro {
@@ -607,6 +634,7 @@ function onSubmit() {
 .newsletter-block__title {
   margin: 0 0 clamp(1rem, 2.5vw, 1.5rem);
   line-height: 1.15;
+  white-space: pre-line;
 }
 
 .newsletter-block__form {
@@ -615,6 +643,8 @@ function onSubmit() {
   align-items: end;
   gap: 1rem;
   width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .newsletter-block__form--stacked {
@@ -624,7 +654,8 @@ function onSubmit() {
 }
 
 .newsletter-block__form--overlay {
-  gap: 0.75rem;
+  display: block;
+  gap: 0;
 }
 
 .newsletter-block__fieldset {
@@ -693,6 +724,11 @@ function onSubmit() {
   outline: none;
 }
 
+.newsletter-block__input::placeholder {
+  color: var(--newsletter-ink);
+  opacity: 1;
+}
+
 .newsletter-block__select {
   cursor: pointer;
   appearance: none;
@@ -704,21 +740,35 @@ function onSubmit() {
 }
 
 .newsletter-block__form--overlay .newsletter-block__label {
-  font-size: clamp(0.8125rem, 1.2vw, 0.9375rem);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  display: none;
+}
+
+.newsletter-block__form--overlay .newsletter-block__field {
+  position: relative;
 }
 
 .newsletter-block__form--overlay .newsletter-block__input {
-  padding-bottom: 0.65rem;
-  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  padding-right: clamp(7rem, 18vw, 12rem);
+  padding-bottom: clamp(15px, 0.5em, 2em);
+  font-size: clamp(16px, 2.2vw, 4rem);
   text-transform: none;
   letter-spacing: 0;
 }
 
+.newsletter-block__form--overlay .newsletter-block__input:focus::placeholder {
+  opacity: 0;
+}
+
 .newsletter-block__form--overlay .newsletter-block__submit {
-  padding-bottom: 0.55rem;
-  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: calc(100% - clamp(15px, 0.5em, 2em));
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(16px, 1.5vw, 1.75rem);
 }
 
 .newsletter-block__checkbox {
@@ -743,7 +793,7 @@ function onSubmit() {
   padding: 0 0 0.55rem;
   border: 0;
   background: transparent;
-  color: inherit;
+  color: var(--newsletter-ink);
   font-size: clamp(1rem, 2.2vw, 1.35rem);
   font-weight: 400;
   line-height: 1;
