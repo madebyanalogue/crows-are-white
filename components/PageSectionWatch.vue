@@ -496,7 +496,7 @@ const sectionStyle = computed(() => {
 .page-section-watch__title {
   margin: 0;
   font-size: clamp(30px, 2.5vw, 3rem);
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.15;
   text-transform: uppercase;
@@ -511,7 +511,7 @@ const sectionStyle = computed(() => {
   gap: clamp(0.45rem, 1vw, 0.65rem);
   margin: 0;
   font-size: clamp(0.95rem, 1.6vw, 1.1rem);
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.88);
@@ -532,7 +532,7 @@ const sectionStyle = computed(() => {
   color: var(--watch-accent-text);
   font-family: var(--serif);
   font-size: 17px;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.07em;
   line-height: 1.1;
   text-transform: uppercase;

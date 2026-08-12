@@ -127,7 +127,7 @@
               v-if="footerLegal.length"
               class="footer__legal-copy"
             >
-              <SanityContent :blocks="footerLegal" />
+              <SanityContent :blocks="footerLegalBlocks" />
             </div>
             <nav
               v-if="privacyMenuItems.length"
@@ -151,6 +151,10 @@
 
 <script setup>
 import { toCssColor } from '~/utils/pageColors'
+import {
+  applyPortableTextTokens,
+  getDefaultPortableTextTokens,
+} from '~/utils/portableTextTokens'
 
 const {
   footerMenus,
@@ -168,6 +172,10 @@ const {
 const footerStyle = computed(() => ({
   '--footer-social-feature-color': toCssColor(footerSocialFeatureColor.value, 'arancio'),
 }))
+
+const footerLegalBlocks = computed(() =>
+  applyPortableTextTokens(footerLegal.value, getDefaultPortableTextTokens()),
+)
 
 const SOCIAL_PLATFORM_LABELS = {
   instagram: 'Instagram',
