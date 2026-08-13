@@ -3,9 +3,7 @@ import {
   DEFAULT_MENU_HIGHLIGHT_COLOR,
   getMenuBorderVars,
   getPageColorVars,
-  getWideGamutStyleVars,
   normalizeColorValue,
-  parseWideGamutColorInput,
   toCssColor,
 } from '~/utils/pageColors'
 
@@ -35,16 +33,8 @@ export function extractHeroChromeColors(section = {}) {
 }
 
 export function getHeroFeatureColorVar(section = {}) {
-  const parsed = parseWideGamutColorInput(section?.heroFeatureColor)
-  return parsed?.srgb || toCssColor(undefined, DEFAULT_MENU_HIGHLIGHT_COLOR)
-}
-
-export function getHeroFeatureColorStyleVars(section = {}) {
-  return getWideGamutStyleVars(
-    section?.heroFeatureColor,
-    DEFAULT_MENU_HIGHLIGHT_COLOR,
-    '--hero-feature-color',
-  )
+  const { heroFeatureColor } = extractHeroChromeColors(section)
+  return toCssColor(heroFeatureColor, DEFAULT_MENU_HIGHLIGHT_COLOR)
 }
 
 function applyHeroMenuBorderColor(result, heroMenuBorderColor) {
@@ -70,10 +60,10 @@ export function getHeroMenuChromeVars(section = {}) {
     heroMenuBackgroundColor,
     heroMenuTextColor,
     heroMenuBorderColor,
+    heroFeatureColor,
   } = extractHeroChromeColors(section)
 
-  const parsedFeatureColor = parseWideGamutColorInput(section?.heroFeatureColor)
-  const featureColor = parsedFeatureColor?.srgb || toCssColor(undefined, DEFAULT_MENU_HIGHLIGHT_COLOR)
+  const featureColor = toCssColor(heroFeatureColor, DEFAULT_MENU_HIGHLIGHT_COLOR)
   const result = {
     '--hero-menu-feature-color': featureColor,
   }

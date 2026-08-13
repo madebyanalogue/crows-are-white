@@ -1,6 +1,6 @@
 <script setup>
 import { resolveSectionLoopVideo } from '~/utils/sectionLoopVideo'
-import { getHeroFeatureColorStyleVars } from '~/utils/heroChrome'
+import { getHeroFeatureColorVar } from '~/utils/heroChrome'
 import { isLightColor } from '~/utils/pageColors'
 
 const props = defineProps({
@@ -58,7 +58,7 @@ const showScrim = computed(() => props.section?.heroShowScrim !== false && scrim
 const videoTransform = computed(() => props.section?.heroVideoTransform?.trim() || '')
 
 const heroStyle = computed(() => ({
-  ...getHeroFeatureColorStyleVars(props.section),
+  '--hero-feature-color': getHeroFeatureColorVar(props.section),
   '--hero-primary-text-color': isLightColor(props.section?.heroFeatureColor)
     ? 'var(--obsidian, #000e0a)'
     : 'var(--fuji, #fff)',
@@ -162,7 +162,6 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 .page-section-hero {
   --site-header-panel-width-closed: 360px;
   --hero-feature-color: var(--menu-highlight-color, var(--arancio, #ff9944));
-  --hero-feature-color-resolved: var(--hero-feature-color);
 
   position: relative;
   height: 100svh;
@@ -171,12 +170,6 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   overflow: hidden;
   background: #000;
   color: var(--fuji, #fff);
-}
-
-@supports (color: color(display-p3 1 1 1)) {
-  .page-section-hero {
-    --hero-feature-color-resolved: var(--hero-feature-color-p3, var(--hero-feature-color));
-  }
 }
 
 .page-section-hero__media-wrap {
@@ -222,7 +215,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  color: var(--hero-feature-color-resolved);
+  color: var(--hero-feature-color);
   top:-7%;
 }
 
@@ -244,7 +237,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--hero-feature-color-resolved);
+  color: var(--hero-feature-color);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -329,7 +322,7 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-align: center;
-  color: var(--hero-feature-color-resolved);
+  color: var(--hero-feature-color);
   grid-area: byline;
 }
 
@@ -389,8 +382,8 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 }
 
 .page-section-hero__button--primary {
-  background-color: var(--hero-feature-color-resolved);
-  border: 1px solid var(--hero-feature-color-resolved);
+  background-color: var(--hero-feature-color);
+  border: 1px solid var(--hero-feature-color);
   color: var(--hero-primary-text-color);
 }
 
@@ -400,8 +393,8 @@ const { sectionRef } = useHeroMenuChrome(toRef(props, 'section'))
 
 .page-section-hero__button--secondary {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--hero-feature-color-resolved);
-  color: var(--hero-feature-color-resolved);
+  border: 1px solid var(--hero-feature-color);
+  color: var(--hero-feature-color);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(20px);
 }

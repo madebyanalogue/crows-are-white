@@ -180,7 +180,30 @@ function resolveButtonItem(button) {
     aria-label="Synopsis"
   >
     <div class="page-section-synopsis__inner wrapper">
+
+
+
       <div
+        v-if="buttons.length"
+        class="page-section-synopsis__buttons-row"
+      >
+        <div class="page-section-synopsis__buttons">
+          <MenuLink
+            v-for="button in buttons"
+            :key="button._key"
+            :item="resolveButtonItem(button)"
+            :link-class="[
+              'page-section-synopsis__button',
+              button.style === 'secondary'
+                ? 'page-section-synopsis__button--secondary'
+                : 'page-section-synopsis__button--primary',
+            ]"
+            :show-arrow="false"
+          />
+        </div>
+      </div>
+
+      <!-- <div
         v-if="linkGroupColumns.length || legacyLinkGroupRows.length"
         class="page-section-synopsis__link-groups"
       >
@@ -313,7 +336,7 @@ function resolveButtonItem(button) {
           </section>
           </div>
         </template>
-      </div>
+      </div> -->
 
       <div
         v-if="title || introBlocks.length || usefulLinks.length || galleryItems.length"
@@ -368,26 +391,6 @@ function resolveButtonItem(button) {
           </ul>
         </div>
       </div>
-
-      <div
-        v-if="buttons.length"
-        class="page-section-synopsis__buttons-row"
-      >
-        <div class="page-section-synopsis__buttons">
-          <MenuLink
-            v-for="button in buttons"
-            :key="button._key"
-            :item="resolveButtonItem(button)"
-            :link-class="[
-              'page-section-synopsis__button',
-              button.style === 'secondary'
-                ? 'page-section-synopsis__button--secondary'
-                : 'page-section-synopsis__button--primary',
-            ]"
-            :show-arrow="false"
-          />
-        </div>
-      </div>
     </div>
   </section>
 </template>
@@ -397,7 +400,7 @@ function resolveButtonItem(button) {
   --synopsis-text-size: 22px;
   --synopsis-text-line-height: 1.5;
   --synopsis-link-group-gap: 2.7em;
-  padding: 135px 0;
+  padding: 65px 0 240px;
   letter-spacing: 0.04em;
 }
 
@@ -628,7 +631,7 @@ function resolveButtonItem(button) {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 15px 20px;
+  gap: 15px 25px;
   width: min(100%, var(--site-header-panel-width-closed, 680px));
 }
 

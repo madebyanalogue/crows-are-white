@@ -28,7 +28,7 @@ const heroLogoMarkup = heroLogoSvg.replace(
   display: block;
   width: 100%;
   height: 100%;
-  color: var(--hero-feature-color-resolved, currentColor);
+  color: var(--hero-feature-color, currentColor);
 }
 
 .hero-wordmark-logo :deep(svg) {
