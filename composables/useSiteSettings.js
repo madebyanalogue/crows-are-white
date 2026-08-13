@@ -74,27 +74,13 @@ export function useSiteSettings() {
   const metaPixelId = computed(() => settings.value?.metaPixelId?.trim() || '')
   const hotjarSiteId = computed(() => settings.value?.hotjarSiteId?.trim() || '')
   const mobileBreakpoint = computed(() => settings.value?.mobileBreakpoint ?? 1000)
-  const trustpilotUrl = computed(() => settings.value?.trustpilot?.url?.trim() || '')
-  const footerShowTrustpilot = computed(() => settings.value?.trustpilot?.showInFooter === true)
-  const whatsappEnabled = computed(() => settings.value?.whatsapp?.enabled === true)
-  const whatsappLinkUrl = computed(() => settings.value?.whatsapp?.url?.trim() || '')
-  const whatsappPhoneNumber = computed(() => settings.value?.whatsapp?.phoneNumber?.trim() || '')
-  const whatsappMessage = computed(() => settings.value?.whatsapp?.message?.trim() || '')
-  const whatsappUrl = computed(() => {
-    if (whatsappLinkUrl.value) return whatsappLinkUrl.value
-
-    if (!whatsappEnabled.value) return null
-
-    const digits = whatsappPhoneNumber.value.replace(/\D/g, '')
-    if (!digits) return null
-
-    const base = `https://wa.me/${digits}`
-    if (whatsappMessage.value) {
-      return `${base}?text=${encodeURIComponent(whatsappMessage.value)}`
-    }
-
-    return base
-  })
+  const trustpilotUrl = computed(() => '')
+  const footerShowTrustpilot = computed(() => false)
+  const whatsappEnabled = computed(() => false)
+  const whatsappLinkUrl = computed(() => '')
+  const whatsappPhoneNumber = computed(() => '')
+  const whatsappMessage = computed(() => '')
+  const whatsappUrl = computed(() => null)
   const theatricalReleaseActive = computed(() => settings.value?.theatricalReleaseActive !== false)
   const assemble = computed(() => ({
     enabled: settings.value?.assemble?.enabled === true,

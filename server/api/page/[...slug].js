@@ -779,19 +779,6 @@ export default defineEventHandler(async (event) => {
       richTextTwoColumns,
       richTextPaddingTop,
       richTextPaddingBottom,
-      "articleCta": *[_type == "siteSettings"][0].articleCta {
-        title[] ${portableTextProjection},
-        description[] ${portableTextProjection},
-        links[] {
-          _key,
-          type,
-          linkTitle,
-          page-> {
-            slug { current }
-          },
-          url
-        }
-      },
       "sections": sections[0...50]->${sectionFields},
       "productPageSections": productPageSections[0...50]->${sectionFields}
     }`

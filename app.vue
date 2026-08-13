@@ -30,7 +30,6 @@
         <div data-transition-secondary class="transition__secondary" />
       </div>
 
-      <WhatsAppButton />
       <ClientOnly>
         <NewsletterPopup />
       </ClientOnly>
@@ -44,7 +43,6 @@
 
 <script setup>
 import Header from '~/components/Header.vue'
-import WhatsAppButton from '~/components/WhatsAppButton.vue'
 
 const {
   seoTitle,

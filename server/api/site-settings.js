@@ -77,14 +77,6 @@ export default defineEventHandler(async () => {
     googleTagManagerId,
     metaPixelId,
     hotjarSiteId,
-    defaultCtaImage {
-      asset-> {
-        _id,
-        url,
-        _ref
-      },
-      alt
-    },
     "primaryMenu": coalesce(primaryMenu-> ${menuProjection}, mainMenuLeft-> ${menuProjection}),
     "secondaryMenu": coalesce(secondaryMenu-> ${menuProjection}, mainMenuSub-> ${menuProjection}),
     mainMenuLeft-> ${menuProjection},
@@ -103,16 +95,6 @@ export default defineEventHandler(async () => {
     footerShowLogo,
     footerSocialStyle,
     privacyMenu-> ${menuProjection},
-    trustpilot {
-      url,
-      showInFooter
-    },
-    whatsapp {
-      enabled,
-      url,
-      phoneNumber,
-      message
-    },
     theatricalReleaseActive,
     mailchimpAction,
     assemble {

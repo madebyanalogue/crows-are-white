@@ -610,10 +610,10 @@ function onSubmit() {
 }
 
 .newsletter-block__panel-title {
-  margin: 0 0 clamp(50px, 5vw, 7rem);
-  font-size: clamp(1.35rem, 3.45vw, 9rem);
+  font-size: clamp(1.35rem,3.75vw,5.5rem);
   font-weight: 400;
   line-height: 0.925;
+  margin: 0 0 clamp(50px,6vw,8rem);
   white-space: pre-line;
   text-align: center;
 }
@@ -748,11 +748,13 @@ function onSubmit() {
 }
 
 .newsletter-block__form--overlay .newsletter-block__input {
-  padding-right: clamp(7rem, 18vw, 12rem);
-  padding-bottom: clamp(15px, 0.5em, 2em);
-  font-size: clamp(16px, 2.2vw, 4rem);
-  text-transform: none;
+  font-size: clamp(16px, 2vw, 2.6rem);
   letter-spacing: 0;
+  padding-bottom: clamp(15px, .5em, 2em);
+  padding-right: clamp(7rem, 18vw, 12rem);
+  text-transform: none;
+  /* font-weight: 300; */
+  letter-spacing: 0.02em;
 }
 
 .newsletter-block__form--overlay .newsletter-block__input:focus::placeholder {
@@ -769,6 +771,7 @@ function onSubmit() {
   margin: 0;
   padding: 0;
   font-size: clamp(16px, 1.5vw, 1.75rem);
+  /* font-weight: 300; */
 }
 
 .newsletter-block__checkbox {

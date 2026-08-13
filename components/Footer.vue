@@ -6,20 +6,11 @@
 
         <div class="grid-1 gap-section gap-md-0">
           <div
-            v-if="footerStrapline.length || footerShowTrustpilot"
+            v-if="footerStrapline.length"
             class="strapline--container gap-section gap-md-gutter"
           >
-            <div
-              v-if="footerStrapline.length"
-              class="footer__strapline h3 serif"
-            >
+            <div class="footer__strapline h3 serif">
               <SanityContent :blocks="footerStrapline" />
-            </div>
-            <div v-if="footerShowTrustpilot" class="footer-trustpilot">
-              <TrustpilotSummary
-                fetch-business-unit
-                light-wordmark
-              />
             </div>
           </div>
 
@@ -161,7 +152,6 @@ const {
   footerStrapline,
   footerLegal,
   privacyMenu,
-  footerShowTrustpilot,
   socialLinks,
   footerShowLogo,
   footerSocialStyle,
@@ -501,16 +491,11 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 .strapline--container {
   display: flex;
   flex-direction: column;
-  --trustpilot-wordmark-fill: var(--text-color);
 }
 
 .footer__strapline {
   flex: 1;
   font-size: clamp(var(--h3), 5vw, 200px);
-}
-
-.footer-trustpilot {
-  display: flex;
 }
 
 @media (min-width: 700px) {

@@ -70,20 +70,6 @@ export default defineEventHandler(async (event) => {
         title[] ${portableTextProjection},
         description[] ${portableTextProjection},
         link ${linkProjection}
-      },
-      bottomCtaImage ${imageProjection},
-      "articleCta": *[_type == "siteSettings"][0].articleCta {
-        title[] ${portableTextProjection},
-        description[] ${portableTextProjection},
-        links[] {
-          _key,
-          type,
-          linkTitle,
-          page-> {
-            slug { current }
-          },
-          url
-        }
       }
     }`
 

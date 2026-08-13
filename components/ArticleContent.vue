@@ -99,13 +99,6 @@
         />
       </template>
     </div>
-
-    <footer v-if="globalCta" class="article__footer gap-section wrapper">
-      <ArticleBlockCta
-        :block="globalCta"
-        class="article__global-cta"
-      />
-    </footer>
   </article>
 </template>
 
@@ -157,16 +150,6 @@ const featuredFigureRef = ref(null)
 const featuredParallaxRef = ref(null)
 
 useVideoParallax(featuredFigureRef, featuredParallaxRef)
-
-const globalCta = computed(() => {
-  const cta = props.article?.articleCta
-  if (!cta?.title?.length && !cta?.description?.length && !cta?.links?.length) return null
-
-  return {
-    ...cta,
-    image: props.article?.bottomCtaImage || null,
-  }
-})
 </script>
 
 <style scoped>
@@ -240,9 +223,6 @@ const globalCta = computed(() => {
     grid-template-columns: repeat(2, 1fr);
     align-items: stretch;
   }
-  .article__footer {
-    padding-bottom: calc(var(--section-padding) * 1);
-  }
   .article__title {
     max-width:900px;
     margin: 0 auto;
@@ -292,12 +272,6 @@ const globalCta = computed(() => {
   flex-direction: column;
   align-items: center;
   --body: clamp(16px, calc(var(--unit-font) * .8), 18px);
-}
-
-.article__footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 </style>
