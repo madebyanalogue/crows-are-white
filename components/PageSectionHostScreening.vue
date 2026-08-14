@@ -584,7 +584,7 @@ function onSubmit() {
   font-family: var(--handwritten);
   text-transform: none;
   letter-spacing: 0;
-  font-size: 18px;
+  font-size: 23px;
 }
 
 .host-form__legend {

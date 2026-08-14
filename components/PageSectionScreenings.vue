@@ -27,6 +27,8 @@ const emptyButtonHref = computed(() => {
   return `#${anchor || 'newsletter'}`
 })
 
+const showFilters = computed(() => props.section?.screeningsHideFilters !== true)
+
 const screeningsStyle = computed(() => ({
   '--screenings-feature-color': toCssColor(
     props.section?.screeningsFeatureColor,
@@ -212,7 +214,11 @@ onBeforeUnmount(() => {
         <h1 class="screenings-page__title serif">{{ title }}</h1>
       </header>
       
-        <div ref="toolbarRef" class="screenings-toolbar">
+        <div
+          v-if="showFilters"
+          ref="toolbarRef"
+          class="screenings-toolbar"
+        >
           <label class="screenings-filter">
             <span class="screenings-filter__label">City</span>
             <input
@@ -354,7 +360,7 @@ onBeforeUnmount(() => {
 }
 
 .screenings-page__intro {
-  margin: 0 0 1rem;
+  margin: 0 0 .25rem;
   gap:2rem;
   display: flex;
   flex-direction: column;
@@ -510,13 +516,14 @@ onBeforeUnmount(() => {
 
 .screenings-row:not(.screenings-row--disabled) .screenings-row__action {
   cursor: pointer;
+  color: var(--screenings-ink);
+  background: currentColor;
+  transition: color 0.15s ease;
 }
 
-.screenings-row:not(.screenings-row--disabled) .screenings-row__action:hover .screenings-book,
-.screenings-row:not(.screenings-row--disabled) .screenings-row__link:focus-visible .screenings-row__action .screenings-book {
-  background-color: var(--screenings-feature-color, var(--screenings-ink));
-  border-color: var(--screenings-feature-color, var(--screenings-ink));
-  color: #fff;
+.screenings-row:not(.screenings-row--disabled) .screenings-row__action:hover,
+.screenings-row:not(.screenings-row--disabled) .screenings-row__link:focus-visible .screenings-row__action {
+  color: var(--screenings-feature-color, var(--screenings-ink));
 }
 
 .screenings-row__label {
@@ -582,7 +589,8 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 2.85rem;
   padding: 0.6rem 0.75rem;
-  border: 3px double var(--screenings-ink);
+  border: 0;
+  background: transparent;
   font-family: var(--serif);
   font-size: 17px;
   font-weight: 300;
@@ -594,8 +602,16 @@ onBeforeUnmount(() => {
   color: var(--screenings-ink);
   border-radius: 0;
   corner-shape: rounded;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
   pointer-events: none;
+}
+
+.screenings-book:not(.screenings-book--disabled) {
+  color: #fff;
+}
+
+.screenings-book--disabled {
+  border: 3px double var(--screenings-ink);
 }
 
 

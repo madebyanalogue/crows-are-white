@@ -584,6 +584,7 @@ function pageSectionProjection() {
     },
     screeningsTitle,
     screeningsLede,
+    screeningsHideFilters,
     screeningsEmptyTitle,
     screeningsEmptyText,
     screeningsEmptyButtonLabel,
