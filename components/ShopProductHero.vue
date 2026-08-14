@@ -635,7 +635,7 @@ function incrementQty() {
 
 .shop-product-hero__copy {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.05rem;
   width: min(100%, var(--site-header-panel-width-closed));
 }
 
@@ -662,6 +662,7 @@ function incrementQty() {
   font-weight: 300;
   line-height: 0.95;
   letter-spacing: -0.00em;
+  margin-bottom: 0.75rem;
   /* text-transform: uppercase; */
 }
 

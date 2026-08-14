@@ -13,6 +13,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const pageColorSwapped = useState('crows_pageColorSwapped', () => false)
   const pendingRoutePath = useState('dorsia_pendingRoutePath', () => '')
   const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
+  const shopNavActive = useState('crows_shopNavActive', () => false)
   let isAppMounted = false
 
   function shouldAnimate(from) {
@@ -27,10 +28,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     isTransitioning.value = false
   })
 
-  function resolvesToShopRoute(path = '') {
-    return isShopRoute(path) || /^\/shop\/collections\/[^/]+\/?$/.test(path)
-  }
-
   router.beforeEach((to, from) => {
     if (from.matched.length > 0) {
       isInitialPageLoad.value = false
@@ -39,11 +36,11 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (from.matched.length === 0) return true
     if (to.fullPath === from.fullPath) return true
 
-    skipNextPageTransition.value = resolvesToShopRoute(from.path) && resolvesToShopRoute(to.path)
+    shopNavActive.value = isShopRoute(from.path) && isShopRoute(to.path)
 
     suspendPageColorTransitions()
 
-    if (!shouldAnimate(from) || skipNextPageTransition.value) {
+    if (!shouldAnimate(from)) {
       isTransitioning.value = false
       return true
     }
@@ -55,13 +52,17 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   router.afterEach((_to, _from, failure) => {
+    shopNavActive.value = false
+
     if (failure) {
       isTransitioning.value = false
+      skipNextPageTransition.value = false
       resumePageColorTransitions()
       return
     }
 
     if (!isTransitioning.value) {
+      skipNextPageTransition.value = false
       resumePageColorTransitions()
     }
   })

@@ -169,6 +169,7 @@ import gsap from 'gsap'
 import { defaultMainMenu, defaultMainMenuSub } from '~/data/site'
 import { lockOverlayScroll, resetOverlayScrollLock, unlockOverlayScroll } from '~/composables/useOverlayScrollLock'
 import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
+import { isShopRoute } from '~/utils/shopColors'
 
 const { primaryMenu, secondaryMenu, cartDisplayMode } = useSiteSettings()
 const { count: cartCount, isOpen: cartOpen, toggleCart, closeCart } = useCart()
@@ -181,11 +182,11 @@ const awaitingPageTitle = ref(false)
 const { getMenuItemUrl } = useMenuLinks()
 const { shouldSkipTransition } = usePageTransition()
 const pageTransitioning = useState('pageTransitioning', () => false)
+const shopNavActive = useState('crows_shopNavActive', () => false)
 const navInnerRef = ref(null)
 const panelRef = ref(null)
 const pageNameWrapRef = ref(null)
 const menuToggleRef = ref(null)
-const displayedPageName = ref('')
 let menuItemsTween = null
 let menuItemsDelay = null
 let pageNameTween = null
@@ -259,20 +260,24 @@ function isShopProductPath(path) {
   return true
 }
 
-const currentPageName = computed(() => {
-  const path = normalizePath(route.path)
-  if (path === '/') return 'Home'
-  if (isShopProductPath(path)) return 'Shop'
+function resolvePageNameLabel(path = route.path, { allowAwaitingFallback = true } = {}) {
+  const normalized = normalizePath(path)
+  if (normalized === '/') return 'Home'
+  if (isShopProductPath(normalized)) return 'Shop'
 
-  if (awaitingPageTitle.value) {
-    return labelFromMenu(path) || humanizePath(path)
+  if (allowAwaitingFallback && awaitingPageTitle.value) {
+    return labelFromMenu(normalized) || humanizePath(normalized)
   }
 
   const title = pageTitle.value?.trim()
   if (title) return title
 
-  return labelFromMenu(path) || humanizePath(path)
-})
+  return labelFromMenu(normalized) || humanizePath(normalized)
+}
+
+const displayedPageName = ref(resolvePageNameLabel(route.path, { allowAwaitingFallback: false }))
+
+const currentPageName = computed(() => resolvePageNameLabel(route.path))
 
 const pageNameLink = computed(() => {
   if (displayedPageName.value === 'Cart') return null
@@ -288,7 +293,8 @@ const copyrightLabel = computed(() => {
   return `©${year} ALL RIGHTS RESERVED`
 })
 
-watch(() => route.path, () => {
+watch(() => route.path, (path, oldPath) => {
+  if (oldPath && isShopRoute(path) && isShopRoute(oldPath)) return
   awaitingPageTitle.value = true
 }, { flush: 'pre' })
 
@@ -620,7 +626,16 @@ function tryRevealPendingPageName() {
 }
 
 function onPageTransitionBeforeLeave() {
+  if (shouldSkipTransition()) return
+
   wipeCoverComplete = false
+
+  if (shopNavActive.value) {
+    pendingPageNameReveal = currentPageName.value
+    suppressPageNameIn = false
+    return
+  }
+
   pendingPageNameReveal = ''
   suppressPageNameIn = true
 
@@ -653,6 +668,20 @@ async function onRouteChange(fullPath, oldFullPath) {
   if (!import.meta.client) return
   if (!oldFullPath || fullPath === oldFullPath) return
   if (normalizeRoutePath(fullPath) === normalizeRoutePath(oldFullPath)) return
+
+  const nextPath = normalizeRoutePath(fullPath)
+  const oldPath = normalizeRoutePath(oldFullPath)
+
+  if (isShopRoute(nextPath) && isShopRoute(oldPath)) {
+    awaitingPageTitle.value = false
+    suppressPageNameIn = false
+    pendingPageNameReveal = currentPageName.value
+    killPageNameTween()
+    if (cartOpen.value) closeCart()
+    if (menuOpen.value) closeMenu()
+    showPageNameInstant(currentPageName.value)
+    return
+  }
 
   suppressPageNameIn = true
   if (cartOpen.value) closeCart()
@@ -707,6 +736,15 @@ function resetMenuItems() {
 }
 
 watch(() => route.fullPath, onRouteChange)
+
+watch(pageNameChars, () => {
+  if (!import.meta.client || pageNameHidden || suppressPageNameIn || menuOpen.value || cartOpen.value) return
+
+  nextTick(() => {
+    const chars = pageNameCharEls()
+    if (chars.length) gsap.set(chars, { yPercent: 0 })
+  })
+})
 
 function shouldLockOverlayScroll() {
   return menuOpen.value || (cartOpen.value && cartDisplayMode.value === 'dropdown')
@@ -777,8 +815,7 @@ let keyHandler = null
 
 onMounted(() => {
   if (!import.meta.client) return
-  displayedPageName.value = currentPageName.value
-  if (pageNameWrapRef.value) gsap.set(pageNameWrapRef.value, { autoAlpha: 1 })
+  showPageNameInstant(currentPageName.value)
   document.addEventListener('crows:page-transition-before-leave', onPageTransitionBeforeLeave)
   document.addEventListener('crows:page-transition-wipe-covered', onPageTransitionWipeCovered)
   document.addEventListener('page-transition-complete', onPageTransitionComplete)
@@ -1061,6 +1098,7 @@ font-size: 18px;
 .site-header__page-name-char {
   display: inline-block;
   will-change: transform;
+  transform: translateY(0);
 }
 
 .site-header__page-name--link {

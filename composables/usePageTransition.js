@@ -336,12 +336,12 @@ export function usePageTransition() {
     if (getReducedMotion()) return true
 
     const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
-    if (skipNextPageTransition.value) {
-      skipNextPageTransition.value = false
-      return true
-    }
+    return skipNextPageTransition.value === true
+  }
 
-    return false
+  function clearSkipTransition() {
+    const skipNextPageTransition = useState('crows_skipNextPageTransition', () => false)
+    skipNextPageTransition.value = false
   }
 
   function stopLenis() {
@@ -393,6 +393,7 @@ export function usePageTransition() {
 
   async function completePageTransition(el) {
     await resetPage(el)
+    clearSkipTransition()
     document.dispatchEvent(new CustomEvent('page-transition-complete'))
     scheduleScrollSystemSettle()
 
@@ -741,6 +742,7 @@ export function usePageTransition() {
     route,
     isTransitioning,
     shouldSkipTransition,
+    clearSkipTransition,
     transitionHandlers,
     nuxtPageTransition,
     pageTransitionWipeColor,

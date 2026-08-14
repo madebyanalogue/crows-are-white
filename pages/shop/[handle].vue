@@ -6,6 +6,13 @@ import { isVariantPurchasable } from '~/utils/shopVariants'
 const { data: shopPage } = await useShopPage()
 useShopPageColor(shopPage)
 
+const pageTitle = useState('pageTitle', () => '')
+const shopHeading = computed(() => shopPage.value?.title?.trim() || 'Shop')
+
+watchEffect(() => {
+  pageTitle.value = shopHeading.value
+})
+
 const route = useRoute()
 const handle = computed(() => route.params.handle as string)
 const shopFilter = computed(() => shopFilterFromQuery(route.query.filter))

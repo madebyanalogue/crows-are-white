@@ -56,7 +56,7 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
         v-if="title"
         #header
       >
-        <h2 class="shop-products-section__title serif">
+        <h2 class="shop-products-section__title condensed h3">
           {{ title }}
         </h2>
       </template>
