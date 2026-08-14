@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
     data-trailer-section
     :style="sectionStyle"
   >
-    <div class="page-section-columns">
+    <div class="page-section-columns wrapper">
       <CinematicVideoFrame
         ref="frameRef"
         notch-corners
@@ -262,7 +262,7 @@ onBeforeUnmount(() => {
 }
 
 .page-section-trailer :deep(.page-section-trailer__frame) {
-  width: 90%;
+  width: 100%;
   margin-inline: auto;
 }
 

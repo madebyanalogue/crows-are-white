@@ -153,6 +153,11 @@ const overlayLinks = computed(() =>
   [overlayLink.value, overlayLink2.value].filter(Boolean),
 )
 
+const hasDualLightLinks = computed(() =>
+  overlayLinks.value.length === 2
+  && overlayLinks.value.every((link) => link.style === 'light'),
+)
+
 function resolveOverlayLink(labelValue, linkValue, styleValue) {
   const label = labelValue?.trim()
   const link = linkValue
@@ -306,6 +311,7 @@ useVideoParallax(sectionRef, parallaxRef, {
         <div
           v-if="overlayLinks.length"
           class="page-section-letterbox-video__link-wrap"
+          :class="{ 'page-section-letterbox-video__link-wrap--dual-light': hasDualLightLinks }"
         >
           <template
             v-for="(link, index) in overlayLinks"
@@ -470,6 +476,19 @@ useVideoParallax(sectionRef, parallaxRef, {
   gap: clamp(2rem, 6vw, 4rem);
   padding: 1.5rem clamp(1.25rem, 6vw, 30px);
   pointer-events: none;
+}
+
+.page-section-letterbox-video__link-wrap--dual-light {
+  gap: 0;
+}
+
+.page-section-letterbox-video__link-wrap--dual-light .page-section-letterbox-video__link--light {
+  align-items: center;
+  padding: 0.15em 1.35em;
+}
+
+.page-section-letterbox-video__link-wrap--dual-light .page-section-letterbox-video__link--light:not(:last-child) {
+  border-right: 1px solid;
 }
 
 .page-section-letterbox-video__link {
