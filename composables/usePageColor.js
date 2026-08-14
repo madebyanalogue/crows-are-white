@@ -1,9 +1,11 @@
 import {
   extractPageChromeColors,
   extractSiteChromeColors,
+  getPageColorBodyAttrs,
   getPageColorHtmlAttrs,
   mergePageChromeColors,
   pageBackgroundVar,
+  resolvePageBackgroundHex,
 } from '~/utils/pageColors'
 import { getCachedPageForRoute } from '~/utils/videoSectionFlags'
 import { isShopRoute, resolveShopChromeColors, mergeShopChromeColors } from '~/utils/shopColors'
@@ -115,9 +117,21 @@ export function usePageColor(page) {
 export function usePageColorHead() {
   const { applied } = useAppliedPageColors()
 
-  useHead(() => ({
-    htmlAttrs: getPageColorHtmlAttrs(applied.value || {}),
-  }))
+  useHead(() => {
+    const colors = applied.value || {}
+
+    return {
+      htmlAttrs: getPageColorHtmlAttrs(colors),
+      bodyAttrs: getPageColorBodyAttrs(colors),
+      meta: [
+        {
+          key: 'theme-color',
+          name: 'theme-color',
+          content: resolvePageBackgroundHex(colors),
+        },
+      ],
+    }
+  })
 }
 
 export function suspendPageColorTransitions() {

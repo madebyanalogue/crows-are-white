@@ -22,18 +22,14 @@ const viewportRef = ref(null)
 const hasOverflow = ref(false)
 const currentIndex = ref(0)
 const autoplayPaused = ref(false)
-const autoplayStoppedByUser = ref(false)
 
 let autoplayTimer = null
 
 const showControls = computed(() => props.items.length > 1 && hasOverflow.value)
-const showAutoplayControl = computed(() =>
-  props.autoplay && showControls.value && !autoplayStoppedByUser.value,
-)
+const showAutoplayControl = computed(() => props.autoplay && showControls.value)
 const canAutoplay = computed(() =>
   props.autoplay
   && showControls.value
-  && !autoplayStoppedByUser.value
   && !autoplayPaused.value,
 )
 
@@ -95,9 +91,8 @@ function startAutoplayTimer() {
   }, interval)
 }
 
-function stopAutoplayFromUser() {
-  autoplayStoppedByUser.value = true
-  autoplayPaused.value = false
+function pauseAutoplay() {
+  autoplayPaused.value = true
   clearAutoplayTimer()
 }
 
@@ -130,7 +125,7 @@ function goToSlide(index) {
 }
 
 function scrollBySlides(direction) {
-  stopAutoplayFromUser()
+  pauseAutoplay()
   goToSlide(currentIndex.value + direction)
 }
 
@@ -159,7 +154,6 @@ watch(
   () => props.items.map((item) => item._key).join(','),
   () => {
     autoplayPaused.value = false
-    autoplayStoppedByUser.value = false
     nextTick(() => {
       resetScroll()
       startAutoplayTimer()

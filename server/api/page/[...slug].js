@@ -736,7 +736,14 @@ function pageSectionProjection() {
       }
     },
     boldTextPaddingTop,
-    boldTextPaddingBottom
+    boldTextPaddingBottom,
+    playlistTitle,
+    playlistTitleStyle,
+    playlistBackgroundImage ${imageProjection},
+    playlistUrl,
+    playlistView,
+    playlistPaddingTop,
+    playlistPaddingBottom
   }`
 }
 

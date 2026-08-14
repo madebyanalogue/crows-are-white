@@ -343,18 +343,41 @@ export function pageColorStyle(colorsOrBackground, maybeTextColor) {
     .join('; ')
 }
 
+export function resolvePageBackgroundHex(colors = {}) {
+  const normalized = normalizeColorValue(colors?.pageColor)
+  if (isRawCssColor(normalized) && normalized.startsWith('#')) {
+    return normalized
+  }
+  const key = resolvePageColor(
+    colors?.pageColor || DEFAULT_UNSET_PAGE_BACKGROUND,
+    DEFAULT_UNSET_PAGE_BACKGROUND,
+  )
+  return BRAND_HEX[key] || BRAND_HEX[DEFAULT_UNSET_PAGE_BACKGROUND]
+}
+
 export function getPageColorHtmlAttrs(colorsOrBackground, maybeTextColor) {
   const colors = typeof colorsOrBackground === 'object' && colorsOrBackground !== null
     ? colorsOrBackground
     : { pageColor: colorsOrBackground, pageTextColor: maybeTextColor }
 
   const vars = getPageColorVars(colors)
+  const cssVars = Object.entries(vars)
+    .map(([name, value]) => `${name}: ${value}`)
+    .join('; ')
+  const background = vars['--background-color']
+  const text = vars['--text-color']
 
   return {
-    style: Object.entries(vars)
-      .map(([name, value]) => `${name}: ${value}`)
-      .join('; '),
-    'data-background-color': vars['--background-color'],
-    'data-text-color': vars['--text-color'],
+    style: `${cssVars}; background-color: ${background}; color: ${text};`,
+    'data-background-color': background,
+    'data-text-color': text,
+  }
+}
+
+export function getPageColorBodyAttrs(colors = {}) {
+  const vars = getPageColorVars(colors)
+
+  return {
+    style: `background-color: ${vars['--background-color']}; color: ${vars['--text-color']};`,
   }
 }

@@ -162,11 +162,28 @@ html.is-preloader-active body {
 
 html {
   background-color: var(--background-color);
+  min-height: 100%;
+  min-height: 100dvh;
 }
 
 body {
   color: var(--text-color);
   background-color: var(--background-color);
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+html.lenis,
+html.lenis body {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+#__crows-app,
+#app {
+  background-color: var(--background-color);
+  min-height: 100%;
+  min-height: 100dvh;
 }
 
 html.page-colors-transition-ready:not(.is-page-transitioning),
