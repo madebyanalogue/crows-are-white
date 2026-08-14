@@ -717,6 +717,8 @@ function pageSectionProjection() {
       caption,
       image ${imageProjection}
     },
+    synopsisGalleryAutoplay,
+    synopsisGalleryAutoplayInterval,
     laurelsItems[] {
       _key,
       alt,

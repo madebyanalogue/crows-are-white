@@ -641,7 +641,7 @@ function incrementQty() {
 
 .shop-product-hero__type {
   display: inline-block;
-  margin: 0;
+  margin: 0 0 3px;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -974,6 +974,8 @@ function incrementQty() {
   background: var(--shop-text);
   color: var(--shop-bg);
   cursor: pointer;
+  letter-spacing: 0.05em;
+  font-weight: 300;
 }
 
 .shop-product-hero__action-box--primary:hover:not(:disabled) {

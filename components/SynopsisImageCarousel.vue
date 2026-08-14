@@ -8,13 +8,34 @@ const props = defineProps({
     type: String,
     default: 'Synopsis image gallery',
   },
+  autoplay: {
+    type: Boolean,
+    default: false,
+  },
+  autoplayIntervalMs: {
+    type: Number,
+    default: 5000,
+  },
 })
 
 const viewportRef = ref(null)
 const hasOverflow = ref(false)
 const currentIndex = ref(0)
+const autoplayPaused = ref(false)
+const autoplayStoppedByUser = ref(false)
+
+let autoplayTimer = null
 
 const showControls = computed(() => props.items.length > 1 && hasOverflow.value)
+const showAutoplayControl = computed(() =>
+  props.autoplay && showControls.value && !autoplayStoppedByUser.value,
+)
+const canAutoplay = computed(() =>
+  props.autoplay
+  && showControls.value
+  && !autoplayStoppedByUser.value
+  && !autoplayPaused.value,
+)
 
 function getSlideWidth() {
   const viewport = viewportRef.value
@@ -50,6 +71,47 @@ function updateScrollState() {
   }
 }
 
+function clearAutoplayTimer() {
+  if (autoplayTimer != null) {
+    clearInterval(autoplayTimer)
+    autoplayTimer = null
+  }
+}
+
+function startAutoplayTimer() {
+  clearAutoplayTimer()
+
+  if (!canAutoplay.value) return
+
+  const interval = Math.max(2000, Number(props.autoplayIntervalMs) || 5000)
+
+  autoplayTimer = setInterval(() => {
+    if (!canAutoplay.value) {
+      clearAutoplayTimer()
+      return
+    }
+
+    goToSlide(currentIndex.value + 1)
+  }, interval)
+}
+
+function stopAutoplayFromUser() {
+  autoplayStoppedByUser.value = true
+  autoplayPaused.value = false
+  clearAutoplayTimer()
+}
+
+function toggleAutoplayPause() {
+  autoplayPaused.value = !autoplayPaused.value
+
+  if (autoplayPaused.value) {
+    clearAutoplayTimer()
+    return
+  }
+
+  startAutoplayTimer()
+}
+
 function goToSlide(index) {
   const viewport = viewportRef.value
   if (!viewport) return
@@ -68,6 +130,7 @@ function goToSlide(index) {
 }
 
 function scrollBySlides(direction) {
+  stopAutoplayFromUser()
   goToSlide(currentIndex.value + direction)
 }
 
@@ -94,15 +157,42 @@ function resetScroll() {
 
 watch(
   () => props.items.map((item) => item._key).join(','),
-  () => nextTick(resetScroll),
+  () => {
+    autoplayPaused.value = false
+    autoplayStoppedByUser.value = false
+    nextTick(() => {
+      resetScroll()
+      startAutoplayTimer()
+    })
+  },
+)
+
+watch(canAutoplay, (enabled) => {
+  if (enabled) {
+    startAutoplayTimer()
+    return
+  }
+
+  clearAutoplayTimer()
+})
+
+watch(
+  () => props.autoplayIntervalMs,
+  () => {
+    if (canAutoplay.value) startAutoplayTimer()
+  },
 )
 
 onMounted(() => {
   window.addEventListener('resize', updateScrollState, { passive: true })
-  nextTick(updateScrollState)
+  nextTick(() => {
+    updateScrollState()
+    startAutoplayTimer()
+  })
 })
 
 onBeforeUnmount(() => {
+  clearAutoplayTimer()
   viewportRef.value?.removeEventListener('scroll', updateScrollState)
   window.removeEventListener('resize', updateScrollState)
 })
@@ -153,44 +243,82 @@ onBeforeUnmount(() => {
         aria-live="polite"
         :aria-label="`Image ${currentIndex + 1} of ${items.length}`"
       >
-        {{ currentIndex + 1 }}/{{ items.length }}
+        {{ currentIndex + 1 }}/<span class="synopsis-image-carousel__counter-gap" aria-hidden="true" />{{ items.length }}
       </p>
-      <div class="synopsis-image-carousel__arrows">
+
+      <div class="synopsis-image-carousel__nav">
         <button
+          v-if="showAutoplayControl"
           type="button"
-          class="synopsis-image-carousel__arrow synopsis-image-carousel__arrow--prev"
-          aria-label="Previous images"
-          @click="scrollBySlides(-1)"
+          class="synopsis-image-carousel__playpause"
+          :aria-label="autoplayPaused ? 'Play gallery autoplay' : 'Pause gallery autoplay'"
+          :aria-pressed="autoplayPaused"
+          @click="toggleAutoplayPause"
         >
-          <svg
-            viewBox="0 0 13 12"
-            fill="none"
+          <span
+            v-if="autoplayPaused"
+            class="synopsis-image-carousel__play"
             aria-hidden="true"
           >
-            <path
-              stroke="currentColor"
-              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+            <svg
+              viewBox="0 0 18 18"
+              fill="none"
+            >
+              <path
+                d="M6.75 5.44v7.13l6-3.56-6-3.56z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <template v-else>
+            <span
+              class="synopsis-image-carousel__pause-bar"
+              aria-hidden="true"
             />
-          </svg>
+            <span
+              class="synopsis-image-carousel__pause-bar"
+              aria-hidden="true"
+            />
+          </template>
         </button>
 
-        <button
-          type="button"
-          class="synopsis-image-carousel__arrow synopsis-image-carousel__arrow--next"
-          aria-label="Next images"
-          @click="scrollBySlides(1)"
-        >
-          <svg
-            viewBox="0 0 13 12"
-            fill="none"
-            aria-hidden="true"
+        <div class="synopsis-image-carousel__arrows">
+          <button
+            type="button"
+            class="synopsis-image-carousel__arrow synopsis-image-carousel__arrow--prev"
+            aria-label="Previous images"
+            @click="scrollBySlides(-1)"
           >
-            <path
-              stroke="currentColor"
-              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-            />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="synopsis-image-carousel__arrow synopsis-image-carousel__arrow--next"
+            aria-label="Next images"
+            @click="scrollBySlides(1)"
+          >
+            <svg
+              viewBox="0 0 13 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                stroke="currentColor"
+                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -208,10 +336,57 @@ onBeforeUnmount(() => {
   left: 0;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   width: 100%;
   gap: 1rem;
   margin-top: 2rem;
+}
+
+.synopsis-image-carousel__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.synopsis-image-carousel__playpause {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: clamp(2.5rem, 6vw, 3.25rem);
+  height: clamp(2.5rem, 6vw, 3.25rem);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.synopsis-image-carousel__play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+}
+
+.synopsis-image-carousel__play svg {
+  display: block;
+  width: 34px;
+  height: 34px;
+}
+
+.synopsis-image-carousel__pause-bar {
+  display: block;
+  width: 3px;
+  height: 14px;
+  background: currentColor;
+}
+
+.synopsis-image-carousel__playpause:hover {
+  opacity: 0.65;
 }
 
 .synopsis-image-carousel__arrows {
@@ -228,6 +403,11 @@ onBeforeUnmount(() => {
   text-transform: none;
   opacity: 0.75;
   pointer-events: none;
+}
+
+.synopsis-image-carousel__counter-gap {
+  display: inline-block;
+  width: 0.25em;
 }
 
 .synopsis-image-carousel__arrow {

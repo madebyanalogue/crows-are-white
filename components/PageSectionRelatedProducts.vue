@@ -74,9 +74,6 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
 .shop-products-section__title {
   margin: 0;
   padding: 0;
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
   font-weight: 300;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 </style>

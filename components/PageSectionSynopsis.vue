@@ -55,6 +55,12 @@ const galleryItems = computed(() =>
     })),
 )
 
+const synopsisAutoplayIntervalMs = computed(() => {
+  const seconds = Number(props.section?.synopsisGalleryAutoplayInterval)
+  if (!Number.isFinite(seconds) || seconds <= 0) return 5000
+  return Math.min(60, Math.max(2, seconds)) * 1000
+})
+
 const hasContent = computed(() =>
   title.value
   || introBlocks.value.length
@@ -346,6 +352,8 @@ function resolveButtonItem(button) {
           v-if="galleryItems.length"
           class="page-section-synopsis__gallery"
           :items="galleryItems"
+          :autoplay="section.synopsisGalleryAutoplay === true"
+          :autoplay-interval-ms="synopsisAutoplayIntervalMs"
         />
 
         <div

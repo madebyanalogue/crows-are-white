@@ -125,46 +125,11 @@ function onItemEnter(item) {
   if (item.isGallerySlot || !gallerySlot.value || !item.hoverImageUrl) return
   hoveredItemKey.value = item._key
 }
-
-const sectionRef = ref(null)
-let inViewObserver = null
-
-onMounted(() => {
-  if (!import.meta.client || !sectionRef.value) return
-
-  const section = sectionRef.value
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-  if (prefersReducedMotion) return
-
-  section.classList.add('is-ready')
-
-  inViewObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return
-
-        section.classList.add('in-view')
-        inViewObserver?.disconnect()
-        inViewObserver = null
-      })
-    },
-    { threshold: 0.15 },
-  )
-
-  inViewObserver.observe(section)
-})
-
-onBeforeUnmount(() => {
-  inViewObserver?.disconnect()
-  inViewObserver = null
-})
 </script>
 
 <template>
   <section
     v-if="hasContent"
-    ref="sectionRef"
     class="page-section-quarters"
     aria-label="Quarters"
     :style="sectionStyle"
@@ -182,14 +147,13 @@ onBeforeUnmount(() => {
 
       <ul class="page-section-quarters__grid">
         <li
-          v-for="(item, index) in items"
+          v-for="item in items"
           :key="item._key"
           class="page-section-quarters__item"
           :class="{
             'page-section-quarters__item--gallery-slot': item.isGallerySlot,
             'page-section-quarters__item--is-hovered': hoveredItemKey === item._key,
           }"
-          :style="{ '--item-index': index }"
           @mouseenter="onItemEnter(item)"
         >
           <div class="page-section-quarters__media">
@@ -239,7 +203,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .page-section-quarters {
-  --quarters-stagger: 0.35s;
   color: inherit;
 }
 
@@ -273,7 +236,6 @@ onBeforeUnmount(() => {
 }
 
 .page-section-quarters__item {
-  --item-index: 0;
   min-width: 0;
 }
 
@@ -297,19 +259,4 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 
-.page-section-quarters.is-ready .page-section-quarters__item {
-  opacity: 0;
-  animation: none;
-}
-
-.page-section-quarters.is-ready.in-view .page-section-quarters__item {
-  animation: page-section-quarters-show 0s forwards;
-  animation-delay: calc(var(--item-index) * var(--quarters-stagger));
-}
-
-@keyframes page-section-quarters-show {
-  to {
-    opacity: 1;
-  }
-}
 </style>
