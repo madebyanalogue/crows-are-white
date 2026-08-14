@@ -142,7 +142,7 @@ defineExpose(api)
 }
 
 .trailer-section :deep(.trailer-section__frame) {
-  width: var(--video-frame-width);
+  width: 90%;
 }
 
 @media (max-width: 767px) {

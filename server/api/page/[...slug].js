@@ -446,6 +446,7 @@ function pageSectionProjection() {
       }
     },
     featuredProductsTitle,
+    featuredProductsTitleStyle,
     featuredProductsCollection,
     featuredProductsLimit,
     relatedProductsTitle,
@@ -721,7 +722,18 @@ function pageSectionProjection() {
       image ${imageProjection}
     },
     laurelsPaddingTop,
-    laurelsPaddingBottom
+    laurelsPaddingBottom,
+    boldTextItems[] {
+      _key,
+      ${colorField('textColor')},
+      textLines[] {
+        _key,
+        text,
+        style
+      }
+    },
+    boldTextPaddingTop,
+    boldTextPaddingBottom
   }`
 }
 

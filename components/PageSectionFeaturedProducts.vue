@@ -21,6 +21,13 @@ const products = computed(() =>
 )
 
 const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
+
+const titleClass = computed(() => {
+  const style = props.section?.featuredProductsTitleStyle
+  return style === 'condensed'
+    ? 'shop-products-section__title h2 condensed'
+    : 'shop-products-section__title h2 serif light'
+})
 </script>
 
 <template>
@@ -42,7 +49,7 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
           <div class="shop-products-section__header">
             <h2
               v-if="title"
-              class="shop-products-section__title h3 serif light"
+              :class="titleClass"
             >
               {{ title }}
             </h2>
@@ -69,7 +76,7 @@ const title = computed(() => props.section?.featuredProductsTitle?.trim() || '')
 
 .shop-products-section__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   width: 100%;

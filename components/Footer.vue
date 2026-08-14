@@ -441,6 +441,45 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
   height: 100%;
 }
 
+.footer__social-list--square {
+  gap: 0;
+  border-top: 1px solid var(--text-color);
+  border-left: 1px solid var(--text-color);
+}
+
+.footer__social-list--square .footer__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 13px;
+  border-right: 1px solid var(--text-color);
+  border-bottom: 1px solid var(--text-color);
+  color: #555;
+  border-radius: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.footer__social-list--square .footer__social-link:hover,
+.footer__social-list--square .footer__social-link:focus-visible {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--footer-social-feature-color);
+  background: var(--footer-social-feature-color);
+  color: #fff;
+}
+
+.footer__social-list--square .footer__social-link :deep(.social-icon) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .footer__shopify-line {
   margin: 0;
   text-align: center;

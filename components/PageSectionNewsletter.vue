@@ -191,6 +191,14 @@ const { items: reflectionItems } = useReflections(500)
   padding-block: var(--wrapper-padding);
 }
 
+@media (max-width: 999px) {
+  .page-section-newsletter__inner--contained {
+    padding-block: var(--wrapper-padding);
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
 .page-section-newsletter__inner:not(.page-section-newsletter__inner--contained) {
   width: 100%;
 }

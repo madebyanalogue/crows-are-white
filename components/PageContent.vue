@@ -100,6 +100,10 @@
           v-else-if="section.sectionType === 'laurels'"
           :section="section"
         />
+        <PageSectionBoldText
+          v-else-if="section.sectionType === 'boldText'"
+          :section="section"
+        />
 
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--

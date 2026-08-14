@@ -239,12 +239,12 @@ onBeforeUnmount(() => {
 .shop-product-carousel__header {
   min-height: clamp(2.5rem, 6vw, 3.25rem);
   margin-bottom: 2rem;
-  padding: 0 clamp(1rem, 3vw, 2rem);
+  padding: 0 clamp(1rem, 3.5vw, 3rem);
 }
 
 .shop-product-carousel__header-start {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 50px;
   min-width: 0;
 }

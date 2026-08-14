@@ -262,7 +262,7 @@ onBeforeUnmount(() => {
 }
 
 .page-section-trailer :deep(.page-section-trailer__frame) {
-  width: var(--video-frame-width);
+  width: 90%;
   margin-inline: auto;
 }
 

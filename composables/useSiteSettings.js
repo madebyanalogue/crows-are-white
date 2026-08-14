@@ -91,9 +91,11 @@ export function useSiteSettings() {
   const watchNowDropdown = computed(() => settings.value?.watchNowDropdown || null)
   const socialLinks = computed(() => settings.value?.socialLinks || [])
   const footerShowLogo = computed(() => settings.value?.footerShowLogo !== false)
-  const footerSocialStyle = computed(() =>
-    settings.value?.footerSocialStyle === 'initials' ? 'initials' : 'icons',
-  )
+  const footerSocialStyle = computed(() => {
+    const style = settings.value?.footerSocialStyle
+    if (style === 'initials' || style === 'square') return style
+    return 'icons'
+  })
   const mailchimpAction = computed(() => settings.value?.mailchimpAction || '')
   const cartDisplayMode = computed(() =>
     settings.value?.cartDisplayMode === 'drawer' ? 'drawer' : 'dropdown',
