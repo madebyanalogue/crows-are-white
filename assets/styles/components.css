@@ -3161,6 +3161,10 @@ width: 90%;
   height: clamp(260px, 50dvh, 100vw);
 }
 
+.page-content__intro--above-sections {
+  padding-bottom: 0 !important;
+}
+
 @media (min-width: 1000px) {
   .page-content__intro--two-columns .page-content__intro-title h1 {
     position: sticky;
@@ -4136,7 +4140,7 @@ body.header-mobile-open {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0 1.5rem;
+  gap: 1.2rem;
   width: 100%;
 }
 

@@ -6,7 +6,7 @@
     >
       <header class="page-content__intro page-content__intro--single grid-1">
         <div class="page-content__intro-title text-center">
-          <h1 class="h1 condensed">
+          <h1 :class="titleClass">
             <slot name="title">{{ title }}</slot>
           </h1>
         </div>
@@ -45,11 +45,20 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  titleStyle: {
+    type: String,
+    default: 'condensed',
+    validator: (value) => value === 'condensed' || value === 'serif',
+  },
   wide: {
     type: Boolean,
     default: false,
   },
 })
+
+const titleClass = computed(() =>
+  props.titleStyle === 'serif' ? 'h1 serif light' : 'h1 condensed',
+)
 
 const subtitleBlocks = computed(() => {
   const text = props.subtitle?.trim()
@@ -73,8 +82,8 @@ const subtitleBlocks = computed(() => {
 }
 
 .default-page__body {
-  padding-top: var(--section-padding);
-  padding-bottom: var(--section-padding);
+  padding-top: var(--wrapper-padding);
+  padding-bottom: var(--wrapper-padding);
 }
 
 .default-page__content {

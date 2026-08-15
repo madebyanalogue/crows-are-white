@@ -3,22 +3,25 @@
       <div v-if="showPageIntro" class="wrapper">
         <div
           class="page-content__intro"
-          :class="richTextTwoColumns
-            ? 'page-content__intro--two-columns grid-1 gap-md-0'
-            : 'page-content__intro--single grid-1'"
+          :class="[
+            introUsesTwoColumns
+              ? 'page-content__intro--two-columns grid-1 gap-md-0'
+              : 'page-content__intro--single grid-1',
+            { 'page-content__intro--above-sections': hasSectionsBelow },
+          ]"
           :style="introPaddingStyle"
         >
           <div
             class="page-content__intro-title text-center "
-            :class="richTextTwoColumns ? 'text-left-md' : 'text-center '"
+            :class="introUsesTwoColumns ? 'text-left-md' : 'text-center '"
           >
-            <h1 class="h1 condensed">{{ page.title }}</h1>
+            <h1 :class="pageTitleClass">{{ page.title }}</h1>
           </div>
           <SanityContent
             v-if="hasRichText"
             :blocks="page.richText"
             class="rich-text underline-links "
-            :class="richTextTwoColumns ? 'max-width-medium' : 'page-content__intro-copy max-central-content'"
+            :class="introUsesTwoColumns ? 'max-width-medium' : 'page-content__intro-copy max-central-content'"
           />
         </div>
       </div>
@@ -109,6 +112,15 @@
           :section="section"
         />
 
+        <PageSectionContactInformation
+          v-else-if="section.sectionType === 'contactInformation'"
+          :section="section"
+        />
+        <PageSectionContactForm
+          v-else-if="section.sectionType === 'contactForm'"
+          :section="section"
+        />
+
         <!-- Legacy section types from a previous project — components kept for existing content -->
         <!--
         <PageSectionArticlesIndexText
@@ -125,14 +137,6 @@
         />
         <PageSectionTypography
           v-else-if="section.sectionType === 'typography'"
-          :section="section"
-        />
-        <PageSectionContactInformation
-          v-else-if="section.sectionType === 'contactInformation'"
-          :section="section"
-        />
-        <PageSectionContactForm
-          v-else-if="section.sectionType === 'contactForm'"
           :section="section"
         />
         <PageSectionTeam
@@ -228,7 +232,17 @@ watchEffect(() => {
 const hasRichText = computed(() => (props.page?.richText?.length ?? 0) > 0)
 const richTextTwoColumns = computed(() => props.page?.richTextTwoColumns !== false)
 const sections = computed(() => (props.page?.sections || []).filter(Boolean))
-const showPageIntro = computed(() => hasRichText.value || (sections.value.length === 0 && Boolean(props.page?.title)))
+const hasSectionsBelow = computed(() => sections.value.length > 0)
+const introUsesTwoColumns = computed(() => hasRichText.value && richTextTwoColumns.value)
+const showPageTitle = computed(() => props.page?.showPageTitle === true)
+const pageTitleClass = computed(() =>
+  props.page?.pageTitleStyle === 'serif' ? 'h1 serif light' : 'h1 condensed',
+)
+const showPageIntro = computed(() =>
+  hasRichText.value
+  || showPageTitle.value
+  || (sections.value.length === 0 && Boolean(props.page?.title)),
+)
 
 const SECTION_PADDING_VALUES = {
   none: '0',
@@ -248,6 +262,8 @@ function resolveSectionPadding(value) {
 
 const introPaddingStyle = computed(() => ({
   paddingTop: SECTION_PADDING_VALUES[resolveSectionPadding(props.page?.richTextPaddingTop)],
-  paddingBottom: SECTION_PADDING_VALUES[resolveSectionPadding(props.page?.richTextPaddingBottom)],
+  paddingBottom: hasSectionsBelow.value
+    ? '0'
+    : SECTION_PADDING_VALUES[resolveSectionPadding(props.page?.richTextPaddingBottom)],
 }))
 </script>
