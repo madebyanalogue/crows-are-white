@@ -30,19 +30,69 @@ const GRID_VIEW_OPTIONS: {
   {id: '4', label: '4 column layout', offsets: [0, 3, 6, 9], cellSize: 2},
 ]
 
-function defaultGridDensity(width: number): ShopGridDensity {
-  if (width < 700) return '2'
-  if (width < 1000) return '3'
-  return '4'
-}
-
 function allowedGridDensities(width: number): ShopGridDensity[] {
-  if (width < 700) return ['1', '2']
-  if (width < 1000) return ['1', '2', '3']
+  if (width < 1000) return ['1', '2']
   return ['2', '3', '4']
 }
 
+const MOBILE_GRID_STORAGE_KEY = 'shop-grid-density-mobile'
+const DESKTOP_GRID_STORAGE_KEY = 'shop-grid-density-desktop'
+
+const mobileGridDensity = useState<ShopGridDensity>('shop-grid-mobile', () => '2')
+const desktopGridDensity = useState<ShopGridDensity>('shop-grid-desktop', () => '3')
+
+function isMobileWidth(width: number) {
+  return width < 1000
+}
+
+function isValidStoredGridDensity(
+  density: string | null,
+  viewport: 'mobile' | 'desktop',
+): density is ShopGridDensity {
+  if (density !== '1' && density !== '2' && density !== '3' && density !== '4') return false
+  const allowed = viewport === 'mobile' ? ['1', '2'] : ['2', '3', '4']
+  return allowed.includes(density)
+}
+
+function hydrateGridDensityCache() {
+  if (!import.meta.client) return
+
+  const mobile = localStorage.getItem(MOBILE_GRID_STORAGE_KEY)
+  if (isValidStoredGridDensity(mobile, 'mobile')) {
+    mobileGridDensity.value = mobile
+  }
+
+  const desktop = localStorage.getItem(DESKTOP_GRID_STORAGE_KEY)
+  if (isValidStoredGridDensity(desktop, 'desktop')) {
+    desktopGridDensity.value = desktop
+  }
+}
+
+function cachedGridDensityForWidth(width: number): ShopGridDensity {
+  return isMobileWidth(width) ? mobileGridDensity.value : desktopGridDensity.value
+}
+
+function storeGridDensity(width: number, density: ShopGridDensity) {
+  if (isMobileWidth(width)) {
+    mobileGridDensity.value = density
+    if (import.meta.client) {
+      localStorage.setItem(MOBILE_GRID_STORAGE_KEY, density)
+    }
+    return
+  }
+
+  desktopGridDensity.value = density
+  if (import.meta.client) {
+    localStorage.setItem(DESKTOP_GRID_STORAGE_KEY, density)
+  }
+}
+
+if (import.meta.client) {
+  hydrateGridDensityCache()
+}
+
 const viewportWidth = ref(import.meta.client ? window.innerWidth : 1000)
+const viewMode = ref<ShopGridDensity>(cachedGridDensityForWidth(viewportWidth.value))
 
 const visibleGridViewOptions = computed(() =>
   GRID_VIEW_OPTIONS.filter((option) =>
@@ -50,31 +100,34 @@ const visibleGridViewOptions = computed(() =>
   ),
 )
 
-const viewMode = ref<ShopGridDensity>(
-  import.meta.client ? defaultGridDensity(window.innerWidth) : '3',
-)
-
-function syncGridViewToViewport() {
+function applyCachedGridForCurrentViewport() {
   viewportWidth.value = window.innerWidth
-  viewMode.value = defaultGridDensity(viewportWidth.value)
+  viewMode.value = cachedGridDensityForWidth(viewportWidth.value)
+}
+
+function onHorizontalBreakpointChange() {
+  applyCachedGridForCurrentViewport()
 }
 
 function setViewMode(id: ShopGridDensity) {
   viewMode.value = id
+  storeGridDensity(viewportWidth.value, id)
 }
 
 onMounted(() => {
-  syncGridViewToViewport()
-  window.addEventListener('resize', syncGridViewToViewport)
-})
+  hydrateGridDensityCache()
+  applyCachedGridForCurrentViewport()
 
-onUnmounted(() => {
-  window.removeEventListener('resize', syncGridViewToViewport)
+  const mql1000 = window.matchMedia('(min-width: 1000px)')
+
+  mql1000.addEventListener('change', onHorizontalBreakpointChange)
+
+  onUnmounted(() => {
+    mql1000.removeEventListener('change', onHorizontalBreakpointChange)
+  })
 })
 
 const activeFilter = ref<ShopFilterId>(shopFilterFromQuery(route.query.filter))
-
-const isCollectionView = computed(() => activeFilter.value !== 'all')
 
 watch(
   () => route.query.filter,
@@ -137,7 +190,6 @@ useHead({title: 'Shop — Crows Are White'})
 
       <div
         class="shop-views"
-        :class="{ 'shop-views--collection': isCollectionView }"
         role="group"
         aria-label="Grid layout"
       >
@@ -265,9 +317,9 @@ useHead({title: 'Shop — Crows Are White'})
   background: transparent;
   color: inherit;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1;
   cursor: pointer;
 }
@@ -304,19 +356,11 @@ useHead({title: 'Shop — Crows Are White'})
 }
 
 .shop-views {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.65rem;
-}
-
-.shop-views--collection {
-  display: none;
-}
-
-@media (min-width: 1000px) {
-  .shop-views--collection {
-    display: flex;
-  }
 }
 
 .shop-views__btn {

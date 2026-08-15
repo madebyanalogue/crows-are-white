@@ -163,7 +163,7 @@ const productTo = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   padding: 0 1rem;
   text-align: center;
   pointer-events: none;
@@ -171,10 +171,9 @@ const productTo = computed(() => {
 
 .shop-product-card__title,
 .shop-product-card__price {
-  font-size: clamp(12px, 1.5vw, 17px);
+  font-size: clamp(11px, 1vw, 14px);
   font-weight: 400;
   line-height: 1.2;
-  font-family: var(--serif-body);
 }
 
 .shop-product-card__price {
