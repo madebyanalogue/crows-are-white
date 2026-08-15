@@ -546,4 +546,36 @@ useVideoParallax(sectionRef, parallaxRef, {
   outline: 2px solid var(--menu-highlight-color, var(--arancio));
   outline-offset: 4px;
 }
+
+@media (max-width: 999px) {
+  .page-section-letterbox-video:not(.is-natural-shape):not(.is-wrapped):not(.is-viewport-min-height) {
+    aspect-ratio: 1.5;
+    min-height: 0;
+  }
+
+  .page-section-letterbox-video__frame {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+  }
+
+  .page-section-letterbox-video__parallax {
+    inset: 0;
+    top: 0;
+    height: 100%;
+  }
+
+  .page-section-letterbox-video.is-contained :deep(.section-loop-video__el),
+  .page-section-letterbox-video.is-contained .page-section-letterbox-video__image {
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 699px) {
+  .page-section-letterbox-video:not(.is-natural-shape):not(.is-wrapped):not(.is-viewport-min-height) {
+    aspect-ratio: 1.2;
+    min-height: 0;
+  }
+}
 </style>

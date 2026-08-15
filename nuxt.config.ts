@@ -4,6 +4,10 @@ const siteEnv = process.env.NUXT_SITE_ENV || process.env.VERCEL_ENV || process.e
 export default defineNuxtConfig({
   compatibilityDate: '2025-06-09',
   devtools: { enabled: false },
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
   modules: ['@nuxt/image', '@nuxtjs/sitemap', '@nuxtjs/sanity'],
   site: {
     url: siteUrl,

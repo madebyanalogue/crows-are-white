@@ -58,7 +58,7 @@
                 class="contact-information__cell contact-information__cell--title"
                 role="cell"
               >
-                <h3 v-if="item.title" class="contact-information__item-title handwritten">
+                <h3 v-if="item.title" class="contact-information__item-title serif light">
                   {{ item.title }}
                 </h3>
               </div>
@@ -230,7 +230,7 @@ function hasContactLink(item) {
   margin-top: 0.65rem;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 1000px) {
   .contact-information__table-head {
     display: grid;
   }
@@ -245,10 +245,16 @@ function hasContactLink(item) {
   }
 }
 
-@media (max-width: 699px) {
+@media (max-width: 999px) {
+  .contact-information__table {
+    max-width: 600px;
+    margin-inline: auto;
+  }
+
   .contact-information__table-row {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding-bottom: 35px;
   }
 
   .contact-information__cell--link {

@@ -434,6 +434,9 @@ function onSubmit() {
     inset: 0;
     height: auto;
   }
+  .page-section-host-screening {
+    padding-bottom:0 !important;
+  }
 }
 
 .page-section-host-screening__title {

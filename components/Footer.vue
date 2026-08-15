@@ -252,11 +252,12 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
 .footer__inner {
   display: flex;
   flex-direction: column;
-  gap: 190px;
-  padding: 100px 0px 70px;
+  gap: 110px;
+  padding: 90px 0 50px;
 }
 @media (min-width: 1000px) {
   .footer__inner {
+    gap: 190px;
     padding: 140px 40px 90px;
   }
 }

@@ -11,7 +11,66 @@ const route = useRoute()
 const router = useRouter()
 const { data: shopPage } = useShopPage()
 const {data: productData, pending} = useShopifyProducts()
-const viewMode = ref<'feature' | 'grid'>('feature')
+// Grid icons are 11×11: 1×1 (11px), 2×2 (5px), 3×3 (3px), 4×4 (2px) cells with 1px gaps.
+function gridIconCells(offsets: number[]) {
+  return offsets.flatMap((y) => offsets.map((x) => ({x, y, key: `${x}-${y}`})))
+}
+
+type ShopGridDensity = '1' | '2' | '3' | '4'
+
+const GRID_VIEW_OPTIONS: {
+  id: ShopGridDensity
+  label: string
+  offsets: number[]
+  cellSize: number
+}[] = [
+  {id: '1', label: '1 column layout', offsets: [0], cellSize: 11},
+  {id: '2', label: '2 column layout', offsets: [0, 6], cellSize: 5},
+  {id: '3', label: '3 column layout', offsets: [0, 4, 8], cellSize: 3},
+  {id: '4', label: '4 column layout', offsets: [0, 3, 6, 9], cellSize: 2},
+]
+
+function defaultGridDensity(width: number): ShopGridDensity {
+  if (width < 700) return '2'
+  if (width < 1000) return '3'
+  return '4'
+}
+
+function allowedGridDensities(width: number): ShopGridDensity[] {
+  if (width < 700) return ['1', '2']
+  if (width < 1000) return ['1', '2', '3']
+  return ['2', '3', '4']
+}
+
+const viewportWidth = ref(import.meta.client ? window.innerWidth : 1000)
+
+const visibleGridViewOptions = computed(() =>
+  GRID_VIEW_OPTIONS.filter((option) =>
+    allowedGridDensities(viewportWidth.value).includes(option.id),
+  ),
+)
+
+const viewMode = ref<ShopGridDensity>(
+  import.meta.client ? defaultGridDensity(window.innerWidth) : '3',
+)
+
+function syncGridViewToViewport() {
+  viewportWidth.value = window.innerWidth
+  viewMode.value = defaultGridDensity(viewportWidth.value)
+}
+
+function setViewMode(id: ShopGridDensity) {
+  viewMode.value = id
+}
+
+onMounted(() => {
+  syncGridViewToViewport()
+  window.addEventListener('resize', syncGridViewToViewport)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', syncGridViewToViewport)
+})
 
 const activeFilter = ref<ShopFilterId>(shopFilterFromQuery(route.query.filter))
 
@@ -43,14 +102,6 @@ watch(shopHeading, (value) => {
 })
 
 useHead({title: 'Shop — Crows Are White'})
-
-// Both icons are 11x11 pixel grids: 3px blocks in a 3x3, 2px blocks in a 4x4.
-function iconCells(offsets: number[]) {
-  return offsets.flatMap((y) => offsets.map((x) => ({x, y, key: `${x}-${y}`})))
-}
-
-const FEATURE_ICON_CELLS = iconCells([0, 4, 8])
-const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
 </script>
 
 <template>
@@ -91,12 +142,14 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
         aria-label="Grid layout"
       >
         <button
+          v-for="option in visibleGridViewOptions"
+          :key="option.id"
           type="button"
           class="shop-views__btn"
-          :class="{ 'is-active': viewMode === 'feature' }"
-          aria-label="Large layout"
-          :aria-pressed="viewMode === 'feature'"
-          @click="viewMode = 'feature'"
+          :class="{ 'is-active': viewMode === option.id }"
+          :aria-label="option.label"
+          :aria-pressed="viewMode === option.id"
+          @click="setViewMode(option.id)"
         >
           <svg
             viewBox="0 0 11 11"
@@ -104,36 +157,12 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
             aria-hidden="true"
           >
             <rect
-              v-for="cell in FEATURE_ICON_CELLS"
+              v-for="cell in gridIconCells(option.offsets)"
               :key="cell.key"
               :x="cell.x"
               :y="cell.y"
-              width="3"
-              height="3"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="shop-views__btn"
-          :class="{ 'is-active': viewMode === 'grid' }"
-          aria-label="Grid layout"
-          :aria-pressed="viewMode === 'grid'"
-          @click="viewMode = 'grid'"
-        >
-          <svg
-            viewBox="0 0 11 11"
-            shape-rendering="crispEdges"
-            aria-hidden="true"
-          >
-            <rect
-              v-for="cell in GRID_ICON_CELLS"
-              :key="cell.key"
-              :x="cell.x"
-              :y="cell.y"
-              width="2"
-              height="2"
+              :width="option.cellSize"
+              :height="option.cellSize"
               fill="currentColor"
             />
           </svg>
@@ -191,6 +220,12 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   padding-top: calc(var(--header-height, 112) * 1px);
   background: var(--shop-bg);
   color: var(--shop-text);
+}
+
+@media (max-width: 999px) {
+  .shop-page {
+    min-height: 0;
+  }
 }
 
 .shop-page__header {
@@ -343,70 +378,40 @@ const GRID_ICON_CELLS = iconCells([0, 3, 6, 9])
   overflow: hidden;
 }
 
-/* Grid view: 2 / 3 / 4 columns — drop right edge on the last column only. */
-.shop-grid--grid .shop-cell:nth-child(2n) {
+/* 1 column */
+.shop-grid--1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.shop-grid--1 .shop-cell {
   border-right: none;
 }
 
-@media (min-width: 700px) {
-  .shop-grid--grid .shop-cell:nth-child(2n) {
-    border-right: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--grid .shop-cell:nth-child(3n) {
-    border-right: none;
-  }
+/* 2 columns */
+.shop-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@media (min-width: 900px) {
-  .shop-grid--grid .shop-cell:nth-child(3n) {
-    border-right: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--grid .shop-cell:nth-child(4n) {
-    border-right: none;
-  }
-}
-
-/* Feature view: 2 columns below 700px, then 3. */
-.shop-grid--feature .shop-cell:nth-child(2n) {
+.shop-grid--2 .shop-cell:nth-child(2n) {
   border-right: none;
 }
 
-@media (min-width: 700px) {
-  .shop-grid--feature .shop-cell:nth-child(2n) {
-    border-right: 1px solid var(--shop-line);
-  }
-
-  .shop-grid--feature .shop-cell:nth-child(3n) {
-    border-right: none;
-  }
+/* 3 columns */
+.shop-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.shop-grid--grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.shop-grid--3 .shop-cell:nth-child(3n) {
+  border-right: none;
 }
 
-@media (min-width: 700px) {
-  .shop-grid--grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+/* 4 columns */
+.shop-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-@media (min-width: 900px) {
-  .shop-grid--grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.shop-grid--feature {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (min-width: 700px) {
-  .shop-grid--feature {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.shop-grid--4 .shop-cell:nth-child(4n) {
+  border-right: none;
 }
 
 .shop-grid .shop-cell {

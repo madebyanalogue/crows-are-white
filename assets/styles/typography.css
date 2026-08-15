@@ -129,7 +129,7 @@ body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.000em; }
 .h8 { font-size: var(--h8); line-height: 1.0; letter-spacing: -0.000em; }
 .body { font-size: var(--body); line-height: 1.75; letter-spacing: -0.0175em; }
 
-.large-title { font-size: clamp(30px, 3vw, 70px); line-height: 1.1; letter-spacing: -0.000em; font-weight: 300; font-style: normal; font-family: var(--serif); }
+.large-title { font-size: clamp(35px, 3.5vw, 70px); line-height: 1.1; letter-spacing: -0.000em; font-weight: 300; font-style: normal; font-family: var(--serif); }
 
 .heading-condensed {
   margin: 0;
