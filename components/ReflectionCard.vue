@@ -323,6 +323,7 @@ onBeforeUnmount(() => {
   z-index: 0;
   border-top: 0.035em dashed color-mix(in srgb, var(--reflection-paper-text) 40%, transparent);
   pointer-events: none;
+  display: none;
 }
 
 .reflection-card__paper--open::before {
@@ -406,7 +407,7 @@ onBeforeUnmount(() => {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: start;
   gap: 1rem;
   height: 100%;
   min-height: 0;
@@ -428,7 +429,7 @@ onBeforeUnmount(() => {
   font-weight: 300;
   line-height: 1.3;
   letter-spacing: 0.02em;
-  text-align: center;
+  text-align: left;
 }
 
 .reflection-card__quote--longform {
@@ -443,7 +444,7 @@ onBeforeUnmount(() => {
 
 .reflection-card__attribution {
   position: absolute;
-  right: 8%;
+  left: 8%;
   bottom: 8%;
   margin: 0;
   font-size: 5cqmin;

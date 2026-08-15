@@ -137,7 +137,7 @@ const sectionStyle = computed(() => {
   return style
 })
 
-const fullViewTab = ref('list')
+const fullViewTab = ref('grid')
 const { items, pending } = useReflections(500)
 
 function selectFullViewTab(tab) {

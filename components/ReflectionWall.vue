@@ -8,27 +8,66 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  cardsOpen: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const openId = ref(null)
+const openIds = ref(new Set())
+
+function syncOpenIds(items = props.items) {
+  if (!props.cardsOpen) {
+    openIds.value = new Set()
+    return
+  }
+
+  openIds.value = new Set(items.map((item) => item._id).filter(Boolean))
+}
+
+watch(
+  () => [props.cardsOpen, props.items.map((item) => item._id).join(',')],
+  () => syncOpenIds(),
+  { immediate: true },
+)
+
 const wallRef = ref(null)
 
+function isCardOpen(id) {
+  if (props.cardsOpen) return openIds.value.has(id)
+  return openIds.value.size === 1 && openIds.value.has(id)
+}
+
 function openCard(id) {
-  openId.value = id
+  if (props.cardsOpen) {
+    openIds.value = new Set([...openIds.value, id])
+    return
+  }
+
+  openIds.value = new Set([id])
 }
 
 function closeOpenCard() {
-  openId.value = null
+  openIds.value = new Set()
 }
 
 function closeCard(id) {
-  if (openId.value === id) {
-    openId.value = null
+  if (props.cardsOpen) {
+    const next = new Set(openIds.value)
+    next.delete(id)
+    openIds.value = next
+    return
+  }
+
+  if (openIds.value.has(id)) {
+    openIds.value = new Set()
   }
 }
 
+const hasOpenCard = computed(() => openIds.value.size > 0)
+
 function handleDocumentClick(event) {
-  if (!openId.value) return
+  if (!hasOpenCard.value || props.cardsOpen) return
 
   const openCardEl = wallRef.value?.querySelector('.reflection-card--open')
   if (!openCardEl || openCardEl.contains(event.target)) return
@@ -36,12 +75,12 @@ function handleDocumentClick(event) {
   closeOpenCard()
 }
 
-watch(openId, (id) => {
-  if (!import.meta.client) return
+watch(hasOpenCard, (isOpen) => {
+  if (!import.meta.client || props.cardsOpen) return
 
   document.removeEventListener('click', handleDocumentClick)
 
-  if (!id) return
+  if (!isOpen) return
 
   setTimeout(() => {
     document.addEventListener('click', handleDocumentClick)
@@ -66,14 +105,14 @@ onUnmounted(() => {
       :key="item._id"
       class="reflection-wall__cell"
       :class="{
-        'reflection-wall__cell--open': openId === item._id,
+        'reflection-wall__cell--open': isCardOpen(item._id),
         'reflection-wall__cell--longform': item.longform,
       }"
     >
       <ReflectionCard
         :item="item"
         :index="index"
-        :open="openId === item._id"
+        :open="isCardOpen(item._id)"
         click-only
         show-folded-location
         disable-paper-tilt

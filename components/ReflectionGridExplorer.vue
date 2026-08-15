@@ -1,7 +1,7 @@
 <script setup>
 import {
   applyReflectionFilters,
-  getReflectionCountries,
+  getReflectionCountriesWithCounts,
 } from '~/utils/reflections'
 
 const props = defineProps({
@@ -28,7 +28,9 @@ const filterMode = ref('all')
 const selectedCountry = ref('')
 const visibleCount = ref(props.pageSize)
 
-const countryOptions = computed(() => getReflectionCountries(props.items))
+const countryOptions = computed(() =>
+  getReflectionCountriesWithCounts(props.items),
+)
 
 const filteredItems = computed(() => {
   const country = filterMode.value === 'country' ? selectedCountry.value : ''
@@ -96,8 +98,9 @@ function loadMore() {
         </button>
 
         <ReflectionCountryDropdown
+          class="reflection-grid-explorer__country-dropdown"
           :model-value="selectedCountry"
-          :options="countryOptions"
+          :options="countryOptions.map((entry) => entry.country)"
           @update:model-value="onCountryUpdate"
         />
       </div>
@@ -110,19 +113,51 @@ function loadMore() {
       </div>
     </div>
 
-    <ReflectionWall
-      v-if="displayMode === 'grid'"
-      class="reflection-grid-explorer__wall"
-      :items="visibleItems"
-      :pending="pending"
-    />
+    <div
+      class="reflection-grid-explorer__body"
+      :class="{ 'reflection-grid-explorer__body--with-sidebar': countryOptions.length }"
+    >
+      <aside
+        v-if="countryOptions.length"
+        class="reflection-grid-explorer__sidebar"
+        aria-label="Countries"
+      >
+        <ul class="reflection-grid-explorer__country-list">
+          <li
+            v-for="entry in countryOptions"
+            :key="entry.country"
+          >
+            <button
+              type="button"
+              class="reflection-grid-explorer__country serif"
+              :class="{
+                'reflection-grid-explorer__country--active':
+                  filterMode === 'country' && selectedCountry === entry.country,
+              }"
+              @click="selectCountry(entry.country)"
+            >
+              <span class="reflection-grid-explorer__country-name">{{ entry.country }}</span>
+              <span class="reflection-grid-explorer__country-count">({{ entry.count }})</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
 
-    <ReflectionList
-      v-else
-      class="reflection-grid-explorer__list"
-      :items="visibleItems"
-      :pending="pending"
-    />
+      <ReflectionWall
+        v-if="displayMode === 'grid'"
+        class="reflection-grid-explorer__wall"
+        :items="visibleItems"
+        :pending="pending"
+        cards-open
+      />
+
+      <ReflectionList
+        v-else
+        class="reflection-grid-explorer__list"
+        :items="visibleItems"
+        :pending="pending"
+      />
+    </div>
 
     <div
       v-if="hasMore"
@@ -198,11 +233,101 @@ function loadMore() {
   opacity: 0.85;
 }
 
+.reflection-grid-explorer__body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  min-width: 0;
+}
+
+.reflection-grid-explorer__body--with-sidebar {
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.reflection-grid-explorer__country-dropdown {
+  min-width: 0;
+}
+
+.reflection-grid-explorer__sidebar {
+  display: none;
+  min-width: 0;
+}
+
+.reflection-grid-explorer__country-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reflection-grid-explorer__country {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: clamp(0.95rem, 1.35vw, 1.05rem);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-align: left;
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.reflection-grid-explorer__country--active {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.reflection-grid-explorer__country:hover {
+  opacity: 0.85;
+}
+
+.reflection-grid-explorer__country--active:hover {
+  opacity: 1;
+}
+
+.reflection-grid-explorer__country-count {
+  flex-shrink: 0;
+  opacity: 0.72;
+}
+
 .reflection-grid-explorer__wall :deep(.reflection-wall) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (min-width: 700px) {
+  .reflection-grid-explorer__country-dropdown {
+    display: none;
+  }
+
+  .reflection-grid-explorer__sidebar {
+    display: block;
+  }
+
+  .reflection-grid-explorer__body--with-sidebar {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .reflection-grid-explorer__wall :deep(.reflection-wall) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
   .reflection-grid-explorer__wall :deep(.reflection-wall) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

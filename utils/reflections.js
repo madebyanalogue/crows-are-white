@@ -283,6 +283,20 @@ export function getReflectionCountries(items = []) {
   return [...countries].sort((left, right) => left.localeCompare(right))
 }
 
+export function getReflectionCountriesWithCounts(items = []) {
+  const counts = new Map()
+
+  for (const item of items) {
+    const country = normalizeReflectionField(item?.country)
+    if (!country) continue
+    counts.set(country, (counts.get(country) || 0) + 1)
+  }
+
+  return [...counts.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([country, count]) => ({ country, count }))
+}
+
 export function filterReflectionsByCountry(items = [], country) {
   const normalizedCountry = normalizeReflectionField(country).toLowerCase()
   if (!normalizedCountry) return items
