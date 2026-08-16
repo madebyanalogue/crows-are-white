@@ -17,6 +17,18 @@ export function isVariantPurchasable(variant: VariantAvailabilityLike) {
   return variant.currentlyNotInStock === false
 }
 
+export function resolveDefaultVariantId(
+  variants: Array<{id: string} & VariantAvailabilityLike> | undefined,
+  preferredId = '',
+) {
+  if (!variants?.length) return ''
+  if (preferredId && variants.some((variant) => variant.id === preferredId)) {
+    return preferredId
+  }
+
+  return (variants.find((variant) => isVariantPurchasable(variant)) || variants[0]).id
+}
+
 export function resolveVariantOptionName(
   options: ProductOptionLike[] | undefined,
   fallback = 'Variant',

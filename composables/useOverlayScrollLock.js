@@ -21,10 +21,15 @@ export function lockOverlayScroll() {
     lockedScrollY = getScrollY()
 
     try {
-      useNuxtApp().$lenis?.stop?.()
+      const nuxtApp = useNuxtApp()
+      const lenis = nuxtApp.$lenis
+      lenis?.scrollTo?.(lockedScrollY, { immediate: true })
+      lenis?.stop?.()
     } catch {
       // Lenis may not be initialized yet.
     }
+
+    window.scrollTo(0, lockedScrollY)
 
     document.documentElement.classList.add('is-overlay-scroll-locked')
     document.documentElement.style.overflow = 'hidden'

@@ -11,8 +11,8 @@ defineProps<{
 <style scoped>
 .shop-sale-badge {
   position: absolute;
-  top: clamp(0.65rem, 1.2vw, 0.85rem);
-  right: clamp(0.65rem, 1.2vw, 0.85rem);
+  top: var(--wrapper-padding);
+  right: var(--wrapper-padding);
   z-index: 2;
   padding: 0.4rem .4rem 0.3rem;
   background: #d40000;

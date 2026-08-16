@@ -7,8 +7,10 @@ const props = withDefaults(defineProps<{
   emptyMessage?: string
   ariaLabel?: string
   columns?: number
+  variant?: 'default' | 'related'
 }>(), {
   columns: 4,
+  variant: 'default',
 })
 
 const carouselStyle = computed(() => ({
@@ -119,6 +121,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="shop-product-carousel"
+    :class="{ 'shop-product-carousel--related': variant === 'related' }"
     :style="carouselStyle"
     :aria-label="ariaLabel"
   >
@@ -128,49 +131,49 @@ onBeforeUnmount(() => {
     >
       <div class="shop-product-carousel__header-start">
         <slot name="header" />
+      </div>
 
-        <div
-          v-if="showControls"
-          class="shop-product-carousel__controls"
+      <div
+        v-if="showControls"
+        class="shop-product-carousel__controls"
+      >
+        <button
+          type="button"
+          class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
+          aria-label="Previous products"
+          :disabled="!canGoPrev"
+          @click="goPrev"
         >
-          <button
-            type="button"
-            class="shop-product-carousel__arrow shop-product-carousel__arrow--prev"
-            aria-label="Previous products"
-            :disabled="!canGoPrev"
-            @click="goPrev"
+          <svg
+            viewBox="0 0 13 12"
+            fill="none"
+            aria-hidden="true"
           >
-            <svg
-              viewBox="0 0 13 12"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                stroke="currentColor"
-                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-              />
-            </svg>
-          </button>
+            <path
+              stroke="currentColor"
+              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+            />
+          </svg>
+        </button>
 
-          <button
-            type="button"
-            class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
-            aria-label="Next products"
-            :disabled="!canGoNext"
-            @click="goNext"
+        <button
+          type="button"
+          class="shop-product-carousel__arrow shop-product-carousel__arrow--next"
+          aria-label="Next products"
+          :disabled="!canGoNext"
+          @click="goNext"
+        >
+          <svg
+            viewBox="0 0 13 12"
+            fill="none"
+            aria-hidden="true"
           >
-            <svg
-              viewBox="0 0 13 12"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                stroke="currentColor"
-                d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              stroke="currentColor"
+              d="m7.304 10.919 5.007-5.08m0 0L7.304.76m5.007 5.08H.93"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -223,30 +226,60 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 660px) {
-  .shop-product-carousel {
+  .shop-product-carousel:not(.shop-product-carousel--related) {
     --shop-carousel-slides-visible: 3.5;
     --shop-carousel-visible-gaps: 3;
   }
 }
 
 @media (min-width: 1000px) {
-  .shop-product-carousel {
+  .shop-product-carousel:not(.shop-product-carousel--related) {
+    --shop-carousel-slides-visible: var(--shop-carousel-slides-desktop, 4);
+    --shop-carousel-visible-gaps: var(--shop-carousel-visible-gaps-desktop, 3);
+  }
+}
+
+.shop-product-carousel--related {
+  --shop-carousel-slides-visible: 2;
+  --shop-carousel-visible-gaps: 1;
+}
+
+@media (min-width: 700px) {
+  .shop-product-carousel--related {
+    --shop-carousel-slides-visible: 2.5;
+    --shop-carousel-visible-gaps: 2;
+  }
+}
+
+@media (min-width: 1000px) {
+  .shop-product-carousel--related {
+    --shop-carousel-slides-visible: 3;
+    --shop-carousel-visible-gaps: 2;
+  }
+}
+
+@media (min-width: 1400px) {
+  .shop-product-carousel--related {
     --shop-carousel-slides-visible: var(--shop-carousel-slides-desktop, 4);
     --shop-carousel-visible-gaps: var(--shop-carousel-visible-gaps-desktop, 3);
   }
 }
 
 .shop-product-carousel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   min-height: clamp(2.5rem, 6vw, 3.25rem);
   margin-bottom: 2rem;
-  padding: 0 clamp(1rem, 3.5vw, 3rem);
+  padding: 0 var(--shop-x-padding);
 }
 
 .shop-product-carousel__header-start {
   display: flex;
   align-items: center;
-  gap: 50px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .shop-product-carousel__controls {

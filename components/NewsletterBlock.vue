@@ -712,7 +712,7 @@ onUnmounted(clearOverlayFeedbackTimer)
 }
 
 .newsletter-block__panel-title {
-  font-size: clamp(1.35rem,8vw,4.5rem);
+  font-size: clamp(2.1rem, 8vw, 4.5rem);
   font-weight: 400;
   line-height: 0.925;
   margin: 0 0 clamp(90px, 7vw, 9rem);
@@ -860,6 +860,7 @@ onUnmounted(clearOverlayFeedbackTimer)
 }
 
 .newsletter-block__form--overlay .newsletter-block__input {
+  border-radius: 0;
   padding-right: clamp(7rem, 18vw, 12rem);
   padding-bottom: var(--newsletter-field-padding-bottom);
   font-size: clamp(18px, 4.2vw, 2rem);

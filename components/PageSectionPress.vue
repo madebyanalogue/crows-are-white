@@ -668,7 +668,7 @@ const sectionStyle = computed(() => {
   .page-section-press__stack {
     width: 100%;
     max-width: 100%;
-    aspect-ratio: 5 / 4;
+    aspect-ratio: 4 / 3;
   }
 
   .page-section-press__card-image,
@@ -714,7 +714,7 @@ const sectionStyle = computed(() => {
   }
 
   .page-section-press__link-cell.large-title {
-    font-size: clamp(35px, 6vw, 70px);
+    font-size: clamp(32px, 6vw, 70px);
   }
 }
 
@@ -856,11 +856,11 @@ const sectionStyle = computed(() => {
 
 .page-section-press__caption--handwritten {
   position: absolute;
-  right: 10px;
+  right: 0;
   top: calc(100% + .75em);
-  max-width: min(78%, 35rem);
+  max-width: unset;
   font-family: var(--handwritten);
-  font-size: clamp(23px, 2.1vw, 40px);
+  font-size: clamp(20px, 3.5vw, 40px);
   line-height: 1.05;
   text-align: right;
   color: var(--text-color);
@@ -868,6 +868,11 @@ const sectionStyle = computed(() => {
   transform-origin: bottom right;
 }
 
+@media (min-width: 1000px) {
+.page-section-press__caption--handwritten {
+  font-size: clamp(20px, 2.1vw, 40px);
+}
+}
 .page-section-press.is-media-valign-bottom .page-section-press__caption--handwritten {
   top: auto;
   bottom: calc(100% + .75em);

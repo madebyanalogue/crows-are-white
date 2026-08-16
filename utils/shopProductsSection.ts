@@ -5,7 +5,7 @@ import {
   type ShopFilterId,
 } from '~/utils/shopCollections'
 
-export function resolveShopSectionLimit(value: unknown, fallback = 8) {
+export function resolveShopSectionLimit(value: unknown, fallback = 16) {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 24) : fallback
 }
@@ -27,7 +27,7 @@ export function buildDefaultRelatedProductsSection(product?: ShopifyProduct | nu
     _id: 'default-related-products',
     relatedProductsTitle: 'Related',
     relatedProductsCollection: inferShopProductCollection(product),
-    relatedProductsLimit: 8,
+    relatedProductsLimit: 16,
     relatedProductsExcludeCurrent: true,
   }
 }
@@ -40,10 +40,22 @@ export function resolveShopSectionProducts(
     excludeHandle?: string | null
   } = {},
 ) {
+  const limit = options.limit ?? 16
   const collection = resolveShopFilterId(options.collection || 'all')
   const filtered = filterProductsByCollection(products, collection)
   const excluded = options.excludeHandle
     ? filtered.filter((product) => product.handle !== options.excludeHandle)
     : filtered
-  return excluded.slice(0, options.limit ?? 8)
+  const sliced = excluded.slice(0, limit)
+
+  if (!sliced.length || sliced.length >= limit) {
+    return sliced
+  }
+
+  const padded: ShopifyProduct[] = []
+  while (padded.length < limit) {
+    padded.push(...sliced)
+  }
+
+  return padded.slice(0, limit)
 }

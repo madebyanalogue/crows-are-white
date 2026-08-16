@@ -390,12 +390,13 @@ useHead({title: 'Shop — Crows Are White'})
 
 .shop-page__notice,
 .shop-page__empty {
-  padding: 0.9rem clamp(1rem, 3vw, 2rem);
+  padding: 170px 80px;
   border-bottom: 1px solid var(--shop-line);
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0.7;
+  text-align: center;
 }
 
 .shop-page__notice code {

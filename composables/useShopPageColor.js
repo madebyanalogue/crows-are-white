@@ -1,4 +1,5 @@
 import { resolveShopChromeColors, mergeShopChromeColors } from '~/utils/shopColors'
+import { syncBrowserChromeColors } from '~/composables/usePageColor'
 
 export function useShopChromeColorsState() {
   return useState('shopChromeColors', () => null)
@@ -45,6 +46,7 @@ export function useShopPageColor(shopPageSource) {
 
     if (shouldApplyNow) {
       applied.value = resolved
+      syncBrowserChromeColors(resolved)
     }
   })
 }

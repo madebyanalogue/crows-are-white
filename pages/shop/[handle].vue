@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { buildDefaultRelatedProductsSection } from '~/utils/shopProductsSection'
 import { shopFilterFromQuery, shopIndexHref } from '~/utils/shopCollections'
-import { isVariantPurchasable } from '~/utils/shopVariants'
+import { resolveDefaultVariantId } from '~/utils/shopVariants'
 
 const { data: shopPage } = await useShopPage()
 useShopPageColor(shopPage)
@@ -18,7 +18,7 @@ const handle = computed(() => route.params.handle as string)
 const shopFilter = computed(() => shopFilterFromQuery(route.query.filter))
 const shopBackLink = computed(() => shopIndexHref(shopFilter.value))
 
-const {data, pending, error} = useShopifyProduct(handle)
+const {data, pending, error} = await useShopifyProduct(handle)
 const {addToCartWithOpen} = useCart()
 
 const product = computed(() => data.value?.product)
@@ -45,22 +45,19 @@ const productBuilderPage = computed(() => {
   }
 })
 
-const selectedVariantId = ref('')
+const selectedVariantId = useState(
+  `shop-selected-variant-${handle.value}`,
+  () => resolveDefaultVariantId(data.value?.product?.variants),
+)
 const quantity = ref(1)
 const adding = ref(false)
 
 watch(product, (value) => {
-  if (!value?.variants.length) {
-    selectedVariantId.value = ''
-    return
-  }
-
-  const currentVariant = value.variants.find((variant) => variant.id === selectedVariantId.value)
-  if (currentVariant) return
-
-  const firstVariant = value.variants.find((variant) => isVariantPurchasable(variant)) || value.variants[0]
-  selectedVariantId.value = firstVariant.id
-}, { immediate: true })
+  selectedVariantId.value = resolveDefaultVariantId(
+    value?.variants,
+    selectedVariantId.value,
+  )
+})
 
 async function onAddToCart() {
   if (!selectedVariantId.value || adding.value) return

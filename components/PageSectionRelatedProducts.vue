@@ -50,6 +50,7 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
     <ShopProductCarousel
       :products="products"
       :pending="pending"
+      variant="related"
       aria-label="Related products carousel"
     >
       <template

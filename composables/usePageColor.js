@@ -6,6 +6,9 @@ import {
   mergePageChromeColors,
   pageBackgroundVar,
   resolvePageBackgroundHex,
+  toCssColor,
+  isLightColor,
+  DEFAULT_UNSET_PAGE_BACKGROUND,
 } from '~/utils/pageColors'
 import { getCachedPageForRoute } from '~/utils/videoSectionFlags'
 import { isShopRoute, resolveShopChromeColors, mergeShopChromeColors } from '~/utils/shopColors'
@@ -22,6 +25,7 @@ export function applyPendingPageColors() {
   const { pending, applied } = useAppliedPageColors()
   if (pending.value) {
     applied.value = { ...pending.value }
+    syncBrowserChromeColors(applied.value)
   }
 }
 
@@ -91,6 +95,7 @@ export async function applyPageColorsFromRoute(path) {
 
   pending.value = colors
   applied.value = colors
+  syncBrowserChromeColors(colors)
 }
 
 export function usePageColor(page) {
@@ -110,8 +115,34 @@ export function usePageColor(page) {
 
     if (shouldApplyNow) {
       applied.value = colors
+      syncBrowserChromeColors(colors)
     }
   })
+}
+
+export function syncBrowserChromeColors(colors = {}) {
+  if (!import.meta.client) return
+
+  const background = toCssColor(
+    colors.pageColor || DEFAULT_UNSET_PAGE_BACKGROUND,
+    DEFAULT_UNSET_PAGE_BACKGROUND,
+  )
+  const hex = resolvePageBackgroundHex(colors)
+  const light = isLightColor(colors.pageColor || background)
+  const colorScheme = light ? 'light' : 'dark'
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeMeta) {
+    themeMeta.setAttribute('content', hex)
+  }
+
+  const schemeMeta = document.querySelector('meta[name="color-scheme"]')
+  if (schemeMeta) {
+    schemeMeta.setAttribute('content', colorScheme)
+  }
+
+  document.documentElement.style.backgroundColor = background
+  document.documentElement.style.colorScheme = colorScheme
 }
 
 export function usePageColorHead() {
@@ -119,6 +150,7 @@ export function usePageColorHead() {
 
   useHead(() => {
     const colors = applied.value || {}
+    const light = isLightColor(colors.pageColor || DEFAULT_UNSET_PAGE_BACKGROUND)
 
     return {
       htmlAttrs: getPageColorHtmlAttrs(colors),
@@ -129,9 +161,25 @@ export function usePageColorHead() {
           name: 'theme-color',
           content: resolvePageBackgroundHex(colors),
         },
+        {
+          key: 'color-scheme',
+          name: 'color-scheme',
+          content: light ? 'light' : 'dark',
+        },
       ],
     }
   })
+
+  if (import.meta.client) {
+    watch(
+      applied,
+      (colors) => {
+        if (!colors) return
+        syncBrowserChromeColors(colors)
+      },
+      { immediate: true, deep: true },
+    )
+  }
 }
 
 export function suspendPageColorTransitions() {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {ShopifyProductDetail} from '~/types/shopify'
 import {formatShopPrice, resolveProductShopFilter, shopIndexHref} from '~/utils/shopCollections'
-import {isVariantPurchasable} from '~/utils/shopVariants'
+import {isVariantPurchasable, resolveDefaultVariantId} from '~/utils/shopVariants'
 
 const props = defineProps<{
   product: ShopifyProductDetail
@@ -19,8 +19,12 @@ const emit = defineEmits<{
 
 const carouselRef = ref<HTMLElement | null>(null)
 
+const resolvedVariantId = computed(() =>
+  resolveDefaultVariantId(props.product.variants, props.selectedVariantId),
+)
+
 const selectedVariant = computed(() =>
-  props.product.variants.find((variant) => variant.id === props.selectedVariantId),
+  props.product.variants.find((variant) => variant.id === resolvedVariantId.value),
 )
 
 const canPurchaseSelectedVariant = computed(() => isVariantPurchasable(selectedVariant.value))
@@ -193,17 +197,13 @@ const categoryFilter = computed(() => resolveProductShopFilter(props.product))
 const categoryHref = computed(() => shopIndexHref(categoryFilter.value))
 
 watch(
-  () => props.product.variants,
-  (variants) => {
-    if (!variants?.length) return
-
-    const isCurrentVariant = variants.some((variant) => variant.id === props.selectedVariantId)
-    if (isCurrentVariant) return
-
-    const firstVariant = variants.find((variant) => isVariantPurchasable(variant)) || variants[0]
-    emit('update:selectedVariantId', firstVariant.id)
+  resolvedVariantId,
+  (variantId) => {
+    if (variantId && variantId !== props.selectedVariantId) {
+      emit('update:selectedVariantId', variantId)
+    }
   },
-  { immediate: true },
+  {immediate: true},
 )
 
 function onVariantChange(event: Event) {
@@ -319,6 +319,25 @@ function incrementQty() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div
+              v-if="hasMultipleImages"
+              class="shop-product-hero__carousel-dots"
+              role="tablist"
+              :aria-label="`${product.title} image pagination`"
+            >
+              <button
+                v-for="(image, index) in carouselImages"
+                :key="`dot-${image.url}-${index}`"
+                type="button"
+                class="shop-product-hero__carousel-dot"
+                :class="{ 'is-active': displayImageIndex === index }"
+                role="tab"
+                :aria-selected="displayImageIndex === index"
+                :aria-label="`Show image ${index + 1} of ${carouselImages.length}`"
+                @click="selectCarouselIndex(index)"
+              />
             </div>
 
             <div
@@ -543,7 +562,7 @@ function incrementQty() {
 }
 
 .shop-product-hero__back-row {
-  position: fixed;
+  position: absolute;
   top: 10px;
   left: 0;
   right: 0;
@@ -552,7 +571,7 @@ function incrementQty() {
   grid-template-columns: minmax(320px, 1fr) minmax(0, 1fr) minmax(320px, 1fr);
   align-items: center;
   height: var(--site-header-bar-height);
-  padding: 0 1rem;
+  padding: 0 var(--shop-x-padding);
   pointer-events: none;
 }
 
@@ -568,7 +587,6 @@ function incrementQty() {
   height: var(--site-header-bar-height);
   display: flex;
   align-items: center;
-  padding: 0 clamp(1rem, 2.5vw, 2rem);
   pointer-events: auto;
 }
 
@@ -627,8 +645,9 @@ function incrementQty() {
   min-height: 0;
   padding:
     calc(var(--site-header-bar-height) + 0.75rem)
-    clamp(1rem, 2.5vw, 2rem)
-    calc(var(--shop-product-actions-offset) + 1rem);
+    0
+    calc(var(--shop-product-actions-offset) + 1rem)
+    var(--shop-x-padding);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -661,7 +680,7 @@ function incrementQty() {
   font-size: clamp(2rem, 4.5vw, 4rem);
   font-weight: 300;
   line-height: 0.95;
-  letter-spacing: -0.00em;
+  letter-spacing: 0.015em;
   margin-bottom: 0.75rem;
   /* text-transform: uppercase; */
 }
@@ -775,6 +794,31 @@ function incrementQty() {
   pointer-events: none;
 }
 
+.shop-product-hero__carousel-dots {
+  display: none;
+}
+
+.shop-product-hero__carousel-dot {
+  display: block;
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #000;
+  opacity: 0.25;
+  cursor: pointer;
+  transition: width 0.18s ease, opacity 0.18s ease;
+}
+
+.shop-product-hero__carousel-dot.is-active {
+  width: 15px;
+  height: 2px;
+  opacity: 1;
+  border-radius: 2px;
+}
+
 .shop-product-hero__carousel {
   width: 100%;
   height: 100%;
@@ -783,6 +827,10 @@ function incrementQty() {
 
 .shop-product-hero__carousel:not(.flickity-enabled) {
   overflow: hidden;
+}
+
+.shop-product-hero__carousel:not(.flickity-enabled) .shop-product-hero__slide:not(:first-child) {
+  display: none;
 }
 
 .shop-product-hero__carousel--scrollable,
@@ -1106,18 +1154,36 @@ function incrementQty() {
 }
 
 @media (max-width: 999px) {
+  .shop-product-hero {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding-top: 75px;
+  }
+
+  .shop-product-hero__back-row {
+    display: none;
+  }
+
   .shop-product-hero__grid {
+    container-type: normal;
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .shop-product-hero__info {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     align-self: start;
-    justify-content: flex-start;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--wrapper-padding);
+    padding-top: 2.5rem;
+    padding-bottom: 3.5rem;
     overflow-y: visible;
   }
 
@@ -1126,10 +1192,10 @@ function incrementQty() {
     grid-column: 1;
     grid-row: 1;
     grid-template-rows: auto auto;
-    gap: 15px;
+    gap: 25px;
     align-self: center;
-    width: min(100%, min(52dvh, 520px));
-    max-width: min(100%, min(52dvh, 520px));
+    justify-self: center;
+    width: min(100%, 720px);
     height: auto;
   }
 
@@ -1137,6 +1203,71 @@ function incrementQty() {
     grid-column: auto;
     grid-row: auto;
     width: 100%;
+    height: auto;
+    min-height: 0;
+    align-self: center;
+    overflow: visible;
+  }
+
+  .shop-product-hero__carousel-shell {
+    width: 100%;
+    height: auto;
+    max-height: unset;
+    aspect-ratio: 1;
+    overflow: visible;
+  }
+
+  .shop-product-hero__carousel-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 0px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transform: translateX(-50%);
+    pointer-events: auto;
+  }
+
+  .shop-product-hero__carousel-nav,
+  .shop-product-hero__thumbnails,
+  .shop-product-hero__aside {
+    display: none;
+  }
+
+  .shop-product-hero__carousel:not(.flickity-enabled),
+  .shop-product-hero__carousel--scrollable:not(.flickity-enabled) {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .shop-product-hero__carousel--scrollable.flickity-enabled {
+    overflow: visible;
+  }
+
+  .shop-product-hero__carousel.flickity-enabled,
+  .shop-product-hero__carousel.flickity-enabled .shop-product-hero__track,
+  .shop-product-hero__carousel.flickity-enabled .shop-product-hero__slide,
+  .shop-product-hero__carousel.flickity-enabled :deep(.flickity-cell),
+  .shop-product-hero__carousel.flickity-enabled :deep(.flickity-viewport) {
+    height: auto !important;
+  }
+
+  .shop-product-hero__carousel.flickity-enabled :deep(.flickity-viewport) {
+    height: auto !important;
+    overflow: visible;
+  }
+
+  .shop-product-hero__frame {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .shop-product-hero__image {
+    width: 100%;
+    height: auto;
   }
 
   .shop-product-hero__actions {
@@ -1145,47 +1276,13 @@ function incrementQty() {
     width: 100%;
     max-width: 100%;
     padding-bottom: 0;
+    padding: 0 var(--wrapper-padding);
   }
+}
 
-  .shop-product-hero__thumbnails {
-    grid-column: 1;
-    grid-row: 2;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    align-self: center;
-    gap: 0.45rem;
-    padding: 0.75rem clamp(1rem, 2.5vw, 2rem) 0;
-  }
-
-  .shop-product-hero__thumbnail {
-    width: 2.5rem;
-  }
-
-  .shop-product-hero__carousel-shell {
-    width: 100%;
-    height: auto;
-    max-height: min(52dvh, 520px);
-  }
-
-  .shop-product-hero__aside {
-    grid-column: 1;
-    grid-row: 3;
-    align-self: stretch;
-    justify-content: flex-end;
-    align-items: flex-end;
-    padding:
-      0
-      clamp(1rem, 2.5vw, 2rem)
-      1.5rem;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
+@media (max-width: 699px) {
   .shop-product-hero {
-    height: auto;
-    min-height: max(600px, 100dvh);
-    max-height: none;
+    padding-top: 68px;
   }
 }
 </style>

@@ -34,6 +34,7 @@
                     :items="group.items"
                     :group-key="group._key || group.title"
                     list-class="footer__menu-list h7"
+                    @click="onFooterNavigate"
                   />
                 </div>
               </div>
@@ -129,6 +130,7 @@
                 :items="privacyMenuItems"
                 group-key="privacy"
                 list-class="footer__privacy-list h8"
+                @click="onFooterNavigate"
               />
             </nav>
           </div>
@@ -159,6 +161,8 @@ const {
   footerMenuHoverColor,
   footerShopifyLine,
 } = useSiteSettings()
+
+const { onFooterNavigate } = useFooterMobileNav()
 
 const footerStyle = computed(() => ({
   '--footer-social-feature-color': toCssColor(footerSocialFeatureColor.value, 'arancio'),
