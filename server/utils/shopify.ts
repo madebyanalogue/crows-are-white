@@ -4,7 +4,7 @@ import type {ShopifyCart, ShopifyProduct, ShopifyProductDetail} from '~/types/sh
 import {isOnSale} from '~/utils/shopifySale'
 import {resolveVariantOptionName} from '~/utils/shopVariants'
 
-const API_VERSION = '2025-01'
+const API_VERSION = '2025-10'
 
 export function useShopifyConfig() {
   const config = useRuntimeConfig()
@@ -342,7 +342,9 @@ function mapCart(cart: {
     totalQuantity: cart.totalQuantity,
     subtotal: cart.cost.subtotalAmount.amount,
     currencyCode: cart.cost.subtotalAmount.currencyCode,
-    lines: cart.lines.nodes.map((line) => ({
+    lines: cart.lines.nodes
+      .filter((line) => line.quantity > 0)
+      .map((line) => ({
       id: line.id,
       quantity: line.quantity,
       variantId: line.merchandise.id,

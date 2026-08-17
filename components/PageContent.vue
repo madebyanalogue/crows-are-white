@@ -8,12 +8,23 @@
               ? 'page-content__intro--two-columns grid-1 gap-md-0'
               : 'page-content__intro--single grid-1',
             { 'page-content__intro--above-sections': hasSectionsBelow },
+            {
+              'page-content__intro--videos-mobile-only':
+                hasVideosSection && showPageTitle && !hasRichText,
+            },
           ]"
           :style="introPaddingStyle"
         >
           <div
+            v-if="showPageIntroTitle"
             class="page-content__intro-title text-center "
-            :class="introUsesTwoColumns ? 'text-left-md' : 'text-center '"
+            :class="[
+              introUsesTwoColumns ? 'text-left-md' : 'text-center ',
+              {
+                'page-content__intro-title--videos-mobile-only':
+                  hasVideosSection && showPageTitle,
+              },
+            ]"
           >
             <h1 :class="pageTitleClass">{{ page.title }}</h1>
           </div>
@@ -232,17 +243,19 @@ watchEffect(() => {
 const hasRichText = computed(() => (props.page?.richText?.length ?? 0) > 0)
 const richTextTwoColumns = computed(() => props.page?.richTextTwoColumns !== false)
 const sections = computed(() => (props.page?.sections || []).filter(Boolean))
+const hasVideosSection = computed(() =>
+  sections.value.some((section) => section?.sectionType === 'videos'),
+)
 const hasSectionsBelow = computed(() => sections.value.length > 0)
 const introUsesTwoColumns = computed(() => hasRichText.value && richTextTwoColumns.value)
 const showPageTitle = computed(() => props.page?.showPageTitle === true)
 const pageTitleClass = computed(() =>
   props.page?.pageTitleStyle === 'serif' ? 'h1 serif light' : 'h1 condensed',
 )
-const showPageIntro = computed(() =>
-  hasRichText.value
-  || showPageTitle.value
-  || (sections.value.length === 0 && Boolean(props.page?.title)),
+const showPageIntroTitle = computed(() =>
+  showPageTitle.value || (sections.value.length === 0 && Boolean(props.page?.title)),
 )
+const showPageIntro = computed(() => hasRichText.value || showPageIntroTitle.value)
 
 const SECTION_PADDING_VALUES = {
   none: '0',
@@ -267,3 +280,15 @@ const introPaddingStyle = computed(() => ({
     : SECTION_PADDING_VALUES[resolveSectionPadding(props.page?.richTextPaddingBottom)],
 }))
 </script>
+
+<style scoped>
+@media (min-width: 1000px) {
+  .page-content__intro--videos-mobile-only {
+    display: none;
+  }
+
+  .page-content__intro-title--videos-mobile-only {
+    display: none;
+  }
+}
+</style>

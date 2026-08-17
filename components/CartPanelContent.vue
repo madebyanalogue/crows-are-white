@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import gsap from 'gsap'
+import type {ShopifyCartLine} from '~/types/shopify'
 
 const props = defineProps({
   variant: {
@@ -43,6 +44,106 @@ function onClose() {
   emit('close')
 }
 
+const exitingItems = ref<ShopifyCartLine[] | null>(null)
+const exitingSubtotal = ref<string | null>(null)
+const skipEmptyLoading = ref(false)
+let clearLastTween: gsap.core.Animation | null = null
+
+const displayItems = computed(() => exitingItems.value ?? items.value)
+const displaySubtotal = computed(() => exitingSubtotal.value ?? subtotal.value)
+
+function killClearLastTween() {
+  clearLastTween?.kill()
+  clearLastTween = null
+}
+
+function resetClearLastState() {
+  killClearLastTween()
+  exitingItems.value = null
+  exitingSubtotal.value = null
+  skipEmptyLoading.value = false
+  if (import.meta.client && panelRef.value) {
+    gsap.set(panelRef.value, { clearProps: 'height,overflow' })
+  }
+}
+
+async function onRemoveItem(lineId: string) {
+  const isLastItem = items.value.length === 1 && !exitingItems.value
+  if (!isLastItem || !import.meta.client || !panelRef.value) {
+    return removeFromCart(lineId)
+  }
+
+  const panel = panelRef.value
+  exitingItems.value = items.value.slice()
+  exitingSubtotal.value = subtotal.value
+  skipEmptyLoading.value = true
+  const removePromise = removeFromCart(lineId)
+
+  try {
+    await nextTick()
+    killRevealTween()
+    killClearLastTween()
+
+    const filled = panel.querySelectorAll('.cart-panel__item, .cart-panel__footer')
+    const fadeOut = gsap.to(filled, {
+      autoAlpha: 0,
+      duration: 0.28,
+      ease: 'power2.out',
+      overwrite: true,
+    })
+    clearLastTween = fadeOut
+    await fadeOut
+
+    if (props.variant === 'dropdown') {
+      gsap.set(panel, {
+        height: panel.getBoundingClientRect().height,
+        overflow: 'hidden',
+      })
+    }
+
+    exitingItems.value = null
+    exitingSubtotal.value = null
+    await nextTick()
+
+    const emptyEl = panel.querySelector('.cart-panel__empty')
+    if (emptyEl) gsap.set(emptyEl, { autoAlpha: 0 })
+
+    if (props.variant === 'dropdown') {
+      const target = emptyEl ? emptyEl.scrollHeight : panel.scrollHeight
+      const heightTween = gsap.to(panel, {
+        height: target,
+        duration: 0.34,
+        ease: 'power2.inOut',
+        overwrite: true,
+      })
+      clearLastTween = heightTween
+      await heightTween
+    }
+
+    if (emptyEl) {
+      const fadeIn = gsap.to(emptyEl, {
+        autoAlpha: 1,
+        duration: 0.32,
+        ease: 'power2.out',
+      })
+      clearLastTween = fadeIn
+      await fadeIn
+    }
+
+    if (props.variant === 'dropdown') {
+      gsap.set(panel, { clearProps: 'height,overflow' })
+    }
+  } catch {
+    resetClearLastState()
+  } finally {
+    exitingItems.value = null
+    exitingSubtotal.value = null
+    clearLastTween = null
+    await removePromise
+    skipEmptyLoading.value = false
+  }
+}
+
 function onItemEnterEnd(lineId: string, event: AnimationEvent) {
   if (event.animationName !== 'cart-item-enter') return
   if (lineId !== lastAddedLineId.value || !lastAddedIsNewLine.value) return
@@ -57,12 +158,13 @@ let revealTween: gsap.core.Tween | null = null
 let hasRevealedContent = false
 
 const showEmptyPanel = computed(() =>
-  items.value.length === 0 && !pendingNewLineSlot.value,
+  items.value.length === 0 && !pendingNewLineSlot.value && !exitingItems.value,
 )
 
 const emptyPanelMessage = computed(() => {
-  if (loading.value && !isAddingItem.value) return 'Loading cart…'
+  if (displayItems.value.length > 0 || skipEmptyLoading.value) return ''
   if (isAddingItem.value) return 'Adding to cart…'
+  if (loading.value && !isAddingItem.value) return 'Loading cart…'
   return ''
 })
 
@@ -175,6 +277,7 @@ watch(() => props.revealContent, (visible) => {
   if (!visible) {
     hasRevealedContent = false
     killRevealTween()
+    resetClearLastState()
     resetRevealTargets()
     return
   }
@@ -213,6 +316,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   killRevealTween()
+  killClearLastTween()
   itemsResizeObserver?.disconnect()
   window.removeEventListener('resize', scheduleFooterBorderCheck)
 })
@@ -227,6 +331,7 @@ onBeforeUnmount(() => {
       {
         'cart-panel--content-hidden':
           props.variant === 'dropdown' && !props.revealContent,
+        'cart-panel--clearing-last': Boolean(exitingItems),
       },
     ]"
   >
@@ -268,7 +373,7 @@ onBeforeUnmount(() => {
         data-lenis-prevent
       >
         <li
-          v-for="item in items"
+          v-for="item in displayItems"
           :key="item.id"
           class="cart-panel__item"
           :class="{
@@ -333,24 +438,26 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="cart-panel__item-actions">
-                  <select
-                    :value="item.quantity"
-                    class="cart-panel__qty"
-                    @change="updateQty(item.id, Number(($event.target as HTMLSelectElement).value))"
-                  >
-                    <option
-                      v-for="n in 10"
-                      :key="n"
-                      :value="n"
+                  <div class="cart-panel__qty-wrap">
+                    <select
+                      :value="item.quantity"
+                      class="cart-panel__qty"
+                      @change="updateQty(item.id, Number(($event.target as HTMLSelectElement).value))"
                     >
-                      {{ n }}
-                    </option>
-                  </select>
+                      <option
+                        v-for="n in 10"
+                        :key="n"
+                        :value="n"
+                      >
+                        {{ n }}
+                      </option>
+                    </select>
+                  </div>
                   <button
                     type="button"
                     class="cart-panel__remove"
                     aria-label="Remove item"
-                    @click="removeFromCart(item.id)"
+                    @click="onRemoveItem(item.id)"
                   >
                     <TrashIcon />
                   </button>
@@ -380,7 +487,7 @@ onBeforeUnmount(() => {
       >
         <div class="cart-panel__subtotal">
           <span>Subtotal</span>
-          <span class="cart-panel__subtotal-value">{{ formatPrice(subtotal, currencyCode) }}</span>
+          <span class="cart-panel__subtotal-value">{{ formatPrice(displaySubtotal, currencyCode) }}</span>
         </div>
         <p class="cart-panel__note">
           Shipping and taxes calculated at checkout.
@@ -415,6 +522,10 @@ onBeforeUnmount(() => {
   color: var(--cart-text-color, var(--menu-text-color, var(--obsidian)));
 }
 
+.cart-panel--clearing-last {
+  pointer-events: none;
+}
+
 .cart-panel :is(strong, b) {
   font-weight: 400;
 }
@@ -441,12 +552,14 @@ onBeforeUnmount(() => {
 }
 
 .cart-panel--dropdown.cart-panel--content-hidden :is(
-  .cart-panel__item:not(.cart-panel__item--placeholder),
-  .cart-panel__footer,
+  .cart-panel__item,
   .cart-panel__empty
 ) {
   opacity: 0;
-  transform: translateY(14px);
+}
+
+.cart-panel--dropdown.cart-panel--content-hidden .cart-panel__footer {
+  opacity: 0;
 }
 
 .cart-panel__header {
@@ -514,7 +627,7 @@ onBeforeUnmount(() => {
   scrollbar-width: none;
   list-style: none;
   margin: 0;
-  padding: 8px 47px;
+  padding: 8px var(--cart-x-padding);
 }
 
 .cart-panel__items::-webkit-scrollbar {
@@ -527,7 +640,6 @@ onBeforeUnmount(() => {
 }
 
 .cart-panel__item {
-  padding: 0 4px;
   border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
 }
 
@@ -571,12 +683,10 @@ onBeforeUnmount(() => {
 @keyframes cart-item-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -612,6 +722,7 @@ onBeforeUnmount(() => {
 
 .cart-panel__item-body {
   min-width: 0;
+  position: relative;
 }
 
 .cart-panel__item-title {
@@ -640,13 +751,64 @@ onBeforeUnmount(() => {
   margin-top: 10px;
 }
 
+.cart-panel__qty-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cart-panel__qty-wrap::after {
+  content: '';
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  width: 8px;
+  height: 5px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
 .cart-panel__qty {
   border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
   border-radius: 0;
-  padding: 5px 8px;
+  padding: 5px 22px 5px 8px;
   font-size: 12px;
+  line-height: 1.2;
+  color: var(--cart-text-color, var(--menu-text-color, #111010));
+  color-scheme: light;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   background: transparent;
-  color: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.cart-panel__qty:hover,
+.cart-panel__qty:focus,
+.cart-panel__qty:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, currentColor 48%, transparent);
+}
+
+.cart-panel__qty option {
+  color: #111010;
+  background-color: #fff;
+}
+
+.cart-panel__qty option:checked,
+.cart-panel__qty option:focus,
+.cart-panel__qty option:hover {
+  color: #111010;
+  background-color: #eee;
+}
+
+.cart-panel__qty::-ms-expand {
+  display: none;
 }
 
 .cart-panel__remove {
@@ -676,7 +838,7 @@ onBeforeUnmount(() => {
 
 .cart-panel__footer {
   flex-shrink: 0;
-  padding: 16px 47px 35px;
+  padding: 16px var(--cart-x-padding) var(--cart-x-padding);
   border-top: 1px solid transparent;
 }
 
@@ -728,5 +890,13 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 12px;
   color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+
+
+
+.cart-panel__item-inner,
+.cart-panel__item-inner > * {
+  border: 1px solid red;
 }
 </style>

@@ -12,9 +12,9 @@ export function isVariantPurchasable(variant: VariantAvailabilityLike) {
   if (!variant) return false
   if (variant.availableForSale) return true
 
-  // Untracked inventory (and some channel configs) can report availableForSale:false
-  // while the variant is still purchasable. currentlyNotInStock:false means not sold out.
-  return variant.currentlyNotInStock === false
+  // Continue selling when out of stock. availableForSale:false +
+  // currentlyNotInStock:false is sold out — Shopify adds those at quantity 0.
+  return variant.currentlyNotInStock === true
 }
 
 export function resolveDefaultVariantId(

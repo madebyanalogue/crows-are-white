@@ -126,17 +126,16 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   margin: 0;
-  padding: 0 1.1rem;
+  padding: 0 0.6rem 0 1.1rem;
   border: 0;
   background: transparent;
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  line-height: 1.3;
+  line-height: 50px;
   text-transform: uppercase;
   text-align: left;
-  color: var(--host-ink, #4f4f4e);
   cursor: pointer;
 }
 
@@ -156,7 +155,7 @@ onBeforeUnmount(() => {
 .host-dropdown__chevron::before {
   content: '';
   position: absolute;
-  top: 2px;
+  top: 0px;
   left: 1px;
   width: 7px;
   height: 7px;
@@ -172,35 +171,36 @@ onBeforeUnmount(() => {
 
 .host-dropdown__menu {
   position: absolute;
-  top: calc(100% + 1px);
-  left: 0;
+  top: 100%;
+  left: -1px;
   right: 0;
   z-index: 20;
   margin: 0;
-  padding: 0.35rem 0;
+  padding: 0rem 0;
   list-style: none;
-  background: #ebe4eb;
+  background: white;
   border: 1px solid color-mix(in srgb, #4f4f4e 28%, transparent);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-  max-height: 220px;
   overflow: auto;
 }
 
 .host-dropdown__option {
-  padding: 0.7rem 1.1rem;
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  line-height: 1.3;
-  text-transform: uppercase;
-  color: var(--host-ink, #4f4f4e);
-  cursor: pointer;
+  padding: 0rem 1.1rem;
+    height: 50px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    color: var(--host-ink, #4f4f4e);
+    cursor: pointer;
+    line-height: 50px;
 }
 
 .host-dropdown__option:hover,
 .host-dropdown__option.is-selected {
-  background: color-mix(in srgb, #4f4f4e 8%, transparent);
+  background: color-mix(in srgb, #4f4f4e 4%, transparent);
 }
 
 .host-dropdown__option.is-selected {

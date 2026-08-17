@@ -227,9 +227,21 @@ const privacyMenuItems = computed(() => privacyMenu.value?.items || [])
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
+@media (min-width: 1000px) {
+  .footer.footer--videos-mobile-only {
+    display: none;
+  }
+}
+
 .footer-content {
   position: relative;
   z-index: 2;
+}
+@media (min-width: 700px) {
+.footer-content {
+  padding-left: 20px;
+  padding-right: 20px;
+}
 }
 
 .footer-content a:not(.logo-wide__link):not(.footer__social-link) {

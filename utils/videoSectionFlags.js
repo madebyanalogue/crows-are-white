@@ -55,6 +55,10 @@ export function getCachedPageForFooter(nuxtApp, path) {
   return getCachedPageForRoute(nuxtApp, path)
 }
 
+export function pageHasVideosSection(page) {
+  return (page?.sections || []).some((section) => section?.sectionType === 'videos')
+}
+
 export function pageShowsFooter(page) {
   return page?.showFooter === true
 }

@@ -38,7 +38,10 @@ html.is-preloader-active body {
   --gutter-desktop: 20;
   --gutter: 20px;
 
-  --shop-x-padding: var(--wrapper-padding);
+  --header-nav-x-padding: clamp(32px, 10%, 45px);
+  --shop-x-padding: var(--header-nav-x-padding);
+
+  --cart-x-padding: var(--header-nav-x-padding);
 
   --section-padding: calc(var(--unit) * 4);
   --section-padding-small: calc(var(--section-padding) * 0.5);
@@ -89,6 +92,7 @@ html.is-preloader-active body {
 
   --min-trustpilot-stars-width: clamp(240px, calc(var(--unit) * 13.25), calc(var(--unit) * 13.25));
 
+  --video-title:clamp(19px, 3vw, 32px);
 }
 
 
@@ -116,6 +120,8 @@ html.is-preloader-active body {
     --max-central-content: 600px;
 
     --shop-x-padding: 2rem;
+
+    --video-title:clamp(20px, 2.5vw, 70px);
   }
 }
 @media (min-width: 2060px) {

@@ -631,17 +631,17 @@ onBeforeUnmount(() => {
 
 .page-section-videos.is-stack-layout {
   height: auto;
-  min-height: 100svh;
+  min-height: unset;
   overflow: visible;
-  padding-top: calc(var(--header-height, 112) * 1px + clamp(1.5rem, 4vw, 2.5rem));
-  padding-bottom: clamp(2.5rem, 8vw, 5rem);
+  padding-top: 20px;
+  padding-bottom: 60px;
 }
 
 .page-section-videos__stack {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(2rem, 6vw, 3.5rem);
+  gap: clamp(2rem, 9vw, 3.5rem);
   width: 100%;
 }
 

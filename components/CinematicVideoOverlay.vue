@@ -127,7 +127,7 @@ defineProps({
 .cinematic-video-overlay__title,
 .cinematic-video-overlay__runtime {
   margin: 0;
-  font-size: clamp(20px, 2.5vw, 70px);
+  font-size: var(--video-title);
   letter-spacing: 0.03em;
   font-weight: 300;
   line-height: 1.1;
@@ -177,6 +177,45 @@ defineProps({
 
 .cinematic-video-overlay--bold .cinematic-video-overlay__play svg {
   min-width: 0;
+}
+
+@media (max-width: 999px) {
+  .cinematic-video-overlay:not(.cinematic-video-overlay--bold) {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .cinematic-video-overlay__title,
+  .cinematic-video-overlay__runtime {
+    display: none;
+  }
+
+  .cinematic-video-overlay--bold .cinematic-video-overlay__title {
+    display: none;
+  }
+
+  .cinematic-video-overlay--bold .cinematic-video-overlay__heading {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .cinematic-video-overlay__play {
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    width: clamp(80px, 15vw, 140px);
+    height: clamp(80px, 15vw, 140px);
+  }
+
+  .cinematic-video-overlay__play svg {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cinematic-video-overlay--bold .cinematic-video-overlay__play {
+    width: clamp(80px, 15vw, 140px);
+    height: clamp(80px, 15vw, 140px);
+  }
 }
 
 @media (max-width: 699px) {

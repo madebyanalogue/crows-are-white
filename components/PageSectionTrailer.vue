@@ -271,4 +271,10 @@ onBeforeUnmount(() => {
   inset: 0;
   background: #8e968d;
 }
+
+@media (max-width: 999px) {
+  .page-section-trailer :deep(.cinematic-video-frame__notch-clip) {
+    aspect-ratio: 0.85;
+  }
+}
 </style>

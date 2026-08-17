@@ -76,12 +76,13 @@ const sectionPaddingStyle = computed(() => ({
 }
 
 .page-section-laurels__list {
+  --laurels-gap: 20px;
+  --laurels-columns: 2;
   display: flex;
-  flex-direction: column;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  gap: 20px;
+  align-items: start;
+  gap: var(--laurels-gap);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -89,7 +90,13 @@ const sectionPaddingStyle = computed(() => ({
 
 .page-section-laurels__item {
   flex: 0 0 auto;
-  width: 200px;
+  width: min(
+    200px,
+    calc(
+      (100% - (var(--laurels-columns) - 1) * var(--laurels-gap))
+      / var(--laurels-columns)
+    )
+  );
 }
 
 .page-section-laurels__image {
@@ -100,12 +107,24 @@ const sectionPaddingStyle = computed(() => ({
 
 @media (min-width: 700px) {
   .page-section-laurels__list {
-    flex-direction: row;
+    --laurels-columns: 3;
+  }
+}
+
+@media (min-width: 1000px) {
+  .page-section-laurels__list {
+    --laurels-columns: 6;
   }
 
   .page-section-laurels__item {
-    width: calc(100% / 6);
-    min-width: 200px;
+    flex: 0 0 auto;
+    width: min(
+      320px,
+      calc(
+        (100% - (var(--laurels-columns) - 1) * var(--laurels-gap))
+        / var(--laurels-columns)
+      )
+    );
   }
 }
 </style>

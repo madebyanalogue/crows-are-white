@@ -1,8 +1,6 @@
 import type {ShopifyCart} from '~/types/shopify'
 import { lockOverlayScroll, unlockOverlayScroll } from '~/composables/useOverlayScrollLock'
 
-const CART_SLOT_OPEN_MS = 380
-
 export function useCart() {
   const cart = useState<ShopifyCart | null>('shopify-cart', () => null)
   const loading = useState('shopify-cart-loading', () => false)
@@ -12,6 +10,7 @@ export function useCart() {
   const lastAddedIsNewLine = useState('cart-last-added-is-new-line', () => false)
   const pendingNewLineSlot = useState('cart-pending-new-line-slot', () => false)
   const isAddingItem = useState('cart-adding-item', () => false)
+  const fetchId = useState('shopify-cart-fetch-id', () => 0)
 
   const count = computed(() => cart.value?.totalQuantity ?? 0)
   const subtotal = computed(() => cart.value?.subtotal ?? '0.00')
@@ -19,12 +18,14 @@ export function useCart() {
   const items = computed(() => cart.value?.lines ?? [])
 
   async function refreshCart() {
+    const id = ++fetchId.value
     loading.value = true
     try {
       const response = await $fetch<{cart: ShopifyCart | null}>('/api/shop/cart')
+      if (id !== fetchId.value) return
       cart.value = response.cart
     } finally {
-      loading.value = false
+      if (id === fetchId.value) loading.value = false
     }
   }
 
@@ -35,15 +36,17 @@ export function useCart() {
   })
 
   async function mutateCart(body: Record<string, unknown>) {
+    const id = ++fetchId.value
     loading.value = true
     try {
       const response = await $fetch<{cart: ShopifyCart}>('/api/shop/cart', {
         method: 'POST',
         body,
       })
+      if (id !== fetchId.value) return
       cart.value = response.cart
     } finally {
-      loading.value = false
+      if (id === fetchId.value) loading.value = false
     }
   }
 
@@ -66,30 +69,19 @@ export function useCart() {
     })
   }
 
-  function waitForSlotOpen() {
-    if (!import.meta.client) return Promise.resolve()
-    return new Promise<void>((resolve) => {
-      window.setTimeout(resolve, CART_SLOT_OPEN_MS)
-    })
-  }
-
   async function addToCartWithOpen(variantId: string, quantity = 1) {
+    const wasOpen = isOpen.value
     const isNewLine = !cart.value?.lines.some((entry) => entry.variantId === variantId)
     isAddingItem.value = true
 
     try {
-      if (!isOpen.value) {
-        openCart()
-        await waitForCartOpen()
-      }
-
-      if (isNewLine) {
-        pendingNewLineSlot.value = true
-        await nextTick()
-        await waitForSlotOpen()
-      }
-
       await mutateCart({action: 'add', variantId, quantity})
+      await nextTick()
+
+      if (!wasOpen) {
+        isOpen.value = true
+        return
+      }
 
       if (isNewLine) {
         const line = cart.value?.lines.find((entry) => entry.variantId === variantId)
@@ -126,7 +118,7 @@ export function useCart() {
 
   function openCart() {
     isOpen.value = true
-    refreshCart()
+    if (!isAddingItem.value) refreshCart()
   }
 
   function closeCart() {

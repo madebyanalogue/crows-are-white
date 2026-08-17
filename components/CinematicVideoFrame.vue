@@ -91,6 +91,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  mobileStackCaption: {
+    type: Boolean,
+    default: false,
+  },
   notchMaskColor: {
     type: String,
     default: '',
@@ -295,6 +299,7 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
       :class="{
         'is-open': isOpen,
         'has-notch-corners': notchCorners,
+        'has-mobile-caption-stack': mobileStackCaption || notchCorners,
       }"
     >
       <div
@@ -440,6 +445,25 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
           />
         </template>
       </div>
+    </div>
+
+    <div
+      v-if="showOverlay && overlayShowTitle"
+      class="cinematic-video-frame__caption"
+      :class="{ 'cinematic-video-frame__caption--bold': overlayBoldTypography }"
+    >
+      <p
+        class="cinematic-video-frame__caption-title"
+        :class="{ serif: !overlayBoldTypography }"
+      >
+        {{ title }}
+      </p>
+      <p
+        v-if="overlayShowRuntime && runtime"
+        class="cinematic-video-frame__caption-runtime serif"
+      >
+        {{ runtime }}
+      </p>
     </div>
 
     <div
@@ -716,5 +740,82 @@ defineExpose({ open, close, stop, isOpen, thumbnailRef })
 
 .cinematic-video-frame.is-open .cinematic-video-frame__darken {
   cursor: pointer;
+}
+
+.cinematic-video-frame__caption {
+  display: none;
+}
+
+@media (max-width: 999px) {
+  .cinematic-video-frame:has(.has-mobile-caption-stack) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cinematic-video-frame__stage.has-mobile-caption-stack {
+    flex-shrink: 0;
+    aspect-ratio: auto;
+  }
+
+  .cinematic-video-frame__stage.has-mobile-caption-stack:not(.has-notch-corners) .cinematic-video-frame__stage-inner {
+    aspect-ratio: 1.5;
+    height: auto;
+    width: 100%;
+  }
+
+  .cinematic-video-frame__caption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    margin: 0;
+    padding: clamp(1rem, 3vw, 1.5rem) 0 0;
+    background: transparent;
+    color: var(--text-color);
+  }
+
+  .cinematic-video-frame__caption-title,
+  .cinematic-video-frame__caption-runtime {
+    color: var(--text-color);
+  }
+
+  .cinematic-video-frame__caption-title {
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+    font-size: var(--video-title);
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    line-height: 1.1;
+  }
+
+  .cinematic-video-frame__caption--bold .cinematic-video-frame__caption-title {
+    font-family: var(--condensed);
+    text-transform: uppercase;
+    font-size: clamp(20px, 3.5vw, 80px);
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+
+  .cinematic-video-frame__caption-runtime {
+    margin: 0;
+    flex: 0 0 auto;
+    text-align: right;
+    font-size: var(--video-title);
+    letter-spacing: 0.03em;
+    font-weight: 300;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cinematic-video-frame.is-open .cinematic-video-frame__caption {
+    position: relative;
+    z-index: 3;
+    flex-shrink: 0;
+  }
 }
 </style>

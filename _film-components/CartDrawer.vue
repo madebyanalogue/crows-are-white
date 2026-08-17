@@ -278,7 +278,7 @@ onUnmounted(() => {
 }
 
 .cart-panel__footer {
-  padding: 20px 24px 24px;
+  padding: 20px var(--cart-x-padding) 24px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 

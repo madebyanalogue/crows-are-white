@@ -132,7 +132,7 @@ function onSubmit() {
               <span class="host-form__label">Name<span class="host-form__req" aria-hidden="true">*</span></span>
               <input
                 v-model="form.name"
-                class="host-form__input handwritten"
+                class="host-form__input"
                 type="text"
                 name="name"
                 required
@@ -235,7 +235,7 @@ function onSubmit() {
           <div class="host-form__rule host-form__rule--double" aria-hidden="true" />
 
           <div class="host-form__footer">
-            <p class="host-form__legend">
+            <p class="host-form__legend handwritten">
               <span class="host-form__legend-dot" aria-hidden="true">•</span> = Required
             </p>
             <button type="submit" class="host-form__submit">
@@ -412,7 +412,7 @@ function onSubmit() {
   }
 
   .page-section-host-screening.has-background .page-section-host-screening__form-container {
-    max-width: 580px;
+    max-width: 670px;
   }
 }
 
@@ -458,12 +458,11 @@ function onSubmit() {
   max-width: 28rem;
   text-align: center;
   font-family: var(--sans);
-  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  line-height: 1.55;
-  text-transform: uppercase;
+  line-height: 1.5;
   color: var(--host-ink);
+  font-size: clamp(13px, 2vw, 14px);
+  white-space: pre-line;
 }
 
 .host-form {
@@ -545,7 +544,7 @@ function onSubmit() {
   padding: 0 1.1rem;
   font-family: var(--sans);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.3;
   text-transform: uppercase;
@@ -554,16 +553,18 @@ function onSubmit() {
   appearance: none;
   border-radius: 0;
   box-shadow: none;
+  transition: color 9999s ease 9999s, background-color 9999s ease 9999s;
 }
 
-.host-form__row--name .host-form__input {
-  font-family: var(--handwritten);
-  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+.host-form__input {
+  font-size:15px;
+  text-transform: none;
   font-weight: 400;
   letter-spacing: normal;
   line-height: 1.2;
   text-transform: none;
-  color: var(--host-hand);
+  letter-spacing: 0;
+  padding-top: 2px;
 }
 
 .host-form__input::placeholder,
@@ -581,7 +582,7 @@ function onSubmit() {
 
 .host-form__footer {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 2rem;
   padding-top: 2.25rem;
@@ -592,7 +593,6 @@ function onSubmit() {
   align-items: center;
   gap: 0.45rem;
   margin: 0;
-  font-family: var(--handwritten);
   font-size: 23px;
   font-weight: 400;
   letter-spacing: 0;
@@ -634,11 +634,21 @@ function onSubmit() {
   opacity: 0.55;
 }
 
+@media (max-width: 999px) {
+.host-form__input {
+  font-size:16px;
+}
+}
+
 @media (max-width: 699px) {
+  .page-section-host-screening {
+    background:var(--host-form-bg);
+  }
   .host-form__row,
   .host-form__row--name,
   .host-form__row--dates,
   .host-form__row--notes {
+    position: relative;
     grid-template-columns: 1fr;
     height: auto;
     min-height: 50px;
@@ -650,7 +660,9 @@ function onSubmit() {
     max-width: 360px;
     margin: 0 auto;
   }
-
+  .host-form__footer {
+  align-items: end;
+  }
   .host-form__row--name {
     min-height: 72px;
   }
@@ -663,29 +675,32 @@ function onSubmit() {
     min-height: 130px;
   }
 
-  .host-form__label {
-    border-right: 0;
-    padding: 0.85rem 0 0.15rem;
+  .host-form__label,
+  .host-form__input {
+    min-height: 80px;
+    padding-top: 30px;
   }
 
-  .host-form__row--dates .host-form__label,
-  .host-form__row--notes .host-form__label {
-    padding-top: 0.85rem;
+  .host-form__label {
+    border-right: 0;
+    position: absolute;
+    align-items: start;
+    padding-top: 17px;
+    pointer-events: none;
   }
 
   .host-form__input,
   .host-form__textarea {
     padding-left: 0;
-    height: auto;
-    min-height: 2rem;
   }
 
   .host-form__textarea {
-    min-height: 4rem;
+    padding-top: 45px;
   }
 
   .host-form__row :deep(.host-dropdown__trigger) {
     padding-left: 0;
+    padding-top: 35px;
   }
 
   .host-form__footer {

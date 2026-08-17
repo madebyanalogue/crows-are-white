@@ -6,8 +6,9 @@
   >
     <CinematicVideoFrame
       ref="frameRef"
+      mobile-stack-caption
       :title="video.title"
-      :runtime="layout === 'stack' ? '' : displayRuntime"
+      :runtime="displayRuntime"
       :provider="playerProvider"
       :video-src="videoUrl"
       :vimeo-id="vimeoId"
@@ -15,8 +16,6 @@
       :vimeo-hash="video.vimeoHash"
       :iframe-title="video.title"
       :interactable="interactable"
-      :overlay-show-title="layout !== 'stack'"
-      :overlay-show-runtime="layout !== 'stack'"
       show-close
       close-on-darken
       close-on-escape
@@ -66,13 +65,6 @@
         </div>
       </template>
     </CinematicVideoFrame>
-
-    <p
-      v-if="layout === 'stack'"
-      class="videos-item__stack-title serif"
-    >
-      {{ video.title }}
-    </p>
   </div>
 </template>
 
@@ -260,17 +252,5 @@ onMounted(() => {
 
 .videos-item__thumb-fallback {
   background: #8e968d;
-}
-
-.videos-item__stack-title {
-  margin: 1.2em 0;
-  padding: 0;
-  color: var(--text-color);
-  font-size: clamp(18px, 4vw, 24px);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  line-height: 1.15;
-  text-align: left;
-  text-transform: uppercase;
 }
 </style>

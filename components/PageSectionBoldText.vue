@@ -141,13 +141,13 @@ function lineClass(style) {
 }
 
 .page-section-bold-text__line--condensed {
-    font-size: clamp(45px, 5vw, 93px);
+    font-size: clamp(38px, 5vw, 93px);
     line-height: 0.875;
     margin-bottom: .5rem;
 }
 
 .page-section-bold-text__line--serif {
-  font-size: clamp(21px, 2vw, 33px);
+  font-size: clamp(19px, 2vw, 33px);
     margin: 0.75em 0;
     letter-spacing: 0.01em;
 }

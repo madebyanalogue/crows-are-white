@@ -1292,7 +1292,7 @@ font-size: 18px;
 }
 
 .site-header.is-open .site-header__nav-inner {
-  padding: 10px clamp(35px, 10%, 45px) 35px;
+  padding: 10px var(--header-nav-x-padding) 35px;
   gap: 40px;
 }
 
@@ -1338,6 +1338,12 @@ font-size: 18px;
   list-style: none;
   margin: 0;
   padding: 2.5rem 0 0.5em;
+}
+
+@media (max-width: 699px) {
+  .site-header__sublist {
+    padding: 1.5rem 0 0.5em;
+  }
 }
 
 .site-header__subitem :deep(.site-header__sublink),

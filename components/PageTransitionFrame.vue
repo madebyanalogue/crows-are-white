@@ -8,7 +8,10 @@
         >
           <component :is="pageComponent" />
         </div>
-        <Footer v-if="showFooter" />
+        <Footer
+          v-if="showFooter"
+          :class="{ 'footer--videos-mobile-only': footerVideosMobileOnly }"
+        />
       </div>
     </div>
   </div>
@@ -19,6 +22,7 @@ import Footer from '~/components/Footer.vue'
 import { routeRemovesHeaderPadding } from '~/utils/headerPadding'
 import {
   getCachedPageForRoute,
+  pageHasVideosSection,
   pageRemovesHeaderPadding,
   pageShowsFooter,
 } from '~/utils/videoSectionFlags'
@@ -43,6 +47,7 @@ const footerPageSlug = computed(() => {
 const { data: footerPage } = useCmsPage(footerPageSlug)
 
 const showFooter = computed(() => pageShowsFooter(footerPage.value))
+const footerVideosMobileOnly = computed(() => pageHasVideosSection(footerPage.value))
 
 const mountPath = route.path
 const mountMeta = route.meta
