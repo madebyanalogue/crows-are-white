@@ -198,9 +198,8 @@ let wipeCoverComplete = false
 let pendingPageNameReveal = ''
 const switchingFromCartToMenu = useState('crows_switchingFromCartToMenu', () => false)
 const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
-const panelHeightMorphing = useState('crows_panelHeightMorphing', () => false)
+const { panelHeightMorphing, clearPanelHeightLock, morphPanelHeight } = useHeaderPanelHeightMorph()
 let panelSwitchTimer = null
-let panelHeightTimer = null
 const MENU_OPEN_MS = 320
 const TITLE_SETTLE_MS = 60
 
@@ -316,18 +315,8 @@ function setDisplayedPageName(name) {
   })
 }
 
-function clearPanelHeightLock() {
-  const panel = panelRef.value
-  if (panel) {
-    panel.style.height = ''
-    panel.style.overflow = ''
-    panel.style.transition = ''
-  }
-  panelHeightMorphing.value = false
-  if (panelHeightTimer != null) {
-    clearTimeout(panelHeightTimer)
-    panelHeightTimer = null
-  }
+function clearPanelHeightLockLocal() {
+  clearPanelHeightLock(panelRef.value)
 }
 
 function runPanelSwitch(direction, applyState) {
@@ -336,7 +325,7 @@ function runPanelSwitch(direction, applyState) {
     return
   }
 
-  clearPanelHeightLock()
+  clearPanelHeightLockLocal()
 
   if (panelSwitchTimer != null) {
     clearTimeout(panelSwitchTimer)
@@ -358,27 +347,7 @@ function runPanelSwitch(direction, applyState) {
     return
   }
 
-  const startHeight = panel.offsetHeight
-  panel.style.overflow = 'hidden'
-  panel.style.height = `${startHeight}px`
-  panelHeightMorphing.value = true
-
-  applyState()
-
-  nextTick(() => {
-    requestAnimationFrame(() => {
-      panel.style.height = 'auto'
-      const endHeight = panel.offsetHeight
-      panel.style.height = `${startHeight}px`
-      panel.style.transition = `height ${MENU_OPEN_MS}ms ease`
-      void panel.offsetHeight
-      panel.style.height = `${endHeight}px`
-
-      panelHeightTimer = setTimeout(() => {
-        clearPanelHeightLock()
-      }, MENU_OPEN_MS)
-    })
-  })
+  morphPanelHeight(panel, applyState, MENU_OPEN_MS)
 }
 
 function toggleMenu() {
@@ -834,7 +803,7 @@ onBeforeUnmount(() => {
   killPageNameTween()
   if (titleSettleTimer != null) clearTimeout(titleSettleTimer)
   if (panelSwitchTimer != null) clearTimeout(panelSwitchTimer)
-  clearPanelHeightLock()
+  clearPanelHeightLockLocal()
   resetOverlayScrollLock()
   document.documentElement.classList.remove('is-nav-open')
   if (keyHandler) window.removeEventListener('keydown', keyHandler)

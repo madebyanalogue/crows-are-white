@@ -611,9 +611,9 @@ function incrementQty() {
 
 .shop-product-hero__back-arrow {
   display: inline-flex;
-  width: 0.7em;
+  width: 0.75em;
   flex-shrink: 0;
-  transform: translateY(-0.04em);
+  transform: none;
 }
 
 .shop-product-hero__back-arrow svg {
@@ -627,11 +627,11 @@ function incrementQty() {
 }
 
 .shop-product-hero__back-label {
-  font-size: 17px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  text-transform: capitalize;
 }
 
 .shop-product-hero__info {

@@ -32,6 +32,8 @@ const {
   clearLastAddedLineId,
 } = useCart()
 
+const { clearPanelHeightLock, morphPanelHeight, MORPH_MS } = useHeaderPanelHeightMorph()
+
 function formatPrice(amount: string, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(amount))
 }
@@ -46,7 +48,7 @@ function onClose() {
 
 const exitingItems = ref<ShopifyCartLine[] | null>(null)
 const exitingSubtotal = ref<string | null>(null)
-const skipEmptyLoading = ref(false)
+const skipEmptyLoading = useState('cart-skip-empty-loading', () => false)
 let clearLastTween: gsap.core.Animation | null = null
 
 const displayItems = computed(() => exitingItems.value ?? items.value)
@@ -64,6 +66,7 @@ function resetClearLastState() {
   skipEmptyLoading.value = false
   if (import.meta.client && panelRef.value) {
     gsap.set(panelRef.value, { clearProps: 'height,overflow' })
+    clearPanelHeightLock(panelRef.value.closest('.site-header__panel'))
   }
 }
 
@@ -94,44 +97,25 @@ async function onRemoveItem(lineId: string) {
     clearLastTween = fadeOut
     await fadeOut
 
-    if (props.variant === 'dropdown') {
-      gsap.set(panel, {
-        height: panel.getBoundingClientRect().height,
-        overflow: 'hidden',
-      })
-    }
+    const headerPanel = props.variant === 'dropdown'
+      ? panel.closest('.site-header__panel')
+      : null
 
-    exitingItems.value = null
-    exitingSubtotal.value = null
-    await nextTick()
-
-    const emptyEl = panel.querySelector('.cart-panel__empty')
-    if (emptyEl) gsap.set(emptyEl, { autoAlpha: 0 })
-
-    if (props.variant === 'dropdown') {
-      const target = emptyEl ? emptyEl.scrollHeight : panel.scrollHeight
-      const heightTween = gsap.to(panel, {
-        height: target,
-        duration: 0.34,
-        ease: 'power2.inOut',
-        overwrite: true,
-      })
-      clearLastTween = heightTween
-      await heightTween
-    }
+    const emptyEl = await morphPanelHeight(headerPanel, () => {
+      exitingItems.value = null
+      exitingSubtotal.value = null
+    }, MORPH_MS).then(() => panel.querySelector('.cart-panel__empty'))
 
     if (emptyEl) {
+      gsap.set(emptyEl, { autoAlpha: 0, y: 0 })
       const fadeIn = gsap.to(emptyEl, {
         autoAlpha: 1,
-        duration: 0.32,
+        duration: 0.65,
         ease: 'power2.out',
       })
       clearLastTween = fadeIn
       await fadeIn
-    }
-
-    if (props.variant === 'dropdown') {
-      gsap.set(panel, { clearProps: 'height,overflow' })
+      hasRevealedContent = true
     }
   } catch {
     resetClearLastState()
@@ -157,9 +141,10 @@ let itemsResizeObserver: ResizeObserver | null = null
 let revealTween: gsap.core.Tween | null = null
 let hasRevealedContent = false
 
-const showEmptyPanel = computed(() =>
-  items.value.length === 0 && !pendingNewLineSlot.value && !exitingItems.value,
-)
+const showEmptyPanel = computed(() => {
+  if (skipEmptyLoading.value && !exitingItems.value) return true
+  return items.value.length === 0 && !pendingNewLineSlot.value && !exitingItems.value
+})
 
 const emptyPanelMessage = computed(() => {
   if (displayItems.value.length > 0 || skipEmptyLoading.value) return ''
@@ -169,6 +154,11 @@ const emptyPanelMessage = computed(() => {
 })
 
 function updateFooterBorderVisibility() {
+  if (revealTween) {
+    footerBorderVisible.value = false
+    return
+  }
+
   const el = itemsListRef.value
   if (!el) {
     footerBorderVisible.value = false
@@ -219,14 +209,22 @@ function revealTargetEls() {
 }
 
 function killRevealTween() {
-  revealTween?.kill()
-  revealTween = null
+  if (revealTween) {
+    revealTween.kill()
+    revealTween = null
+  }
+}
+
+function isEmptyRevealTarget(targets: Element[]) {
+  return targets.length === 1 && targets[0].classList.contains('cart-panel__empty')
 }
 
 function resetRevealTargets() {
   if (props.variant !== 'dropdown' || !import.meta.client) return
   const targets = revealTargetEls()
-  if (targets.length) gsap.set(targets, { autoAlpha: 0, y: 14 })
+  if (!targets.length) return
+
+  gsap.set(targets, { autoAlpha: 0, y: 0 })
 }
 
 function animateRevealTargets() {
@@ -236,20 +234,20 @@ function animateRevealTargets() {
   if (!targets.length) return
 
   killRevealTween()
-  gsap.set(targets, { autoAlpha: 0, y: 14 })
+  footerBorderVisible.value = false
+  gsap.set(targets, { autoAlpha: 0, y: 0 })
+
   revealTween = gsap.to(targets, {
     autoAlpha: 1,
-    y: 0,
-    duration: 0.38,
-    stagger: 0.055,
+    duration: 0.65,
+    stagger: isEmptyRevealTarget(targets) ? 0 : 0.09,
     ease: 'power2.out',
     onComplete: () => {
       revealTween = null
+      hasRevealedContent = true
       scheduleFooterBorderCheck()
     },
   })
-  hasRevealedContent = true
-  scheduleFooterBorderCheck()
 }
 
 function scheduleReveal() {
@@ -286,8 +284,10 @@ watch(() => props.revealContent, (visible) => {
   if (canRevealNow()) scheduleReveal()
 })
 
-watch([loading, () => items.value.length, pendingNewLineSlot, isAddingItem], () => {
+watch([loading, () => items.value.length, pendingNewLineSlot, isAddingItem, skipEmptyLoading], () => {
   if (props.variant !== 'dropdown' || !import.meta.client) return
+
+  if (skipEmptyLoading.value) return
 
   if (!props.revealContent) {
     hideRevealTargets()
@@ -859,8 +859,8 @@ onBeforeUnmount(() => {
 }
 
 .cart-panel__note {
-  margin: 0 0 14px;
-  font-size: 11px;
+  margin: 0 0 20px;
+  font-size: 12px;
   color: inherit;
 }
 
@@ -886,7 +886,8 @@ onBeforeUnmount(() => {
 
 .cart-panel__continue {
   display: block;
-  margin-top: 12px;
+  margin-top: 20px;
+  margin-bottom: -10px;
   text-align: center;
   font-size: 12px;
   color: color-mix(in srgb, currentColor 58%, transparent);
@@ -895,8 +896,5 @@ onBeforeUnmount(() => {
 
 
 
-.cart-panel__item-inner,
-.cart-panel__item-inner > * {
-  border: 1px solid red;
-}
+
 </style>

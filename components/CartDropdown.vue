@@ -1,5 +1,6 @@
 <script setup>
 const { isOpen, closeCart, loading, items } = useCart()
+const skipEmptyLoading = useState('cart-skip-empty-loading', () => false)
 const switchingFromMenuToCart = useState('crows_switchingFromMenuToCart', () => false)
 
 const contentVisible = ref(false)
@@ -11,7 +12,7 @@ const awaitingInitialCart = computed(
 )
 
 const isEmptyCartOpen = computed(
-  () => isOpen.value && items.value.length === 0,
+  () => isOpen.value && (items.value.length === 0 || skipEmptyLoading.value),
 )
 
 function clearRevealTimer() {
