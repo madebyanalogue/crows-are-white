@@ -1,4 +1,7 @@
+import { consumeFooterNavScrollY } from '~/composables/useFooterMobileNav'
 import {
+  getScrollSystemLockedY,
+  isScrollSystemLocked,
   lockScrollSystem,
   scheduleScrollSystemSettle,
   waitForScrollLayoutPaint,
@@ -217,6 +220,17 @@ function getScrollY() {
 }
 
 function captureScrollY() {
+  const footerScrollY = consumeFooterNavScrollY()
+  if (footerScrollY != null) {
+    lockedScrollY = footerScrollY
+    return lockedScrollY
+  }
+
+  if (isScrollSystemLocked()) {
+    lockedScrollY = getScrollSystemLockedY()
+    return lockedScrollY
+  }
+
   lockedScrollY = getScrollY()
   return lockedScrollY
 }

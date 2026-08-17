@@ -1,6 +1,7 @@
 import { lockScrollSystem } from '~/composables/useScrollLayoutNotify'
 
 let footerNavLockActive = false
+let pendingFooterNavScrollY = null
 let lifecycleInitialized = false
 
 function isTouchMobile() {
@@ -60,13 +61,15 @@ function isInternalPageLink(link) {
 function prepareFooterMobileNav() {
   if (!shouldPrepareFooterNav()) return false
 
-  lockScrollSystem(getScrollY())
+  const scrollY = getScrollY()
+  pendingFooterNavScrollY = scrollY
+  lockScrollSystem(scrollY)
   footerNavLockActive = true
 
   document.dispatchEvent(new CustomEvent('crows:page-transition-before-leave', {
     detail: {
       leavingRoot: document.querySelector('.page-transition-outer'),
-      scrollY: getScrollY(),
+      scrollY,
     },
   }))
 
@@ -75,6 +78,13 @@ function prepareFooterMobileNav() {
 
 function releaseFooterMobileNavLock() {
   footerNavLockActive = false
+  pendingFooterNavScrollY = null
+}
+
+export function consumeFooterNavScrollY() {
+  const scrollY = pendingFooterNavScrollY
+  pendingFooterNavScrollY = null
+  return scrollY
 }
 
 export function initFooterMobileNavLifecycle() {

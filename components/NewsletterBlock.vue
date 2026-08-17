@@ -863,10 +863,11 @@ onUnmounted(clearOverlayFeedbackTimer)
   border-radius: 0;
   padding-right: clamp(7rem, 18vw, 12rem);
   padding-bottom: var(--newsletter-field-padding-bottom);
-  font-size: clamp(18px, 4.2vw, 2rem);
+  font-size: clamp(21px, 4.2vw, 2rem);
   line-height: 1;
+  font-weight: 300;
   text-transform: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   transition: color 9999s ease-out, background-color 9999s ease-out;
 }
 

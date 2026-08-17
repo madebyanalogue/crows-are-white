@@ -30,9 +30,16 @@ const GRID_VIEW_OPTIONS: {
   {id: '4', label: '4 column layout', offsets: [0, 3, 6, 9], cellSize: 2},
 ]
 
+const MOBILE_GRID_IDS: ShopGridDensity[] = ['1', '2']
+const DESKTOP_GRID_IDS: ShopGridDensity[] = ['2', '3', '4']
+const DESKTOP_GRID_MQ = '(min-width: 1000px)'
+
+function isMobileWidth(width: number) {
+  return width < 1000
+}
+
 function allowedGridDensities(width: number): ShopGridDensity[] {
-  if (width < 1000) return ['1', '2']
-  return ['2', '3', '4']
+  return isMobileWidth(width) ? MOBILE_GRID_IDS : DESKTOP_GRID_IDS
 }
 
 const MOBILE_GRID_STORAGE_KEY = 'shop-grid-density-mobile'
@@ -41,16 +48,12 @@ const DESKTOP_GRID_STORAGE_KEY = 'shop-grid-density-desktop'
 const mobileGridDensity = useState<ShopGridDensity>('shop-grid-mobile', () => '2')
 const desktopGridDensity = useState<ShopGridDensity>('shop-grid-desktop', () => '3')
 
-function isMobileWidth(width: number) {
-  return width < 1000
-}
-
 function isValidStoredGridDensity(
   density: string | null,
   viewport: 'mobile' | 'desktop',
 ): density is ShopGridDensity {
   if (density !== '1' && density !== '2' && density !== '3' && density !== '4') return false
-  const allowed = viewport === 'mobile' ? ['1', '2'] : ['2', '3', '4']
+  const allowed = viewport === 'mobile' ? MOBILE_GRID_IDS : DESKTOP_GRID_IDS
   return allowed.includes(density)
 }
 
@@ -68,10 +71,6 @@ function hydrateGridDensityCache() {
   }
 }
 
-function cachedGridDensityForWidth(width: number): ShopGridDensity {
-  return isMobileWidth(width) ? mobileGridDensity.value : desktopGridDensity.value
-}
-
 function storeGridDensity(width: number, density: ShopGridDensity) {
   if (isMobileWidth(width)) {
     mobileGridDensity.value = density
@@ -87,43 +86,36 @@ function storeGridDensity(width: number, density: ShopGridDensity) {
   }
 }
 
-if (import.meta.client) {
-  hydrateGridDensityCache()
-}
+const shopGridClass = computed(() => [
+  `shop-grid--mobile-${mobileGridDensity.value}`,
+  `shop-grid--desktop-${desktopGridDensity.value}`,
+])
 
-const viewportWidth = ref(import.meta.client ? window.innerWidth : 1000)
-const viewMode = ref<ShopGridDensity>(cachedGridDensityForWidth(viewportWidth.value))
+// Visual layout is CSS. This only keeps aria-pressed on the visible control.
+const isDesktopViewport = ref(false)
 
-const visibleGridViewOptions = computed(() =>
-  GRID_VIEW_OPTIONS.filter((option) =>
-    allowedGridDensities(viewportWidth.value).includes(option.id),
-  ),
-)
-
-function applyCachedGridForCurrentViewport() {
-  viewportWidth.value = window.innerWidth
-  viewMode.value = cachedGridDensityForWidth(viewportWidth.value)
-}
-
-function onHorizontalBreakpointChange() {
-  applyCachedGridForCurrentViewport()
+function isGridOptionPressed(id: ShopGridDensity) {
+  return (isDesktopViewport.value ? desktopGridDensity.value : mobileGridDensity.value) === id
 }
 
 function setViewMode(id: ShopGridDensity) {
-  viewMode.value = id
-  storeGridDensity(viewportWidth.value, id)
+  if (!import.meta.client) return
+  const width = window.innerWidth
+  if (!allowedGridDensities(width).includes(id)) return
+  storeGridDensity(width, id)
 }
 
 onMounted(() => {
   hydrateGridDensityCache()
-  applyCachedGridForCurrentViewport()
 
-  const mql1000 = window.matchMedia('(min-width: 1000px)')
-
-  mql1000.addEventListener('change', onHorizontalBreakpointChange)
-
+  const mql = window.matchMedia(DESKTOP_GRID_MQ)
+  const syncViewport = () => {
+    isDesktopViewport.value = mql.matches
+  }
+  syncViewport()
+  mql.addEventListener('change', syncViewport)
   onUnmounted(() => {
-    mql1000.removeEventListener('change', onHorizontalBreakpointChange)
+    mql.removeEventListener('change', syncViewport)
   })
 })
 
@@ -194,13 +186,19 @@ useHead({title: 'Shop — Crows Are White'})
         aria-label="Grid layout"
       >
         <button
-          v-for="option in visibleGridViewOptions"
+          v-for="option in GRID_VIEW_OPTIONS"
           :key="option.id"
           type="button"
           class="shop-views__btn"
-          :class="{ 'is-active': viewMode === option.id }"
+          :class="[
+            `shop-views__btn--${option.id}`,
+            {
+              'is-active-mobile': mobileGridDensity === option.id,
+              'is-active-desktop': desktopGridDensity === option.id,
+            },
+          ]"
           :aria-label="option.label"
-          :aria-pressed="viewMode === option.id"
+          :aria-pressed="isGridOptionPressed(option.id)"
           @click="setViewMode(option.id)"
         >
           <svg
@@ -232,7 +230,7 @@ useHead({title: 'Shop — Crows Are White'})
     <div
       v-if="pending"
       class="shop-grid"
-      :class="`shop-grid--${viewMode}`"
+      :class="shopGridClass"
       aria-busy="true"
       aria-label="Loading products"
     >
@@ -254,7 +252,7 @@ useHead({title: 'Shop — Crows Are White'})
     <div
       v-else
       class="shop-grid"
-      :class="`shop-grid--${viewMode}`"
+      :class="shopGridClass"
     >
       <ShopProductCard
         v-for="product in products"
@@ -383,9 +381,34 @@ useHead({title: 'Shop — Crows Are White'})
   display: block;
 }
 
-.shop-views__btn.is-active,
+.shop-views__btn--3,
+.shop-views__btn--4 {
+  display: none;
+}
+
+.shop-views__btn.is-active-mobile,
 .shop-views__btn:hover {
   opacity: 1;
+}
+
+@media (min-width: 1000px) {
+  .shop-views__btn--1 {
+    display: none;
+  }
+
+  .shop-views__btn--3,
+  .shop-views__btn--4 {
+    display: grid;
+  }
+
+  .shop-views__btn.is-active-mobile:not(:hover) {
+    opacity: 0.4;
+  }
+
+  .shop-views__btn.is-active-desktop,
+  .shop-views__btn:hover {
+    opacity: 1;
+  }
 }
 
 .shop-page__notice,
@@ -423,40 +446,52 @@ useHead({title: 'Shop — Crows Are White'})
   overflow: hidden;
 }
 
-/* 1 column */
-.shop-grid--1 {
+/* Mobile densities. Desktop overrides from 1000px. */
+.shop-grid--mobile-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
-.shop-grid--1 .shop-cell {
+.shop-grid--mobile-1 .shop-cell {
   border-right: none;
 }
 
-/* 2 columns */
-.shop-grid--2 {
+.shop-grid--mobile-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.shop-grid--2 .shop-cell:nth-child(2n) {
+.shop-grid--mobile-2 .shop-cell:nth-child(2n) {
   border-right: none;
 }
 
-/* 3 columns */
-.shop-grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+@media (min-width: 1000px) {
+  .shop-grid--mobile-1 .shop-cell,
+  .shop-grid--mobile-2 .shop-cell:nth-child(2n) {
+    border-right: 1px solid var(--shop-line);
+  }
 
-.shop-grid--3 .shop-cell:nth-child(3n) {
-  border-right: none;
-}
+  .shop-grid--desktop-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-/* 4 columns */
-.shop-grid--4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
+  .shop-grid--desktop-2 .shop-cell:nth-child(2n) {
+    border-right: none;
+  }
 
-.shop-grid--4 .shop-cell:nth-child(4n) {
-  border-right: none;
+  .shop-grid--desktop-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .shop-grid--desktop-3 .shop-cell:nth-child(3n) {
+    border-right: none;
+  }
+
+  .shop-grid--desktop-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .shop-grid--desktop-4 .shop-cell:nth-child(4n) {
+    border-right: none;
+  }
 }
 
 .shop-grid .shop-cell {

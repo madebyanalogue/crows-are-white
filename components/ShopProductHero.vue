@@ -1220,7 +1220,7 @@ function incrementQty() {
   .shop-product-hero__carousel-dots {
     position: absolute;
     left: 50%;
-    bottom: 0px;
+    bottom: 10px;
     z-index: 4;
     display: flex;
     align-items: center;
@@ -1283,6 +1283,10 @@ function incrementQty() {
 @media (max-width: 699px) {
   .shop-product-hero {
     padding-top: 68px;
+  }
+
+  .shop-product-hero__carousel-dots {
+    bottom: 0;
   }
 }
 </style>

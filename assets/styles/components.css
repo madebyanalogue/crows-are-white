@@ -3158,7 +3158,7 @@ width: 90%;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: clamp(260px, 50dvh, 100vw);
+  height:300px;
 }
 
 .page-content__intro--above-sections {

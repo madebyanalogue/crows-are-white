@@ -570,11 +570,23 @@ useVideoParallax(sectionRef, parallaxRef, {
   .page-section-letterbox-video.is-contained .page-section-letterbox-video__image {
     object-fit: cover;
   }
+
+  .page-section-letterbox-video__link-wrap {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: center;
+    gap: 25px;
+  }
+
+  .page-section-letterbox-video__link-wrap--dual-light {
+    flex-direction: row;
+    gap: 0;
+  }
 }
 
 @media (max-width: 699px) {
   .page-section-letterbox-video:not(.is-natural-shape):not(.is-wrapped):not(.is-viewport-min-height) {
-    aspect-ratio: 1.2;
+    aspect-ratio: 1;
     min-height: 0;
   }
 }

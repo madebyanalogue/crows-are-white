@@ -9,6 +9,10 @@ export function isScrollSystemLocked() {
   return scrollSystemLocked
 }
 
+export function getScrollSystemLockedY() {
+  return scrollSystemLockedY
+}
+
 export function lockScrollSystem(scrollY = 0) {
   if (!import.meta.client) return
 

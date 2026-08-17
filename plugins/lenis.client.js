@@ -86,9 +86,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     nuxtApp.hook('page:finish', () => {
       lastSyncedScroll = -1
-      lockScrollSystem(0)
 
       if (!isTransitioning.value) {
+        lockScrollSystem(0)
         scheduleScrollSystemSettle()
       }
     })

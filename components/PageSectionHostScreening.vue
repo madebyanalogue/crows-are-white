@@ -236,8 +236,7 @@ function onSubmit() {
 
           <div class="host-form__footer">
             <p class="host-form__legend">
-              <span class="host-form__legend-dot" aria-hidden="true" />
-              <span>= Required</span>
+              <span class="host-form__legend-dot" aria-hidden="true">•</span> = Required
             </p>
             <button type="submit" class="host-form__submit">
               Submit
@@ -256,7 +255,6 @@ function onSubmit() {
 
   position: relative;
   box-sizing: border-box;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding:
@@ -275,6 +273,11 @@ function onSubmit() {
 @media (min-width: 700px) {
   .page-section-host-screening {
     --host-nav-clearance: calc(3.5rem + 50px + 1.5rem);
+  }
+}
+@media (min-width: 1000px) {
+  .page-section-host-screening {
+    min-height: 100dvh;
   }
 }
 
@@ -363,21 +366,28 @@ function onSubmit() {
 
 .page-section-host-screening__form-container {
   width: 100%;
+  box-sizing: border-box;
+  padding:0px 0px 40px;
+}
+
+@media (min-width: 700px) {
+
+  .page-section-host-screening__form-container {
+  width: 100%;
   background: var(--host-form-bg);
   color: var(--host-ink);
   border: 3px double var(--host-line);
   padding: 35px;
-  box-sizing: border-box;
+  }
 }
-
-@media (min-width: 1000px) {
+  @media (min-width: 1000px) {
   .page-section-host-screening.has-background {
     padding: 0;
     min-height: 100dvh;
   }
 
   .page-section-host-screening.has-background .page-section-host-screening__layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(720px, 1fr);
     align-items: stretch;
     min-height: 100dvh;
   }
@@ -421,13 +431,7 @@ function onSubmit() {
       clamp(1.25rem, 4vw, 2rem);
   }
 
-  .page-section-host-screening.has-background .page-section-host-screening__media-column {
-    order: 2;
-    display: block;
-    width: 100%;
-    aspect-ratio:1;
-    min-height: 0;
-  }
+  
 
   .page-section-host-screening.has-background .page-section-host-screening__media-inner {
     position: absolute;
@@ -442,7 +446,7 @@ function onSubmit() {
 .page-section-host-screening__title {
   margin: .5em 0 1em 0px;
     text-align: center;
-    font-size: clamp(24px, 4vw, 39px);
+    font-size: clamp(31px, 4vw, 39px);
     font-weight: 300;
     letter-spacing: 0.02em;
     line-height: 1.2;
@@ -577,17 +581,10 @@ function onSubmit() {
 
 .host-form__footer {
   display: flex;
-  align-items: center;
+  align-items: end;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding-top: 1.8rem;
-}
-
-.host-form__legend span:not(.host-form__legend-dot) {
-  font-family: var(--handwritten);
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 23px;
+  gap: 2rem;
+  padding-top: 2.25rem;
 }
 
 .host-form__legend {
@@ -595,35 +592,42 @@ function onSubmit() {
   align-items: center;
   gap: 0.45rem;
   margin: 0;
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-family: var(--handwritten);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: 0;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--host-ink);
 }
 
 .host-form__legend-dot {
-  display: block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #e11d48;
+  color: #e11d48;
   flex-shrink: 0;
 }
 
 .host-form__submit {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 500;
+  background: black;
+  font-family: var(--serif);
+  /* width: 100%; */
+  height: 50px;
+  font-size: 17px;
+  color: white;
+  font-weight: 300;
   letter-spacing: 0.08em;
+  min-width: 270px;
   text-transform: uppercase;
-  color: var(--host-ink);
+  border: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .host-form__submit:hover {
@@ -638,6 +642,13 @@ function onSubmit() {
     grid-template-columns: 1fr;
     height: auto;
     min-height: 50px;
+  }
+  .host-form__submit {
+    width: 100%;
+  }
+  .page-section-host-screening__form-container {
+    max-width: 360px;
+    margin: 0 auto;
   }
 
   .host-form__row--name {
@@ -675,6 +686,10 @@ function onSubmit() {
 
   .host-form__row :deep(.host-dropdown__trigger) {
     padding-left: 0;
+  }
+
+  .host-form__footer {
+    flex-direction: column;
   }
 }
 </style>

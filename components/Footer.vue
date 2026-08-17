@@ -34,7 +34,7 @@
                     :items="group.items"
                     :group-key="group._key || group.title"
                     list-class="footer__menu-list h7"
-                    @click="onFooterNavigate"
+                    @click.capture="onFooterNavigate"
                   />
                 </div>
               </div>
@@ -130,7 +130,7 @@
                 :items="privacyMenuItems"
                 group-key="privacy"
                 list-class="footer__privacy-list h8"
-                @click="onFooterNavigate"
+                @click.capture="onFooterNavigate"
               />
             </nav>
           </div>
