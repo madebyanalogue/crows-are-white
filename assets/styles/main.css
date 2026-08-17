@@ -39,7 +39,7 @@ html.is-preloader-active body {
   --gutter: 20px;
 
   --header-nav-x-padding: clamp(32px, 10%, 45px);
-  --shop-x-padding: var(--header-nav-x-padding);
+  --shop-x-padding: var(--wrapper-padding);
 
   --cart-x-padding: var(--header-nav-x-padding);
 

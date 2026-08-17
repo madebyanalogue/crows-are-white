@@ -633,8 +633,14 @@ onBeforeUnmount(() => {
   height: auto;
   min-height: unset;
   overflow: visible;
-  padding-top: 20px;
+  padding-top: 100px;
   padding-bottom: 60px;
+}
+
+@media (min-width: 700px) {
+  .page-section-videos.is-stack-layout {
+    padding-top: 115px;
+  }
 }
 
 .page-section-videos__stack {

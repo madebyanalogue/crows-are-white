@@ -76,5 +76,6 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
   margin: 0;
   padding: 0;
   font-weight: 300;
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
 }
 </style>

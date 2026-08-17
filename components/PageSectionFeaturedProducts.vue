@@ -82,6 +82,13 @@ const titleClass = computed(() => {
   width: 100%;
 }
 
+.shop-products-section__title {
+  margin: 0;
+  padding: 0;
+  font-weight: 300;
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
+}
+
 .shop-products-section__view-all {
   flex-shrink: 0;
   margin-left: auto;
