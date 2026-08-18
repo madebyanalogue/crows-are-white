@@ -3,6 +3,7 @@ import instagramIcon from '~/assets/svg/social-instagram.svg?raw'
 import youtubeIcon from '~/assets/svg/social-youtube.svg?raw'
 import xIcon from '~/assets/svg/social-x.svg?raw'
 import tiktokIcon from '~/assets/svg/social-tiktok.svg?raw'
+import globeIcon from '~/assets/svg/social-globe.svg?raw'
 
 const props = defineProps({
   platform: {
@@ -16,6 +17,8 @@ const ICONS = {
   youtube: youtubeIcon,
   twitter: xIcon,
   tiktok: tiktokIcon,
+  website: globeIcon,
+  globe: globeIcon,
 }
 
 const normalizedPlatform = computed(() => props.platform?.trim().toLowerCase() || '')

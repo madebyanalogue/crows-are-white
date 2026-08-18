@@ -2,6 +2,7 @@
 import {
   isShopCollectionHandle,
   resolveShopFilterId,
+  shopFilterQueryValue,
 } from '~/utils/shopCollections'
 
 const route = useRoute()
@@ -15,7 +16,7 @@ if (!isShopCollectionHandle(handle) && handle !== 'prints') {
 await navigateTo(
   {
     path: '/shop',
-    query: {filter: resolveShopFilterId(handle)},
+    query: {filter: shopFilterQueryValue(resolveShopFilterId(handle))},
   },
   {redirectCode: 301, replace: true},
 )

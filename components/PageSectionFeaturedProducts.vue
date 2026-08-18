@@ -87,6 +87,7 @@ const titleClass = computed(() => {
   padding: 0;
   font-weight: 300;
   font-size: clamp(2rem, 4.5vw, 2.75rem);
+  letter-spacing: 0.02em;
 }
 
 .shop-products-section__view-all {

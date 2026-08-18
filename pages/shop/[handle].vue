@@ -19,9 +19,15 @@ const shopFilter = computed(() => shopFilterFromQuery(route.query.filter))
 const shopBackLink = computed(() => shopIndexHref(shopFilter.value))
 
 const {data, pending, error} = await useShopifyProduct(handle)
+const { data: productContentData } = await useShopProductContent(handle)
 const {addToCartWithOpen} = useCart()
 
 const product = computed(() => data.value?.product)
+
+const aboutArtist = computed(() => productContentData.value?.content?.artist ?? null)
+const aboutArtistTitle = computed(
+  () => productContentData.value?.content?.aboutArtistTitle?.trim() || 'About the Artist',
+)
 
 const relatedProductSections = computed(() => {
   const cmsSections = (shopPage.value?.sections || []).filter(
@@ -100,6 +106,12 @@ useHead(() => ({
       v-model:quantity="quantity"
       :adding="adding"
       @add-to-cart="onAddToCart"
+    />
+
+    <PageSectionAboutArtist
+      v-if="aboutArtist"
+      :artist="aboutArtist"
+      :title="aboutArtistTitle"
     />
 
     <PageSectionRelatedProducts

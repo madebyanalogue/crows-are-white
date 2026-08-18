@@ -16,6 +16,14 @@ const props = defineProps({
     type: Number,
     default: 5000,
   },
+  aspectRatio: {
+    type: String,
+    default: '1.6',
+  },
+  imageSizes: {
+    type: String,
+    default: 'third',
+  },
 })
 
 const viewportRef = ref(null)
@@ -207,14 +215,17 @@ onBeforeUnmount(() => {
           :key="item._key"
           class="synopsis-image-carousel__slide"
         >
-          <div class="synopsis-image-carousel__frame">
+          <div
+            class="synopsis-image-carousel__frame"
+            :style="{ aspectRatio }"
+          >
             <AppImage
               :src="item.src"
               :width="item.width"
               :height="item.height"
               :alt="item.alt"
               class="synopsis-image-carousel__image"
-              sizes="third"
+              :sizes="imageSizes"
             />
           </div>
           <figcaption
@@ -477,7 +488,6 @@ onBeforeUnmount(() => {
 .synopsis-image-carousel__frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.6;
   overflow: hidden;
   border-radius: 0px;
 }

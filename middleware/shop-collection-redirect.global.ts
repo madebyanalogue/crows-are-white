@@ -1,4 +1,4 @@
-import { resolveShopFilterId } from '~/utils/shopCollections'
+import { resolveShopFilterId, shopFilterQueryValue } from '~/utils/shopCollections'
 
 export default defineNuxtRouteMiddleware((to) => {
   const match = to.path.match(/^\/shop\/collections\/([^/]+)\/?$/)
@@ -8,7 +8,7 @@ export default defineNuxtRouteMiddleware((to) => {
   return navigateTo(
     {
       path: '/shop',
-      query: filter === 'all' ? {} : { filter },
+      query: filter === 'all' ? {} : { filter: shopFilterQueryValue(filter) },
     },
     { replace: true },
   )

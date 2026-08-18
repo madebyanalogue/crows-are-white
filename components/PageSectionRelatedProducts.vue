@@ -57,7 +57,7 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
         v-if="title"
         #header
       >
-        <h2 class="shop-products-section__title condensed h3">
+        <h2 class="shop-products-section__title serif h3">
           {{ title }}
         </h2>
       </template>
@@ -77,5 +77,6 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
   padding: 0;
   font-weight: 300;
   font-size: clamp(2rem, 4.5vw, 2.75rem);
+  letter-spacing: 0.02em;
 }
 </style>
