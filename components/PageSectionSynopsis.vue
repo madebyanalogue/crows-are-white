@@ -488,6 +488,14 @@ function resolveButtonItem(button) {
 }
 
 @media (max-width: 699px) {
+  .page-section-synopsis {
+    padding: 40px 0 110px;
+  }
+
+  .page-section-synopsis__inner {
+    gap: 70px;
+  }
+
   .page-section-synopsis__body {
     grid-template-columns: minmax(0, 1fr);
   }

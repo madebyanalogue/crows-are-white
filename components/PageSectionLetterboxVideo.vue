@@ -125,6 +125,22 @@ const overlayImageAlt = computed(() =>
 
 const hasOverlayImage = computed(() => Boolean(overlayImageUrl.value))
 
+const mobileAspectRatio = computed(() =>
+  props.section?.letterboxMobileAspectRatio?.trim() || '',
+)
+
+const hasMobileAspectRatio = computed(() => Boolean(mobileAspectRatio.value))
+
+const overlayImagePosition = computed(() =>
+  props.section?.letterboxOverlayImagePosition?.trim() || 'center center',
+)
+
+const naturalAspectRatio = computed(() => {
+  if (!hasNaturalShape.value || !resolvedMediaDimensions.value) return ''
+  const dims = resolvedMediaDimensions.value
+  return `${dims.width} / ${dims.height}`
+})
+
 function onMediaDimensions(dimensions) {
   if (!dimensions?.width || !dimensions?.height) return
   mediaDimensions.value = dimensions
@@ -221,20 +237,26 @@ function onLinkClick(event, link) {
 }
 
 const sectionStyle = computed(() => {
-  if (!hasNaturalShape.value || hasCustomWidth.value) return undefined
-
-  const dims = resolvedMediaDimensions.value
-  return {
-    aspectRatio: `${dims.width} / ${dims.height}`,
+  const style = {
+    '--letterbox-overlay-position': overlayImagePosition.value,
   }
+
+  if (hasMobileAspectRatio.value) {
+    style['--letterbox-mobile-aspect-ratio'] = mobileAspectRatio.value
+  }
+
+  if (naturalAspectRatio.value && !hasCustomWidth.value) {
+    style['--letterbox-natural-aspect-ratio'] = naturalAspectRatio.value
+  }
+
+  return style
 })
 
 const frameStyle = computed(() => {
   const style = { width: videoWidth.value }
 
-  if (hasNaturalShape.value && hasCustomWidth.value) {
-    const dims = resolvedMediaDimensions.value
-    style.aspectRatio = `${dims.width} / ${dims.height}`
+  if (naturalAspectRatio.value && hasCustomWidth.value) {
+    style['--letterbox-natural-aspect-ratio'] = naturalAspectRatio.value
   }
 
   return style
@@ -258,6 +280,7 @@ useVideoParallax(sectionRef, parallaxRef, {
       'is-wrapped': useWrapper,
       'is-image': hasImage,
       'is-viewport-min-height': useViewportMinHeight,
+      'is-mobile-ratio-set': hasMobileAspectRatio,
     }"
     :style="sectionStyle"
     :aria-label="hasImage ? 'Image' : 'Video'"
@@ -361,7 +384,7 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 .page-section-letterbox-video.is-natural-shape:not(.is-viewport-min-height),
 .page-section-letterbox-video.is-wrapped:not(.is-viewport-min-height) {
-  aspect-ratio: auto;
+  aspect-ratio: var(--letterbox-natural-aspect-ratio, auto);
   min-height: 0;
   height: auto;
 }
@@ -407,7 +430,7 @@ useVideoParallax(sectionRef, parallaxRef, {
 }
 
 .page-section-letterbox-video__frame.is-natural-shape {
-  aspect-ratio: auto;
+  aspect-ratio: var(--letterbox-natural-aspect-ratio, auto);
   height: 100%;
   max-height: none;
 }
@@ -461,7 +484,8 @@ useVideoParallax(sectionRef, parallaxRef, {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: var(--letterbox-overlay-position, center center);
   pointer-events: none;
 }
 
@@ -548,14 +572,15 @@ useVideoParallax(sectionRef, parallaxRef, {
 }
 
 @media (max-width: 999px) {
-  .page-section-letterbox-video:not(.is-natural-shape):not(.is-wrapped):not(.is-viewport-min-height) {
-    aspect-ratio: 1.5;
-    min-height: 0;
+  .page-section-letterbox-video__container.wrapper {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .page-section-letterbox-video__frame {
     aspect-ratio: auto;
-    width: 100%;
+    width: 100% !important;
     height: 100%;
     max-height: none;
   }
@@ -586,8 +611,19 @@ useVideoParallax(sectionRef, parallaxRef, {
 
 @media (max-width: 699px) {
   .page-section-letterbox-video:not(.is-natural-shape):not(.is-wrapped):not(.is-viewport-min-height) {
-    aspect-ratio: 1;
+    aspect-ratio: var(--letterbox-mobile-aspect-ratio, 1.5);
     min-height: 0;
+  }
+
+  .page-section-letterbox-video.is-mobile-ratio-set:not(.is-viewport-min-height) {
+    aspect-ratio: var(--letterbox-mobile-aspect-ratio);
+    min-height: 0;
+    height: auto;
+  }
+
+  .page-section-letterbox-video.is-mobile-ratio-set .page-section-letterbox-video__frame {
+    aspect-ratio: var(--letterbox-mobile-aspect-ratio) !important;
+    height: auto;
   }
 }
 </style>

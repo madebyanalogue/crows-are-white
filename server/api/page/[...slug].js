@@ -543,6 +543,7 @@ function pageSectionProjection() {
     letterboxMediaType,
     letterboxImage ${imageProjection},
     letterboxAspectRatio,
+    letterboxMobileAspectRatio,
     letterboxVideoFit,
     letterboxParallax,
     letterboxUseWrapper,
@@ -564,6 +565,7 @@ function pageSectionProjection() {
     letterboxLoopCloudflare720,
     letterboxLoopCloudflare1080,
     letterboxOverlayImage ${imageProjection},
+    letterboxOverlayImagePosition,
     letterboxLinkText,
     letterboxLinkStyle,
     letterboxLink {

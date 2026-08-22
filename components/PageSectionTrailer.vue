@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 999px) {
   .page-section-trailer :deep(.cinematic-video-frame__notch-clip) {
-    aspect-ratio: 0.85;
+    aspect-ratio: 3/2;
   }
 }
 </style>

@@ -202,13 +202,15 @@ function normalizeExternalUrl(value) {
 
 <style scoped>
 .page-section-about-artist {
-  padding: clamp(2rem, 5vw, 4rem) 0;
+  padding: var(--shop-section-padding) 0;
   background: var(--shop-bg);
   color: var(--shop-text);
   --shop-line: #ddd;
   border-bottom: 1px solid var(--shop-line);
 }
-
+.page-section-about-artist .wrapper {
+  padding: 0 var(--shop-x-padding);
+}
 .page-section-about-artist__header {
   margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
 }

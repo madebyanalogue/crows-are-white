@@ -67,7 +67,7 @@ const title = computed(() => props.section?.relatedProductsTitle?.trim() || '')
 
 <style scoped>
 .shop-products-section {
-  padding: clamp(2rem, 5vw, 4rem) 0;
+  padding: var(--shop-section-padding) 0;
   background: var(--shop-bg);
   color: var(--shop-text);
 }
